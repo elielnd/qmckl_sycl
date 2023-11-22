@@ -1,5 +1,6 @@
 #include "../include/qmckl_memory_sycl.h"
 #include <assert.h>
+#include <CL/sycl.hpp>
 
 // This file contains functions prototypes for context memory management
 // functions (on device only, we expect most if not all of the context
