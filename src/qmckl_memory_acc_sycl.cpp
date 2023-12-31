@@ -68,50 +68,50 @@ void *qmckl_malloc_device(qmckl_context_device context, size_t size) {
 	return pointer;
 }
 
-qmckl_exit_code_device qmckl_free_device(qmckl_context_device context,
-										 void *const ptr) {
+// qmckl_exit_code_device qmckl_free_device(qmckl_context_device context,
+// 										 void *const ptr) {
 
-	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE) {
-		return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
-									 "qmckl_free_device", NULL);
-	}
+// 	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE) {
+// 		return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
+// 									 "qmckl_free_device", NULL);
+// 	}
 
-	if (ptr == NULL) {
-		return qmckl_failwith_device(context, QMCKL_INVALID_ARG_2_DEVICE,
-									 "qmckl_free_device", "NULL pointer");
-	}
+// 	if (ptr == NULL) {
+// 		return qmckl_failwith_device(context, QMCKL_INVALID_ARG_2_DEVICE,
+// 									 "qmckl_free_device", "NULL pointer");
+// 	}
 
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
-	int device_id = qmckl_get_device_id(context);
+// 	qmckl_context_struct_device *const ctx =
+// 		(qmckl_context_struct_device *)context;
+// 	int device_id = qmckl_get_device_id(context);
 
-	qmckl_lock_device(context);
-	{
-		/* Find pointer in array of saved pointers */
-		size_t pos = (size_t)0;
-		while (pos < ctx->memory_device.array_size &&
-			   ctx->memory_device.element[pos].pointer != ptr) {
-			pos += (size_t)1;
-		}
+// 	qmckl_lock_device(context);
+// 	{
+// 		/* Find pointer in array of saved pointers */
+// 		size_t pos = (size_t)0;
+// 		while (pos < ctx->memory_device.array_size &&
+// 			   ctx->memory_device.element[pos].pointer != ptr) {
+// 			pos += (size_t)1;
+// 		}
 
-		if (pos >= ctx->memory_device.array_size) {
-			/* Not found */
-			qmckl_unlock_device(context);
-			return qmckl_failwith_device(context, QMCKL_FAILURE_DEVICE,
-										 "qmckl_free_device",
-										 "Pointer not found in context");
-		}
+// 		if (pos >= ctx->memory_device.array_size) {
+// 			/* Not found */
+// 			qmckl_unlock_device(context);
+// 			return qmckl_failwith_device(context, QMCKL_FAILURE_DEVICE,
+// 										 "qmckl_free_device",
+// 										 "Pointer not found in context");
+// 		}
 
-		acc_free(ptr);
+// 		acc_free(ptr);
 
-		memset(&(ctx->memory_device.element[pos]), 0,
-			   sizeof(qmckl_memory_info_struct_device));
-		ctx->memory_device.n_allocated -= (size_t)1;
-	}
-	qmckl_unlock_device(context);
+// 		memset(&(ctx->memory_device.element[pos]), 0,
+// 			   sizeof(qmckl_memory_info_struct_device));
+// 		ctx->memory_device.n_allocated -= (size_t)1;
+// 	}
+// 	qmckl_unlock_device(context);
 
-	return QMCKL_SUCCESS_DEVICE;
-}
+// 	return QMCKL_SUCCESS_DEVICE;
+// }
 
 //**********
 // MEMCPYS

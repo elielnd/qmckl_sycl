@@ -234,8 +234,8 @@ qmckl_context_device qmckl_context_create_device(int device_id)
         rc = qmckl_init_nucleus_device(context);
         assert(rc == QMCKL_SUCCESS_DEVICE);
 
-        rc = qmckl_init_ao_basis_device(context);
-        assert(rc == QMCKL_SUCCESS_DEVICE);
+        // rc = qmckl_init_ao_basis_device(context);
+        // assert(rc == QMCKL_SUCCESS_DEVICE);
 
         rc = qmckl_init_mo_basis_device(context);
         assert(rc == QMCKL_SUCCESS_DEVICE);
