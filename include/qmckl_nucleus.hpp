@@ -1,9 +1,9 @@
 
-#include "qmckl_types.h"
-#include "qmckl_basic_functions.h"
-#include "qmckl_context.h"
-#include "qmckl_memory.h"
-#include "qmckl_blas.h"
+#include "qmckl_types.hpp"
+#include "qmckl_basic_functions.hpp"
+#include "qmckl_context.hpp"
+#include "qmckl_memory.hpp"
+#include "qmckl_blas.hpp"
 
 bool qmckl_nucleus_provided_device(qmckl_context_device context);
 
