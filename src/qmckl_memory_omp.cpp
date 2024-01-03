@@ -1,4 +1,4 @@
-#include "../include/qmckl_memory_sycl.h"
+#include "../include/qmckl_memory_sycl.hpp"
 #include <assert.h>
 #include <CL/sycl.hpp>
 
