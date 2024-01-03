@@ -1,4 +1,4 @@
-#include "include/qmckl_basic_functions.hpp"
+#include "../include/qmckl_basic_functions.hpp"
 
 #include <cstdint>
 #include <cinttypes>
