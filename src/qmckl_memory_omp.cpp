@@ -1,4 +1,4 @@
-#include "../include/qmckl_memory_sycl.hpp"
+#include "../include/qmckl_memory.hpp"
 #include <assert.h>
 #include <CL/sycl.hpp>
 
@@ -42,16 +42,14 @@ void *qmckl_malloc_device(sycl::queue &queue, qmckl_context_device context, size
 			if (new_array == nullptr)
 			{
 				qmckl_unlock_device(context);
-				sycl::free(pointer, queue);
 				return nullptr;
 			}
 
-			sycl::memset(&(new_array[old_size]), 0, old_size * sizeof(qmckl_memory_info_struct_device), queue);
-			sycl::memcpy(new_array, ctx->memory_device.element,
-						 old_size * sizeof(qmckl_memory_info_struct_device), queue)
+			memset(&(new_array[old_size]), 0, old_size * sizeof(qmckl_memory_info_struct_device));
+			queue.memcpy(new_array, ctx->memory_device.element,
+						 old_size * sizeof(qmckl_memory_info_struct_device))
 				.wait_and_throw();
 
-			sycl::free(ctx->memory_device.element, queue);
 			ctx->memory_device.element = new_array;
 			ctx->memory_device.array_size = 2L * old_size;
 		}
@@ -112,8 +110,6 @@ qmckl_exit_code_device qmckl_free_device(qmckl_context_device context, void *con
 										 "Pointer not found in context");
 		}
 
-		sycl::free(ptr, ctx->memory_device.qct);
-
 		memset(&(ctx->memory_device.element[pos]), 0,
 			   sizeof(qmckl_memory_info_struct_device));
 		ctx->memory_device.n_allocated -= (size_t)1;
@@ -154,24 +150,21 @@ qmckl_exit_code_device qmckl_memcpy_H2D(qmckl_context_device context,
 		try
 		{
 			// Get the SYCL queue associated with the context
-			queue q(context.get_sycl_queue());
+			sycl::queue q;
 
 			// Use USM for memory management
 			// Memory allocation and data copy to device
 			void *dest_device = malloc_device(size, q);
 			void *src_device = malloc_device(size, q);
-			memcpy(dest_device, dest, size);
-			memcpy(src_device, src, size);
+			q.memcpy(dest_device, dest, size);
+			q.memcpy(src_device, src, size);
 
 			// Perform data transfer using SYCL command group
-			q.submit([&](handler &h)
-					 { h.parallel_for(range<1>(size), [=](id<1> i)
+			q.submit([&](sycl::handler &h)
+					 { h.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i)
 									  { reinterpret_cast<char *>(dest_device)[i] =
 											reinterpret_cast<char *>(src_device)[i]; }); });
 
-			// Free allocated device memory
-			free(dest_device, q);
-			free(src_device, q);
 		}
 		catch (sycl::exception const &e)
 		{
@@ -213,24 +206,21 @@ qmckl_exit_code_device qmckl_memcpy_D2H(qmckl_context_device context,
 		try
 		{
 			// Get the SYCL queue associated with the context
-			queue q(context.get_sycl_queue());
+			sycl::queue q;
 
 			// Use USM for memory management
 			// Memory allocation and data copy to device
 			void *dest_device = malloc_device(size, q);
 			void *src_device = malloc_device(size, q);
-			memcpy(dest_device, dest, size);
-			memcpy(src_device, src, size);
+			q.memcpy(dest_device, dest, size);
+			q.memcpy(src_device, src, size);
 
 			// Perform data transfer using SYCL command group
-			q.submit([&](handler &h)
-					 { h.parallel_for(range<1>(size), [=](id<1> i)
+			q.submit([&](sycl::handler &h)
+					 { h.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i)
 									  { reinterpret_cast<char *>(dest_device)[i] =
 											reinterpret_cast<char *>(src_device)[i]; }); });
 
-			// Free allocated device memory
-			free(dest_device, q);
-			free(src_device, q);
 		}
 		catch (sycl::exception const &e)
 		{
@@ -272,24 +262,21 @@ qmckl_exit_code_device qmckl_memcpy_D2D(qmckl_context_device context,
 		try
 		{
 			// Get the SYCL queue associated with the context
-			queue q(context.get_sycl_queue());
+			sycl::queue q;
 
 			// Use USM for memory management
 			// Memory allocation and data copy to device
 			void *dest_device = malloc_device(size, q);
 			void *src_device = malloc_device(size, q);
-			memcpy(dest_device, dest, size);
-			memcpy(src_device, src, size);
+			q.memcpy(dest_device, dest, size);
+			q.memcpy(src_device, src, size);
 
 			// Perform data transfer using SYCL command group
-			q.submit([&](handler &h)
-					 { h.parallel_for(range<1>(size), [=](id<1> i)
+			q.submit([&](sycl::handler &h)
+					 { h.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i)
 									  { reinterpret_cast<char *>(dest_device)[i] =
 											reinterpret_cast<char *>(src_device)[i]; }); });
 
-			// Free allocated device memory
-			free(dest_device, q);
-			free(src_device, q);
 		}
 		catch (sycl::exception const &e)
 		{

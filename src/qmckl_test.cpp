@@ -1,7 +1,6 @@
 #include <CL/sycl.hpp>
 #include <vector>
 #include <iostream>
-#include <string>
 #include "../include/qmckl_context.hpp"
 
 using namespace sycl;

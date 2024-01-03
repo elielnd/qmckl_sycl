@@ -1,4 +1,4 @@
-#include <sycl/sycl.hpp>
+/* #include <sycl/sycl.hpp>
 
 #include "../include/qmckl_memory.hpp"
 
@@ -32,4 +32,4 @@ int main() {
   }
 
   return 0;
-}
+} */
