@@ -1,5 +1,4 @@
 #pragma once
-
 // This file contains prototypes for device context related functions,
 // as well as the definition of qmckl_context_device and
 // qmckl_context_device_struct, the device specific datatypes for context
