@@ -1,4 +1,4 @@
-#include <CL/sycl.hpp>
+/*#include <CL/sycl.hpp>
 
 using namespace sycl;
 
@@ -15,16 +15,7 @@ int main() {
   queue q;
   //queue q(cpu_selector_v);
 
-
-
-  if (q.get_device().get_info<info::device::name>() == "") 
-  {
-    std::cout << "DeviceDeviceDeviceDeviceDeviceDeviceDevice:\n\n\n\n\n";
-  }
-  else
-  {
-      std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
-  }
+  std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
 
   return 0;
-}
+}*/
