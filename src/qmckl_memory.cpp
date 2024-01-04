@@ -22,6 +22,24 @@
 // ALLOCS / FREES
 //**********
 
+void *qmckl_malloc_device(qmckl_context_device context, size_t size) {
+
+
+	return nullptr;
+}
+
+qmckl_exit_code_device qmckl_memcpy_D2H(qmckl_context_device context,
+										void *const dest, void *const src,
+										size_t size) {
+
+	return QMCKL_SUCCESS_DEVICE;
+										
+}
+qmckl_exit_code_device qmckl_memcpy_D2D(qmckl_context_device context,
+										void *dest, void *src, size_t size) {
+											return QMCKL_SUCCESS_DEVICE;
+}
+
 qmckl_exit_code_device qmckl_free_device(qmckl_context_device context,
 										 void *const ptr) {
 

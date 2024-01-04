@@ -11,6 +11,47 @@ using namespace sycl;
 // MATRIX
 //**********
 
+qmckl_matrix_device qmckl_matrix_alloc_device(qmckl_context_device context,
+											  const int64_t size1,
+											  const int64_t size2) {
+	/* Should always be true by contruction */
+	assert(size1 * size2 > (int64_t)0);
+
+	qmckl_matrix_device result;
+
+	result.size[0] = size1;
+	result.size[1] = size2;
+
+	result.data =
+		(double *)qmckl_malloc_device(context, size1 * size2 * sizeof(double));
+
+	if (result.data == NULL) {
+		result.size[0] = (int64_t)0;
+		result.size[1] = (int64_t)0;
+	}
+	double *data = result.data;
+
+	return result;
+}
+
+qmckl_exit_code_device qmckl_matrix_free_device(qmckl_context_device context,
+												qmckl_matrix_device *matrix) {
+	/* Always true */
+	assert(matrix->data != NULL);
+
+	qmckl_exit_code_device rc;
+
+	rc = qmckl_free_device(context, matrix->data);
+	if (rc != QMCKL_SUCCESS_DEVICE) {
+		return rc;
+	}
+	matrix->data = NULL;
+	matrix->size[0] = (int64_t)0;
+	matrix->size[1] = (int64_t)0;
+
+	return QMCKL_SUCCESS_DEVICE;
+}
+
 qmckl_matrix_device qmckl_matrix_set_device(qmckl_matrix_device matrix,
 											double value)
 {
@@ -98,6 +139,53 @@ qmckl_exit_code_device qmckl_transpose_device(qmckl_context_device context,
 // TENSOR
 //**********
 
+qmckl_tensor_device qmckl_tensor_alloc_device(qmckl_context_device context,
+											  const int64_t order,
+											  const int64_t *size) {
+	/* Should always be true by construction */
+	assert(order > 0);
+	assert(order <= QMCKL_TENSOR_ORDER_MAX_DEVICE);
+	assert(size != NULL);
+
+	qmckl_tensor_device result;
+	result.order = order;
+
+	int64_t prod_size = (int64_t)1;
+	for (int64_t i = 0; i < order; ++i) {
+		assert(size[i] > (int64_t)0);
+		result.size[i] = size[i];
+		prod_size *= size[i];
+	}
+
+	result.data =
+		(double *)qmckl_malloc_device(context, prod_size * sizeof(double));
+
+	if (result.data == NULL) {
+		memset(&result, 0, sizeof(qmckl_tensor_device));
+	}
+
+	return result;
+}
+
+qmckl_exit_code_device qmckl_tensor_free_device(qmckl_context_device context,
+												qmckl_tensor_device *tensor) {
+	/* Always true */
+	assert(tensor->data != NULL);
+
+	qmckl_exit_code_device rc;
+
+	rc = qmckl_free_device(context, tensor->data);
+	if (rc != QMCKL_SUCCESS_DEVICE) {
+		return rc;
+	}
+
+	// TODO Memset to 0
+	// memset(tensor, 0, sizeof(qmckl_tensor_device));
+
+	return QMCKL_SUCCESS_DEVICE;
+}
+
+
 qmckl_tensor_device qmckl_tensor_set_device(qmckl_tensor_device tensor,
 											double value)
 {
@@ -128,3 +216,5 @@ qmckl_tensor_device qmckl_tensor_set_device(qmckl_tensor_device tensor,
 
 	return tensor;
 }
+
+
