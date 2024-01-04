@@ -20,16 +20,12 @@ void *qmckl_malloc_device(sycl::queue &queue, qmckl_context_device context, size
 	int device_id = qmckl_get_device_id(context);
 
 	// Allocate memory and zero it using USM
-	void *pointer = sycl::malloc_device(size, queue);
+	void *pointer = static_cast<void *>(sycl::malloc_shared(size, queue));
 	if (pointer == nullptr)
 	{
 		return nullptr;
 	}
-
-	// TODO
-	// Memset to 0 of size info.size
-	// sycl::memset(pointer, 0, size, queue);
-
+	
 	qmckl_lock_device(context);
 	{
 		// If qmckl_memory_struct is full, reallocate a larger one
@@ -73,7 +69,7 @@ void *qmckl_malloc_device(sycl::queue &queue, qmckl_context_device context, size
 	return pointer;
 }
 
-qmckl_exit_code_device qmckl_free_device(qmckl_context_device context, void *const ptr)
+qmckl_exit_code_device qmckl_free_device(sycl::queue &queue, qmckl_context_device context, void *const ptr)
 {
 	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
 	{
@@ -109,6 +105,8 @@ qmckl_exit_code_device qmckl_free_device(qmckl_context_device context, void *con
 										 "qmckl_free_device",
 										 "Pointer not found in context");
 		}
+
+		sycl::free(ptr, queue);
 
 		memset(&(ctx->memory_device.element[pos]), 0,
 			   sizeof(qmckl_memory_info_struct_device));

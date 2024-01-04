@@ -1,14 +1,9 @@
-/* #include <sycl/sycl.hpp>
-
-#include "../include/qmckl_memory.hpp"
+#include <CL/sycl.hpp>
 
 using namespace sycl;
 
 
 int main() {
-
-  int rows = 2;
-  int cols = 2;
 
   // No device of requested type
   // queue q(gpu_selector_v);
@@ -17,7 +12,7 @@ int main() {
   //queue q(accelerator_selector_v);
   
   // Device: AMD Ryzen 5 5500
-  queue q(default_selector_v);
+  queue q;
   //queue q(cpu_selector_v);
 
 
@@ -32,4 +27,4 @@ int main() {
   }
 
   return 0;
-} */
+}

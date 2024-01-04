@@ -288,7 +288,7 @@ qmckl_context_device qmckl_context_create_device(int device_id)
 // CONTEXT DESTROY
 //**********
 
-qmckl_exit_code_device qmckl_context_destroy_device(const qmckl_context_device context)
+qmckl_exit_code_device qmckl_context_destroy_device(sycl::queue &queue, const qmckl_context_device context)
 {
 
     const qmckl_context_device checked_context = qmckl_context_check_device(context);
@@ -306,7 +306,7 @@ qmckl_exit_code_device qmckl_context_destroy_device(const qmckl_context_device c
     {
         if (ctx->memory.element[pos].pointer != nullptr)
         {
-            qmckl_free_device(context, ctx->memory.element[pos].pointer);
+            qmckl_free_device(queue, context, ctx->memory.element[pos].pointer);
         }
     }
     assert(ctx->memory.n_allocated == (size_t)0);
@@ -319,7 +319,7 @@ qmckl_exit_code_device qmckl_context_destroy_device(const qmckl_context_device c
     {
         if (ctx->memory_device.element[pos].pointer != nullptr)
         {
-            qmckl_free_device(context, ctx->memory_device.element[pos].pointer);
+            qmckl_free_device(queue, context, ctx->memory_device.element[pos].pointer);
         }
     }
     assert(ctx->memory_device.n_allocated == (size_t)0);

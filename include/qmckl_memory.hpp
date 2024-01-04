@@ -20,7 +20,7 @@ void *qmckl_malloc_device(sycl::queue &queue, qmckl_context_device context, size
 qmckl_exit_code_device qmckl_free_host(qmckl_context_device context,
 									   void *const ptr);
 
-qmckl_exit_code_device qmckl_free_device(qmckl_context_device context,
+qmckl_exit_code_device qmckl_free_device(sycl::queue &queue, qmckl_context_device context,
 										 void *const ptr);
 
 /* Memcpys */
