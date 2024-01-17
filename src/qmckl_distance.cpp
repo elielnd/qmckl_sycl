@@ -2,11 +2,7 @@
 
 using namespace sycl;
 
-qmckl_exit_code_device
-qmckl_distance_device(const qmckl_context_device context, const char transa,
-                      const char transb, const int64_t m, const int64_t n,
-                      const double *A, const int64_t lda, const double *B,
-                      const int64_t ldb, double *const C, const int64_t ldc)
+qmckl_exit_code_device qmckl_distance_device(const qmckl_context_device context, const char transa, const char transb, const int64_t m, const int64_t n, const double *A, const int64_t lda, const double *B, const int64_t ldb, double *const C, const int64_t ldc, queue& q)
 {
     int i, j;
     double x, y, z;
@@ -120,8 +116,6 @@ qmckl_distance_device(const qmckl_context_device context, const char transa,
         return info;
     }
 
-    queue q;
-
     switch (transab)
     {
     case 0:
@@ -135,7 +129,8 @@ qmckl_distance_device(const qmckl_context_device context, const char transa,
             C[i + j * ldc] = x * x + y * y + z * z;
             for (int k = 0; k < ldc; k++) {
                 C[k + j * ldc] = sqrt(C[k + j * ldc]);
-            } });
+            } 
+        }).wait();
         break;
     case 1:
         q.parallel_for(range<2>(n, m), [=](id<2> idx)
@@ -148,8 +143,8 @@ qmckl_distance_device(const qmckl_context_device context, const char transa,
             C[i + j * ldc] = x * x + y * y + z * z;
             for (int k = 0; k < j; k++) {
                 C[k + j * ldc] = sqrt(C[k + j * ldc]);
-            } })
-            .wait();
+            } 
+        }).wait();
         break;
     case 2:
         q.parallel_for(range<2>(n, m), [=](id<2> idx)
@@ -162,8 +157,8 @@ qmckl_distance_device(const qmckl_context_device context, const char transa,
             C[i + j * ldc] = x * x + y * y + z * z;
             for (int k = 0; k < ldc; k++) {
                 C[k + j * ldc] = sqrt(C[k + j * ldc]);
-            } })
-            .wait();
+            } 
+        }).wait();
         break;
     case 3:
         q.parallel_for(range<2>(n, m), [=](id<2> idx)
@@ -176,19 +171,15 @@ qmckl_distance_device(const qmckl_context_device context, const char transa,
             C[i + j * ldc] = x * x + y * y + z * z;
             for (int k = 0; k < ldc; k++) {
                 C[k + j * ldc] = sqrt(C[k + j * ldc]);
-            } })
-            .wait();
+            } 
+        }).wait();
         break;
     }
 
     return QMCKL_SUCCESS_DEVICE;
 }
 
-qmckl_exit_code_device qmckl_distance_rescaled_device(
-    const qmckl_context_device context, const char transa, const char transb,
-    const int64_t m, const int64_t n, const double *A, const int64_t lda,
-    const double *B, const int64_t ldb, double *const C, const int64_t ldc,
-    const double rescale_factor_kappa)
+qmckl_exit_code_device qmckl_distance_rescaled_device(const qmckl_context_device context, const char transa, const char transb, const int64_t m, const int64_t n, const double *A, const int64_t lda, const double *B, const int64_t ldb, double *const C, const int64_t ldc, const double rescale_factor_kappa, sycl::queue& q)
 {
 
     int i, j, transab;
@@ -304,8 +295,6 @@ qmckl_exit_code_device qmckl_distance_rescaled_device(
         return info;
     }
 
-    queue q;
-
     switch (transab)
     {
 
@@ -366,10 +355,7 @@ qmckl_exit_code_device qmckl_distance_rescaled_device(
     return info;
 }
 
-qmckl_exit_code_device qmckl_distance_rescaled_deriv_e_device(
-    qmckl_context_device context, char transa, char transb, int m, int n,
-    double *A, int lda, double *B, int ldb, double *C, int ldc,
-    double rescale_factor_kappa)
+qmckl_exit_code_device qmckl_distance_rescaled_deriv_e_device(qmckl_context_device context, char transa, char transb, int m, int n, double *A, int lda, double *B, int ldb, double *C, int ldc, double rescale_factor_kappa)
 {
 
     double rescale_factor_kappa_inv;
@@ -512,8 +498,8 @@ qmckl_exit_code_device qmckl_distance_rescaled_deriv_e_device(
                 z * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
             C[3 + i * 4 + j * 4 * ldc] =
                 (2.0 * dist_inv - rescale_factor_kappa_inv) *
-                (1.0 - rescale_factor_kappa_inv * rij); })
-            .wait();
+                (1.0 - rescale_factor_kappa_inv * rij); 
+        }).wait();
         break;
 
     case 1:
@@ -531,15 +517,11 @@ qmckl_exit_code_device qmckl_distance_rescaled_deriv_e_device(
             }
             double dist_inv = 1.0 / dist;
             double rij = (1.0 - exp(-rescale_factor_kappa * dist)) * rescale_factor_kappa_inv;
-            C[0 + i + j] =
-                x * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[1 + i + j] =
-                y * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[2 + i + j] =
-                z * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[3 + i + j] = (2.0 * dist_inv - rescale_factor_kappa_inv) *
-                            (1.0 - rescale_factor_kappa_inv * rij); })
-            .wait();
+            C[0 + i + j] = x * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
+            C[1 + i + j] = y * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
+            C[2 + i + j] = z * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
+            C[3 + i + j] = (2.0 * dist_inv - rescale_factor_kappa_inv) * (1.0 - rescale_factor_kappa_inv * rij); 
+        }).wait();
         break;
 
     case 2:
@@ -563,10 +545,8 @@ qmckl_exit_code_device qmckl_distance_rescaled_deriv_e_device(
                 y * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
             C[2 + i * 4 + j * 4 * ldc] =
                 z * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[3 + i * 4 + j * ldc] =
-                (2.0 * dist_inv - rescale_factor_kappa_inv) *
-                (1.0 - rescale_factor_kappa_inv * rij); })
-            .wait();
+            C[3 + i * 4 + j * ldc] = (2.0 * dist_inv - rescale_factor_kappa_inv) * (1.0 - rescale_factor_kappa_inv * rij); 
+        }).wait();
         break;
 
     case 3:
@@ -585,16 +565,11 @@ qmckl_exit_code_device qmckl_distance_rescaled_deriv_e_device(
             }
             double dist_inv = 1.0 / dist;
             double rij = (1.0 - exp(-rescale_factor_kappa * dist)) * rescale_factor_kappa_inv;
-            C[0 + i * 4 + j * 4 * ldc] =
-                x * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[1 + i * 4 + j * 4 * ldc] =
-                y * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[2 + i * 4 + j * 4 * ldc] =
-                z * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
-            C[3 + i * 4 + j * 4 * ldc] =
-                (2.0 * dist_inv - rescale_factor_kappa_inv) *
-                (1.0 - rescale_factor_kappa_inv * rij); })
-            .wait();
+            C[0 + i * 4 + j * 4 * ldc] = x * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
+            C[1 + i * 4 + j * 4 * ldc] = y * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
+            C[2 + i * 4 + j * 4 * ldc] = z * dist_inv * (1.0 - rescale_factor_kappa_inv * rij);
+            C[3 + i * 4 + j * 4 * ldc] = (2.0 * dist_inv - rescale_factor_kappa_inv) * (1.0 - rescale_factor_kappa_inv * rij); 
+            }).wait();
         break;
     }
     return info;
