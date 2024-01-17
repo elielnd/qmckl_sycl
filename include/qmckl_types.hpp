@@ -1,5 +1,7 @@
 #pragma once
 
+
+#include <CL/sycl.hpp>
 #include <iostream>
 #include <cstdint>  
 #include <cstdlib>  
@@ -322,6 +324,9 @@ typedef struct qmckl_context_struct_device {
 
 	/* Device id, only used w/ OpenMP */
 	size_t device_id;
+
+	/* Queue , only used w/ SYCL */
+	sycl::queue q;
 
 	/* Validity checking */
 	uint64_t tag;
