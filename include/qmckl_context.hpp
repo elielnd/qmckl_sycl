@@ -30,7 +30,7 @@ qmckl_exit_code_device qmckl_init_jastrow_device(qmckl_context_device context);
 
 qmckl_context_device qmckl_context_create_device(int device_id);
 qmckl_exit_code_device
-qmckl_context_destroy_device(const qmckl_context_device context);
+qmckl_context_destroy_device(sycl::queue queue, const qmckl_context_device context);
 
 static inline size_t qmckl_get_device_id(qmckl_context_device context)
 {

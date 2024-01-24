@@ -1,8 +1,7 @@
 #include <CL/sycl.hpp>
 #include <vector>
 #include <iostream>
-#include <string>
-#include "../include/qmckl_context.hpp"
+#include "../include/qmckl_memory.hpp"
 
 using namespace sycl;
 static const int N = 4;

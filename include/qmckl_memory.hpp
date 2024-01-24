@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <CL/sycl.hpp>
 
 #include "qmckl_types.hpp"
 #include "qmckl_context.hpp"
