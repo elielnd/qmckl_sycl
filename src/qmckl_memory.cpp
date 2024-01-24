@@ -11,13 +11,15 @@
 // ALLOCS / FREES
 //**********
 
-void *qmckl_malloc_device(sycl::queue &queue, qmckl_context_device context, size_t size)
+void *qmckl_malloc_device(qmckl_context_device context, size_t size)
 {
 	assert(qmckl_context_check_device(context) != QMCKL_NULL_CONTEXT_DEVICE);
 
 	qmckl_context_struct_device *const ctx =
 		reinterpret_cast<qmckl_context_struct_device *>(context);
 	int device_id = qmckl_get_device_id(context);
+
+    sycl::queue queue = ctx->q;
 
 	// Allocate memory and zero it using USM
 	void *pointer = static_cast<void *>(sycl::malloc_shared(size, queue));
@@ -69,7 +71,7 @@ void *qmckl_malloc_device(sycl::queue &queue, qmckl_context_device context, size
 	return pointer;
 }
 
-qmckl_exit_code_device qmckl_free_device(sycl::queue &queue, qmckl_context_device context, void *const ptr)
+qmckl_exit_code_device qmckl_free_device(qmckl_context_device context, void *const ptr)
 {
 	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
 	{
@@ -86,6 +88,8 @@ qmckl_exit_code_device qmckl_free_device(sycl::queue &queue, qmckl_context_devic
 	qmckl_context_struct_device *const ctx =
 		(qmckl_context_struct_device *)context;
 	int device_id = qmckl_get_device_id(context);
+
+    sycl::queue queue = ctx->q;
 
 	qmckl_lock_device(context);
 	{
@@ -143,13 +147,15 @@ qmckl_exit_code_device qmckl_memcpy_H2D(qmckl_context_device context,
 									 "qmckl_memcpu_H2D", "NULL src pointer");
 	}
 
+    qmckl_context_struct_device *const ctx =
+		(qmckl_context_struct_device *)context;
+
+	sycl::queue q = ctx->q;
+
 	qmckl_lock_device(context);
 	{
 		try
 		{
-			// Get the SYCL queue associated with the context
-			sycl::queue q;
-
 			// Use USM for memory management
 			// Memory allocation and data copy to device
 			void *dest_device = malloc_device(size, q);
@@ -199,13 +205,15 @@ qmckl_exit_code_device qmckl_memcpy_D2H(qmckl_context_device context,
 									 "qmckl_memcpu_D2H", "NULL src pointer");
 	}
 
+    qmckl_context_struct_device *const ctx =
+		(qmckl_context_struct_device *)context;
+
+	sycl::queue q = ctx->q;
+
 	qmckl_lock_device(context);
 	{
 		try
 		{
-			// Get the SYCL queue associated with the context
-			sycl::queue q;
-
 			// Use USM for memory management
 			// Memory allocation and data copy to device
 			void *dest_device = malloc_device(size, q);
@@ -255,13 +263,15 @@ qmckl_exit_code_device qmckl_memcpy_D2D(qmckl_context_device context,
 									 "qmckl_memcpu_D2D", "NULL src pointer");
 	}
 
+    qmckl_context_struct_device *const ctx =
+		(qmckl_context_struct_device *)context;
+
+	sycl::queue q = ctx->q;
+
 	qmckl_lock_device(context);
 	{
 		try
 		{
-			// Get the SYCL queue associated with the context
-			sycl::queue q;
-
 			// Use USM for memory management
 			// Memory allocation and data copy to device
 			void *dest_device = malloc_device(size, q);
