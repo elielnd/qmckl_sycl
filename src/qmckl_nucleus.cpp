@@ -50,9 +50,9 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
 
     int64_t size[3] = {prim_max, shell_max, nucl_num};
 	ctx->ao_basis.coef_per_nucleus = qmckl_tensor_alloc_device(context, 3, size);
-	ctx->ao_basis.coef_per_nucleus = qmckl_tensor_set_device(ctx->ao_basis.coef_per_nucleus, 0.);
+	ctx->ao_basis.coef_per_nucleus = qmckl_tensor_set_device(ctx->ao_basis.coef_per_nucleus, 0., ctx->q);
 	ctx->ao_basis.expo_per_nucleus = qmckl_matrix_alloc_device(context, prim_max, nucl_num);
-	ctx->ao_basis.expo_per_nucleus = qmckl_matrix_set_device(ctx->ao_basis.expo_per_nucleus, 0.);
+	ctx->ao_basis.expo_per_nucleus = qmckl_matrix_set_device(ctx->ao_basis.expo_per_nucleus, 0., ctx->q);
 
 
     // To avoid offloading structures, expo is split in two arrays :
