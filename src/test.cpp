@@ -70,6 +70,24 @@ try
   exit_code = qmckl_memcpy_H2D(context, nucl_coord_d, nucl_coord, 3 * nucl_num * sizeof(double));
   assert(exit_code != QMCKL_FAILURE_DEVICE);
 
+  // Set nucleus stuff in context
+  qmckl_exit_code_device rc;
+  rc = qmckl_set_nucleus_num_device(context, nucl_num);
+  if (rc != QMCKL_SUCCESS_DEVICE)
+    return 1;
+
+  rc = qmckl_set_nucleus_coord_device(context, 'T', nucl_coord_d,
+                                      3 * nucl_num);
+  if (rc != QMCKL_SUCCESS_DEVICE)
+    return 1;
+
+  rc = qmckl_set_nucleus_charge_device(context, nucl_charge_d, nucl_num);
+  if (rc != QMCKL_SUCCESS_DEVICE)
+    return 1;
+
+  if (!qmckl_nucleus_provided_device(context))
+    return 1;
+
   qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
 
   std::cout << "Device end:  " << ctx->q.get_device().get_info<info::device::name>() << "\n";
