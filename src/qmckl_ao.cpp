@@ -140,7 +140,7 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
     sycl::queue queue = ctx->q;
 
 	double *poly_vgl_shared =
-		(double *)qmckl_malloc_device(context, sizeof(double) * poly_dim);
+		reinterpret_cast<double*>(qmckl_malloc_device(context, sizeof(double) * poly_dim));
 	int64_t *ao_index =
 		(int64_t *)qmckl_malloc_device(context, sizeof(int64_t) * shell_num);
 	int64_t *lstart = (int64_t *)qmckl_malloc_device(context, sizeof(int64_t) * 21);
@@ -188,7 +188,10 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 		}
 	}).wait();
 
-	double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
+	//double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
+	double (*poly_vgl)[chunk_size] = reinterpret_cast<double(*)[chunk_size]>(poly_vgl_shared);
+	double (*poly_vgl)[chunk_size] = reinterpret_cast<double(*)[chunk_size]>(
+    									static_cast<void*>(poly_vgl_shared));
 	double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
 
 	for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++) {
