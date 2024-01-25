@@ -1,13 +1,16 @@
-// This is the header file meant to be included by the users.
-// It contains prototypes for all GPU public functions, and definition of
-// the _device context variant.
+// // This is the header file meant to be included by the users.
+// // It contains prototypes for all GPU public functions, and definition of
+// // the _device context variant.
 
-#pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <pthread.h>
-#include <sys/types.h>
+#include <CL/sycl.hpp>
+
+#include <cstdint>
+#include <cstddef>
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <mutex>
 
 #ifdef HAVE_CUBLAS
 #include <cublas_v2.h>
@@ -19,9 +22,9 @@
 #include <cusparse_v2.h>
 #endif
 
-//**********
-// TYPES
-//**********
+// //**********
+// // TYPES
+// //**********
 
 #define VALID_TAG_DEVICE 0xBEEFFACE
 #define INVALID_TAG_DEVICE 0xDEADBEEF
@@ -33,7 +36,7 @@
 #define QMCKL_MAX_MSG_LEN_DEVICE 1024
 
 #define QMCKL_TENSOR_ORDER_MAX_DEVICE 16
-#define qmckl_mat_device(m, i, j) m.data[(i) + (j)*m.size[0]]
+#define qmckl_mat_device(m, i, j) m.data[(i) + (j) * m.size[0]]
 
 #define QMCKL_SUCCESS_DEVICE ((qmckl_exit_code_device)0)
 #define QMCKL_INVALID_ARG_1_DEVICE ((qmckl_exit_code_device)1)
@@ -66,11 +69,12 @@
 #define QMCKL_ALREADY_SET_DEVICE ((qmckl_exit_code_device)108)
 #define QMCKL_INVALID_EXIT_CODE_DEVICE ((qmckl_exit_code_device)109)
 
-/* Error type */
+//* Error type */
 
 typedef int32_t qmckl_exit_code_device;
 
-typedef struct qmckl_error_struct_device {
+typedef struct qmckl_error_struct_device
+{
 
 	qmckl_exit_code_device exit_code;
 	char function[QMCKL_MAX_FUN_LEN_DEVICE];
@@ -78,38 +82,40 @@ typedef struct qmckl_error_struct_device {
 
 } qmckl_error_struct_device;
 
-/* Numprec */
+// /* Numprec */
 
-typedef struct qmckl_numprec_struct_device {
+typedef struct qmckl_numprec_struct_device
+{
 	uint32_t precision;
 	uint32_t range;
 } qmckl_numprec_struct_device;
 
 #define QMCKL_NULL_CONTEXT_DEVICE (qmckl_context_device)0
 
-/* BLAS */
+// /* BLAS */
 
-typedef struct qmckl_vector_device {
-	double *restrict data;
+typedef struct qmckl_vector_device
+{
+	double *__restrict__ data;
 	int64_t size;
 } qmckl_vector_device;
 
-/*   The dimensions use Fortran ordering: two elements differing by one */
-/*   in the first dimension are consecutive in memory. */
+// /*   The dimensions use Fortran ordering: two elements differing by one */
+// /*   in the first dimension are consecutive in memory. */
 typedef struct qmckl_matrix_device {
-	double *restrict data;
-	int64_t size[2];
+double *__restrict__ data;
+int64_t size[2];
 } qmckl_matrix_device;
 
-/*   The dimensions use Fortran ordering: two elements differing by one */
-/*   in the first dimension are consecutive in memory. */
+// /*   The dimensions use Fortran ordering: two elements differing by one */
+// /*   in the first dimension are consecutive in memory. */
 typedef struct qmckl_tensor_device {
-	double *restrict data;
+	double *__restrict__ data;
 	int64_t order;
 	int64_t size[QMCKL_TENSOR_ORDER_MAX_DEVICE];
 } qmckl_tensor_device;
 
-/* Memory */
+// /* Memory */
 
 typedef struct qmckl_memory_info_struct {
 	size_t size;
@@ -122,10 +128,9 @@ typedef struct qmckl_memory_struct_device {
 	qmckl_memory_info_struct_device *element;
 } qmckl_memory_struct_device;
 
-static const qmckl_memory_info_struct_device
-	qmckl_memory_info_struct_zero_device = {.size = (size_t)0, .pointer = NULL};
+static const qmckl_memory_info_struct_device qmckl_memory_info_struct_zero_device = {.size = (size_t)0, .pointer = NULL};
 
-/* Context */
+// /* Context */
 
 typedef int64_t qmckl_context_device;
 
@@ -237,11 +242,11 @@ typedef struct qmckl_jastrow_struct_device {
 
 typedef struct qmckl_mo_basis_struct_device {
 	int64_t mo_num;
-	double *restrict coefficient;
-	double *restrict coefficient_t;
+	double *__restrict__ coefficient;
+	double *__restrict__ coefficient_t;
 
-	double *restrict mo_vgl;
-	double *restrict mo_value;
+	double *__restrict__ mo_vgl;
+	double *__restrict__ mo_value;
 	uint64_t mo_vgl_date;
 	uint64_t mo_value_date;
 
@@ -266,28 +271,28 @@ typedef struct qmckl_ao_basis_struct_device {
 	int64_t shell_num;
 	int64_t prim_num;
 	int64_t ao_num;
-	int64_t *restrict nucleus_index;
-	int64_t *restrict nucleus_shell_num;
-	int32_t *restrict shell_ang_mom;
-	int64_t *restrict shell_prim_num;
-	int64_t *restrict shell_prim_index;
-	double *restrict shell_factor;
-	double *restrict exponent;
-	double *restrict coefficient;
-	double *restrict prim_factor;
-	double *restrict ao_factor;
+	int64_t *__restrict__ nucleus_index;
+	int64_t *__restrict__ nucleus_shell_num;
+	int32_t *__restrict__ shell_ang_mom;
+	int64_t *__restrict__ shell_prim_num;
+	int64_t *__restrict__ shell_prim_index;
+	double *__restrict__ shell_factor;
+	double *__restrict__ exponent;
+	double *__restrict__ coefficient;
+	double *__restrict__ prim_factor;
+	double *__restrict__ ao_factor;
 
-	int64_t *restrict nucleus_prim_index;
-	double *restrict coefficient_normalized;
-	int32_t *restrict nucleus_max_ang_mom;
-	double *restrict nucleus_range;
-	double *restrict primitive_vgl;
+	int64_t *__restrict__ nucleus_prim_index;
+	double *__restrict__ coefficient_normalized;
+	int32_t *__restrict__ nucleus_max_ang_mom;
+	double *__restrict__ nucleus_range;
+	double *__restrict__ primitive_vgl;
 	uint64_t primitive_vgl_date;
-	double *restrict shell_vgl;
+	double *__restrict__ shell_vgl;
 	uint64_t shell_vgl_date;
-	double *restrict ao_vgl;
+	double *__restrict__ ao_vgl;
 	uint64_t ao_vgl_date;
-	double *restrict ao_value;
+	double *__restrict__ ao_value;
 	uint64_t ao_value_date;
 
 	int32_t uninitialized;
@@ -295,7 +300,7 @@ typedef struct qmckl_ao_basis_struct_device {
 	bool ao_cartesian;
 	char type;
 	/* HPC specific data structures */
-	int32_t *restrict prim_num_per_nucleus;
+	int32_t *__restrict__ prim_num_per_nucleus;
 	qmckl_tensor_device coef_per_nucleus;
 	qmckl_matrix_device expo_per_nucleus;
 } qmckl_ao_basis_struct_device;
@@ -334,6 +339,9 @@ typedef struct qmckl_context_struct_device {
 
 	/* Device id, only used w/ OpenMP */
 	size_t device_id;
+
+	/* queue, only used w/ SYCL */
+	sycl::queue q;
 
 	/* Validity checking */
 	uint64_t tag;
@@ -481,7 +489,7 @@ qmckl_exit_code_device
 qmckl_init_determinant_device(qmckl_context_device context);
 qmckl_exit_code_device qmckl_init_jastrow_device(qmckl_context_device context);
 
-qmckl_context_device qmckl_context_create_device(int device_id);
+qmckl_context_device qmckl_context_create_device(sycl::queue q);
 qmckl_exit_code_device
 qmckl_context_destroy_device(const qmckl_context_device context);
 
@@ -594,22 +602,22 @@ qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 	const qmckl_context_device context, const int64_t ao_num,
 	const int64_t shell_num, const int64_t point_num, const int64_t nucl_num,
-	const double *restrict coord, const double *restrict nucl_coord,
-	const int64_t *restrict nucleus_index,
-	const int64_t *restrict nucleus_shell_num, const double *nucleus_range,
-	const int32_t *restrict nucleus_max_ang_mom,
-	const int32_t *restrict shell_ang_mom, const double *restrict ao_factor,
-	double *shell_vgl, double *restrict const ao_vgl);
+	const double *__restrict__ coord, const double *__restrict__ nucl_coord,
+	const int64_t *__restrict__ nucleus_index,
+	const int64_t *__restrict__ nucleus_shell_num, const double *nucleus_range,
+	const int32_t *__restrict__ nucleus_max_ang_mom,
+	const int32_t *__restrict__ shell_ang_mom, const double *__restrict__ ao_factor,
+	double *shell_vgl, double *__restrict__ const ao_vgl);
 
 qmckl_exit_code_device qmckl_compute_ao_value_device(
 	const qmckl_context_device context, const int64_t ao_num,
 	const int64_t shell_num, const int64_t point_num, const int64_t nucl_num,
-	const double *restrict coord, const double *restrict nucl_coord,
-	const int64_t *restrict nucleus_index,
-	const int64_t *restrict nucleus_shell_num, const double *nucleus_range,
-	const int32_t *restrict nucleus_max_ang_mom,
-	const int32_t *restrict shell_ang_mom, const double *restrict ao_factor,
-	double *shell_vgl, double *restrict const ao_value);
+	const double *__restrict__ coord, const double *__restrict__ nucl_coord,
+	const int64_t *__restrict__ nucleus_index,
+	const int64_t *__restrict__ nucleus_shell_num, const double *nucleus_range,
+	const int32_t *__restrict__ nucleus_max_ang_mom,
+	const int32_t *__restrict__ shell_ang_mom, const double *__restrict__ ao_factor,
+	double *shell_vgl, double *__restrict__ const ao_value);
 
 qmckl_exit_code_device
 qmckl_provide_ao_basis_ao_vgl_device(qmckl_context_device context);
@@ -785,13 +793,13 @@ qmckl_provide_mo_basis_mo_vgl_device(qmckl_context_device context);
 
 qmckl_exit_code_device qmckl_compute_mo_basis_mo_value_device(
 	qmckl_context_device context, int64_t ao_num, int64_t mo_num,
-	int64_t point_num, double *restrict coefficient_t,
-	double *restrict ao_value, double *restrict mo_value);
+	int64_t point_num, double *__restrict__ coefficient_t,
+	double *__restrict__ ao_value, double *__restrict__ mo_value);
 
 qmckl_exit_code_device qmckl_compute_mo_basis_mo_vgl_device(
 	qmckl_context_device context, int64_t ao_num, int64_t mo_num,
-	int64_t point_num, double *restrict coefficient_t, double *restrict ao_vgl,
-	double *restrict mo_vgl);
+	int64_t point_num, double *__restrict__ coefficient_t, double *__restrict__ ao_vgl,
+	double *__restrict__ mo_vgl);
 
 qmckl_exit_code_device
 qmckl_finalize_mo_basis_device(qmckl_context_device context);

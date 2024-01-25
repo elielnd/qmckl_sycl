@@ -1,21 +1,86 @@
-/*#include <CL/sycl.hpp>
+#include <CL/sycl.hpp>
+#include <vector>
+#include <iostream>
+#include "../include/qmckl_gpu.hpp"
+
+#define chbrclf_nucl_num ((int64_t)5)
+
 
 using namespace sycl;
+static const int N = 4;
 
-
-int main() {
-
-  // No device of requested type
-  // queue q(gpu_selector_v);
-  
-  // Device: Intel(R) FPGA Emulation Device
-  //queue q(accelerator_selector_v);
-  
-  // Device: AMD Ryzen 5 5500
+int main()
+{
   queue q;
-  //queue q(cpu_selector_v);
+
+  try
+  {
+    // define queue with accelerator selector
+    q = queue(cl::sycl::gpu_selector_v);
+  }
+  catch (const sycl::exception &e)
+  {
+    q = queue();
+    std::cerr << "Could not create GPU queue. Using default queue.\n";
+  };
 
   std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
 
+  int point = 0;
+  int *ptr_point = &point;
+
+  q.parallel_for(range<1>(N), [=](id<1> i)
+                 { *ptr_point += 1; });
+  q.wait();
+
+  std::cout << "Point: " << point << std::endl;
+
+  //**********************
+  // Test Memory
+  //**********************
+
+try
+{
+  double chbrclf_nucl_coord[3][chbrclf_nucl_num] =
+      {{1.096243353458458e+00, 1.168459237342663e+00, 1.487097297712132e+00, 3.497663849983889e+00, -2.302574592081335e+00},
+       {8.907054016973815e-01, 1.125660720053393e+00, 3.119652484478797e+00, -1.302920810073182e+00, -3.542027060505035e-01},
+       {7.777092280258892e-01, 2.833370314829343e+00, -3.855438138411500e-01, -1.272220319439064e-01, -5.334129934317614e-02}};
+  double chbrclf_charge[chbrclf_nucl_num] = {6., 1., 9., 17., 35.};
+
+  qmckl_context_device context;
+  context  =  qmckl_context_create_device(q);
+
+  int64_t nucl_num = chbrclf_nucl_num;
+  qmckl_exit_code_device exit_code;
+
+  // Put nucleus stuff in CPU arrays
+  double *nucl_charge = chbrclf_charge;
+  double *nucl_coord = &(chbrclf_nucl_coord[0][0]);
+
+  // Put nucleus stuff in GPU arrays
+  double *nucl_charge_d = (double *)qmckl_malloc_device(context, nucl_num * sizeof(double));
+  double *nucl_coord_d = (double *)qmckl_malloc_device(context, nucl_num * sizeof(double));
+
+  assert(nucl_charge_d != nullptr && "nucl_charge_d null");
+  assert(nucl_coord_d != nullptr && "nucl_coord_d null");
+
+  std::cout << "ICI 1" << std::endl;
+
+  exit_code = qmckl_memcpy_H2D(context, nucl_charge_d, nucl_charge, nucl_num * sizeof(double));
+  assert(exit_code != QMCKL_FAILURE_DEVICE && "SYCL exception: qmckl_memcpy_H2D");
+
+  exit_code = qmckl_memcpy_H2D(context, nucl_coord_d, nucl_coord, 3 * nucl_num * sizeof(double));
+  assert(exit_code != QMCKL_FAILURE_DEVICE && "SYCL exception: qmckl_memcpy_H2D");
+
+  qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
+
+  std::cout << "Device: 2 " << ctx->q.get_device().get_info<info::device::name>() << "\n";
+  std::cout << "Size : " << ctx->memory.array_size << "\n";
+}
+catch (const sycl::exception &e)
+{
+  std::cerr <<"3: " << e.what() << '\n';
+}
+
   return 0;
-}*/
+}

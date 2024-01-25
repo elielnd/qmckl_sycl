@@ -22,7 +22,7 @@ void *qmckl_malloc_device(qmckl_context_device context, size_t size)
     sycl::queue queue = ctx->q;
 
 	// Allocate memory and zero it using USM
-	void *pointer = static_cast<void *>(sycl::malloc_shared(size, queue));
+	void *pointer = static_cast<void *>(sycl::malloc_device(size, queue));
 	if (pointer == nullptr)
 	{
 		return nullptr;
@@ -157,18 +157,8 @@ qmckl_exit_code_device qmckl_memcpy_H2D(qmckl_context_device context,
 		try
 		{
 			// Use USM for memory management
-			// Memory allocation and data copy to device
-			void *dest_device = malloc_device(size, q);
-			void *src_device = malloc_device(size, q);
-			q.memcpy(dest_device, dest, size);
-			q.memcpy(src_device, src, size);
-
-			// Perform data transfer using SYCL command group
-			q.submit([&](sycl::handler &h)
-					 { h.parallel_for(sycl::range<1>(size), [=](sycl::id<1> i)
-									  { reinterpret_cast<char *>(dest_device)[i] =
-											reinterpret_cast<char *>(src_device)[i]; }); });
-
+			// data copy to device
+			q.memcpy(dest, src, size);
 		}
 		catch (sycl::exception const &e)
 		{

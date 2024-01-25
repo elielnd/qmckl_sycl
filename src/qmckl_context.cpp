@@ -2,6 +2,7 @@
 
 #include "../include/qmckl_context.hpp"
 
+using namespace sycl;
 //**********
 // MISC FUNCTIONS
 //**********
@@ -179,7 +180,7 @@ qmckl_exit_code_device qmckl_init_jastrow_device(qmckl_context_device context)
     return QMCKL_SUCCESS_DEVICE;
 }
 
-qmckl_context_device qmckl_context_create_device(int device_id)
+qmckl_context_device qmckl_context_create_device(queue q)
 {
 
     qmckl_context_struct_device *const ctx = new (std::nothrow) qmckl_context_struct_device;
@@ -279,7 +280,7 @@ qmckl_context_device qmckl_context_create_device(int device_id)
     ctx->memory_device.n_allocated = (size_t)0;
 
     /* Set the device_id */
-    ctx->device_id = device_id;
+    ctx->q = q;
 
     return (qmckl_context_device)ctx;
 }
