@@ -98,5 +98,5 @@ catch (const sycl::exception &e)
   std::cerr <<"3: " << e.what() << '\n';
 }
 
-  return 0;
+return 0;
 }

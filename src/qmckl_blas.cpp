@@ -79,7 +79,7 @@ qmckl_vector_of_double_device(const qmckl_context_device context,
 
 	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
 
-	ctx->q.memcpy(vector.data, target, vector.size * sizeof(double));
+	ctx->q.memcpy(vector.data, target, vector.size * sizeof(double)).wait();
 
 	*vector_out = vector;
 	return QMCKL_SUCCESS_DEVICE;
@@ -142,16 +142,9 @@ qmckl_matrix_device qmckl_matrix_set_device(qmckl_matrix_device &matrix,
 	double *data = matrix.data;
 
 	// Submit a command group to the queue
-	q.submit([&](handler &h)
-			 {
-        // Access data on the device
-        auto data_device = data;
-
-        // Use parallel_for to parallelize the loop on the device
-        h.parallel_for(range<1>(prod_size), [=](id<1> idx) {
-            data_device[idx] = value;
-        }); })
-		.wait();
+	q.parallel_for(range<1>(prod_size), [=](id<1> i)
+				   { data[i] = value; });
+	q.wait();
 
 	return matrix;
 }
@@ -230,19 +223,12 @@ qmckl_exit_code_device qmckl_transpose_device(qmckl_context_device context,
 
 	queue q = ctx->q;
 	// Submit a command group to the queue
-	q.submit([&](handler &h)
-			 {
-        // Access data on the device
-        auto A_data_device = A_data;
-        auto At_data_device = At_data;
-
-        // Use parallel_for to parallelize the nested loop on the device
-        h.parallel_for<class transpose_kernel>(range<2>(At_s0, At_s1), [=](id<2> idx) {
+	q.parallel_for(range<2>(At_s0, At_s1), [=](id<2> idx)
+				   {
             int64_t i = idx[0];
             int64_t j = idx[1];
-			At_data[i + j * At_s0] = A_data[j + i * A_s0];
-        }); })
-		.wait(); // Wait for the command group to finish
+			At_data[i + j * At_s0] = A_data[j + i * A_s0]; });
+	q.wait(); // Wait for the command group to finish
 
 	return QMCKL_SUCCESS_DEVICE;
 }
@@ -314,16 +300,9 @@ qmckl_tensor_device qmckl_tensor_set_device(qmckl_tensor_device tensor,
 	double *data = tensor.data;
 
 	// Submit a command group to the queue
-	q.submit([&](handler &h)
-			 {
-        // Access data on the device
-        auto data_device = data;
-
-        // Use parallel_for to parallelize
-        h.parallel_for(range<1>(prod_size), [=](id<1> idx) {
-            data_device[idx] = value;
-        }); })
-		.wait();
+	q.parallel_for(range<1>(prod_size), [=](id<1> i)
+				   { data[i] = value; });
+	q.wait();
 
 	return tensor;
 }

@@ -1,20 +1,5 @@
 #include "../include/qmckl_electron.hpp"
 
-/* Provided check  */
-
-bool qmckl_electron_provided_device(qmckl_context_device context)
-{
-
-    if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
-    {
-        return false;
-    }
-
-    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
-    assert(ctx != NULL);
-
-    return ctx->electron.provided;
-}
 
 //**********
 // SETTERS
@@ -91,18 +76,15 @@ qmckl_exit_code_device qmckl_set_electron_coord_device(qmckl_context_device cont
     ctx->electron.walker_old = ctx->electron.walker;
     ctx->electron.walker = tmp;
 
-    memcpy(&(ctx->point), &(ctx->electron.walker.point),
-           sizeof(qmckl_point_struct_device));
+    memcpy(&(ctx->point), &(ctx->electron.walker.point), sizeof(qmckl_point_struct_device));
 
     qmckl_exit_code_device rc;
-    rc = qmckl_set_point_device(context, transp, walk_num * elec_num, coord,
-                                size_max);
+    rc = qmckl_set_point_device(context, transp, walk_num * elec_num, coord, size_max);
     if (rc != QMCKL_SUCCESS_DEVICE)
         return rc;
 
     ctx->electron.walker.num = walk_num;
-    memcpy(&(ctx->electron.walker.point), &(ctx->point),
-           sizeof(qmckl_point_struct_device));
+    memcpy(&(ctx->electron.walker.point), &(ctx->point), sizeof(qmckl_point_struct_device));
 
     return QMCKL_SUCCESS_DEVICE;
 }
@@ -172,8 +154,7 @@ qmckl_exit_code_device qmckl_get_electron_coord_device(const qmckl_context_devic
         return QMCKL_INVALID_CONTEXT_DEVICE;
     }
 
-    qmckl_context_struct_device *const ctx =
-        (qmckl_context_struct_device *)context;
+    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
     assert(ctx != NULL);
 
     if (!ctx->electron.provided)
@@ -191,6 +172,23 @@ qmckl_exit_code_device qmckl_get_electron_coord_device(const qmckl_context_devic
 //**********
 // PROVIDES
 //**********
+
+/* Provided check  */
+
+bool qmckl_electron_provided_device(qmckl_context_device context)
+{
+
+    if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
+    {
+        return false;
+    }
+
+    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
+    assert(ctx != NULL);
+
+    return ctx->electron.provided;
+}
+
 
 qmckl_exit_code_device qmckl_provide_ee_distance_device(qmckl_context_device context)
 {
@@ -302,8 +300,39 @@ qmckl_exit_code_device qmckl_provide_en_distance_device(qmckl_context_device con
 // COMPUTES
 //**********
 
+qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_device context, const int64_t point_num,
+                                                        const int64_t nucl_num, const double *elec_coord, const double *nucl_coord,
+                                                        double *const en_distance, sycl::queue &q)
+{
+    qmckl_exit_code_device rc = QMCKL_SUCCESS_DEVICE;
+
+    if (context == QMCKL_NULL_CONTEXT_DEVICE)
+    {
+        rc = QMCKL_INVALID_CONTEXT_DEVICE;
+        return rc;
+    }
+
+    if (point_num <= 0)
+    {
+        rc = QMCKL_INVALID_ARG_2_DEVICE;
+        return rc;
+    }
+
+    if (nucl_num <= 0)
+    {
+        rc = QMCKL_INVALID_ARG_3_DEVICE;
+        return rc;
+    }
+
+    rc = qmckl_distance_device(context, 'T', 'T', nucl_num, point_num,
+                               nucl_coord, nucl_num, elec_coord, point_num,
+                               en_distance, nucl_num, q);
+
+    return rc;
+}
+
 qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_device context, const int64_t elec_num,
-                                                        const int64_t walk_num, const double *coord, double *const ee_distance, sycl::queue& q)
+                                                        const int64_t walk_num, const double *coord, double *const ee_distance, sycl::queue &q)
 {
 
     int k, i, j;
@@ -341,35 +370,4 @@ qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_devi
     }
 
     return info;
-}
-
-qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_device context, const int64_t point_num,
-                                                        const int64_t nucl_num, const double *elec_coord, const double *nucl_coord,
-                                                        double *const en_distance, sycl::queue& q)
-{
-    qmckl_exit_code_device rc = QMCKL_SUCCESS_DEVICE;
-
-    if (context == QMCKL_NULL_CONTEXT_DEVICE)
-    {
-        rc = QMCKL_INVALID_CONTEXT_DEVICE;
-        return rc;
-    }
-
-    if (point_num <= 0)
-    {
-        rc = QMCKL_INVALID_ARG_2_DEVICE;
-        return rc;
-    }
-
-    if (nucl_num <= 0)
-    {
-        rc = QMCKL_INVALID_ARG_3_DEVICE;
-        return rc;
-    }
-
-    rc = qmckl_distance_device(context, 'T', 'T', nucl_num, point_num,
-                               nucl_coord, nucl_num, elec_coord, point_num,
-                               en_distance, nucl_num, q);
-
-    return rc;
 }

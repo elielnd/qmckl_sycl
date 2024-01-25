@@ -66,7 +66,7 @@ qmckl_failwith_device(qmckl_context_device context,
 
     if (message == nullptr)
     {
-        qmckl_exit_code_device rc =qmckl_set_error_device(context, exit_code, function, qmckl_string_of_error_device(exit_code));
+        qmckl_exit_code_device rc = qmckl_set_error_device(context, exit_code, function, qmckl_string_of_error_device(exit_code));
         assert(rc == QMCKL_SUCCESS_DEVICE);
     }
     else

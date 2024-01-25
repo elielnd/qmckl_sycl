@@ -19,27 +19,31 @@
 #include "qmckl_memory.hpp"
 #include "qmckl_blas.hpp"
 
-qmckl_exit_code_device qmckl_context_touch_device(const qmckl_context_device context);
-
-qmckl_exit_code_device qmckl_init_point_device(qmckl_context_device context);
-qmckl_exit_code_device qmckl_init_ao_basis_device(qmckl_context_device context);
-qmckl_exit_code_device qmckl_init_mo_basis_device(qmckl_context_device context);
-qmckl_exit_code_device
-qmckl_init_determinant_device(qmckl_context_device context);
-qmckl_exit_code_device qmckl_init_jastrow_device(qmckl_context_device context);
-
-qmckl_context_device qmckl_context_create_device(int device_id);
-qmckl_exit_code_device
-qmckl_context_destroy_device(sycl::queue queue, const qmckl_context_device context);
-
 static inline size_t qmckl_get_device_id(qmckl_context_device context)
 {
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
+	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 	return ctx->device_id;
 }
 
+//**********
+// MISC FUNCTIONS
+//**********
+qmckl_exit_code_device qmckl_context_touch_device(const qmckl_context_device context);
 qmckl_context_device qmckl_context_check_device(const qmckl_context_device context);
-
 void qmckl_lock_device(qmckl_context_device context);
 void qmckl_unlock_device(qmckl_context_device context);
+
+//**********
+// CONTEXT CREATE
+//**********
+qmckl_exit_code_device qmckl_init_point_device(qmckl_context_device context);
+qmckl_exit_code_device qmckl_init_ao_basis_device(qmckl_context_device context);
+qmckl_exit_code_device qmckl_init_mo_basis_device(qmckl_context_device context);
+qmckl_exit_code_device qmckl_init_determinant_device(qmckl_context_device context);
+qmckl_exit_code_device qmckl_init_jastrow_device(qmckl_context_device context);
+qmckl_context_device qmckl_context_create_device(int device_id);
+
+//**********
+// CONTEXT DESTROY
+//**********
+qmckl_exit_code_device qmckl_context_destroy_device(sycl::queue queue, const qmckl_context_device context);
