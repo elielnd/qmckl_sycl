@@ -158,14 +158,15 @@ qmckl_exit_code_device qmckl_memcpy_H2D(qmckl_context_device context,
 		{
 			// Use USM for memory management
 			// data copy to device
-			q.memcpy(dest, src, size);
+			q.memcpy(dest, src, size).wait();
 		}
 		catch (sycl::exception const &e)
 		{
 			// Handle exceptions, if any
-			std::cerr << "SYCL Exception: " << e.what() << std::endl;
+			std::cerr << "SYCL Exception in qmckl_memcpy_H2D: " << e.what() << std::endl;
+			qmckl_unlock_device(context);
 			return qmckl_failwith_device(context, QMCKL_FAILURE_DEVICE,
-										 "qmckl_memcpy_H2D", "SYCL exception");
+										 "qmckl_memcpy_H2D", "SYCL exception" );
 		}
 	}
 	qmckl_unlock_device(context);

@@ -16,7 +16,7 @@ int main()
   try
   {
     // define queue with accelerator selector
-    q = queue(cl::sycl::gpu_selector_v);
+    q = queue(cl::sycl::accelerator_selector_v);
   }
   catch (const sycl::exception &e)
   {
@@ -59,22 +59,20 @@ try
 
   // Put nucleus stuff in GPU arrays
   double *nucl_charge_d = (double *)qmckl_malloc_device(context, nucl_num * sizeof(double));
-  double *nucl_coord_d = (double *)qmckl_malloc_device(context, nucl_num * sizeof(double));
+  double *nucl_coord_d = (double *)qmckl_malloc_device(context, 3 * nucl_num * sizeof(double));
 
-  assert(nucl_charge_d != nullptr && "nucl_charge_d null");
-  assert(nucl_coord_d != nullptr && "nucl_coord_d null");
-
-  std::cout << "ICI 1" << std::endl;
+  assert(nucl_charge_d != nullptr);
+  assert(nucl_coord_d != nullptr);
 
   exit_code = qmckl_memcpy_H2D(context, nucl_charge_d, nucl_charge, nucl_num * sizeof(double));
-  assert(exit_code != QMCKL_FAILURE_DEVICE && "SYCL exception: qmckl_memcpy_H2D");
+  assert(exit_code != QMCKL_FAILURE_DEVICE);
 
   exit_code = qmckl_memcpy_H2D(context, nucl_coord_d, nucl_coord, 3 * nucl_num * sizeof(double));
-  assert(exit_code != QMCKL_FAILURE_DEVICE && "SYCL exception: qmckl_memcpy_H2D");
+  assert(exit_code != QMCKL_FAILURE_DEVICE);
 
   qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
 
-  std::cout << "Device: 2 " << ctx->q.get_device().get_info<info::device::name>() << "\n";
+  std::cout << "Device end:  " << ctx->q.get_device().get_info<info::device::name>() << "\n";
   std::cout << "Size : " << ctx->memory.array_size << "\n";
 }
 catch (const sycl::exception &e)
