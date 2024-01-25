@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "qmckl_basic_functions.h"
+#include "qmckl_basic_functions.hpp"
 
-#include "qmckl_context.h"
-#include "qmckl_memory.h"
+#include "qmckl_context.hpp"
+#include "qmckl_memory.hpp"
 
 qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 	qmckl_context_device context, int prim_num, int shell_num, int point_num,
@@ -23,22 +23,22 @@ qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 	const qmckl_context_device context, const int64_t ao_num,
 	const int64_t shell_num, const int64_t point_num, const int64_t nucl_num,
-	const double *restrict coord, const double *restrict nucl_coord,
-	const int64_t *restrict nucleus_index,
-	const int64_t *restrict nucleus_shell_num, const double *nucleus_range,
-	const int32_t *restrict nucleus_max_ang_mom,
-	const int32_t *restrict shell_ang_mom, const double *restrict ao_factor,
-	double *shell_vgl, double *restrict const ao_vgl);
+	const double coord, const double nucl_coord,
+	const int64_t nucleus_index,
+	const int64_t nucleus_shell_num, const double *nucleus_range,
+	const int32_t nucleus_max_ang_mom,
+	const int32_t shell_ang_mom, const double ao_factor,
+	double *shell_vgl, double const ao_vgl);
 
 qmckl_exit_code_device qmckl_compute_ao_value_device(
 	const qmckl_context_device context, const int64_t ao_num,
 	const int64_t shell_num, const int64_t point_num, const int64_t nucl_num,
-	const double *restrict coord, const double *restrict nucl_coord,
-	const int64_t *restrict nucleus_index,
-	const int64_t *restrict nucleus_shell_num, const double *nucleus_range,
-	const int32_t *restrict nucleus_max_ang_mom,
-	const int32_t *restrict shell_ang_mom, const double *restrict ao_factor,
-	double *shell_vgl, double *restrict const ao_value);
+	const double coord, const double nucl_coord,
+	const int64_t nucleus_index,
+	const int64_t nucleus_shell_num, const double *nucleus_range,
+	const int32_t nucleus_max_ang_mom,
+	const int32_t shell_ang_mom, const double ao_factor,
+	double *shell_vgl, double *const ao_value);
 
 qmckl_exit_code_device
 qmckl_provide_ao_basis_ao_vgl_device(qmckl_context_device context);

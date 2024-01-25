@@ -1,6 +1,6 @@
 #include <CL/sycl.hpp>
 
-#include "include/qmckl_ao.h"
+#include "../include/qmckl_ao.hpp"
 #define MAX_MEMORY_SIZE 16.0 * 1024 * 1024 * 1024
 
 //**********
@@ -20,14 +20,15 @@ qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 	// TODO : Use numerical precision here
 	double cutoff = 27.631021115928547; //-dlog(1.d-12)
 
-	
+	qmckl_context_struct_device *const ctx =
+		reinterpret_cast<qmckl_context_struct_device *>(context);
 
-    sycl::queue queue;
+    sycl::queue queue = ctx->q;
 
-	int *shell_to_nucl = qmckl_malloc_device(queue, context, sizeof(int) * shell_num);
+	int *shell_to_nucl = (int *)qmckl_malloc_device(context, sizeof(int) * shell_num);
 
-    queue.submit([&](handler &h) {
-		h.parallel_for(range<1>(nucl_num), [=](id<1> inucl) {
+    queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> inucl) {
 			int ishell_start = nucleus_index[inucl];
 			int ishell_end =
 				nucleus_index[inucl] + nucleus_shell_num[inucl] - 1;
@@ -37,8 +38,8 @@ qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 		});
 	}).wait();
 
-	queue.submit([&](handler &h) {
-		h.parallel_for(range<1>(point_num), [=](id<1> ipoint) {
+	queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(point_num), [=](sycl::id<1> ipoint) {
 			for (int ishell = 0; ishell < shell_num; ishell++) {
 
 				int inucl = shell_to_nucl[ishell];
@@ -99,7 +100,7 @@ qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 		});
 	}).wait();
 
-    qmckl_free_device(queue, context, shell_to_nucl);
+    qmckl_free_device(context, shell_to_nucl);
 
 	qmckl_exit_code_device info = QMCKL_SUCCESS_DEVICE;
 	return info;
@@ -111,12 +112,12 @@ qmckl_exit_code_device qmckl_compute_ao_basis_shell_gaussian_vgl_device(
 qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 	const qmckl_context_device context, const int64_t ao_num,
 	const int64_t shell_num, const int64_t point_num, const int64_t nucl_num,
-	const double *restrict coord, const double *restrict nucl_coord,
-	const int64_t *restrict nucleus_index,
-	const int64_t *restrict nucleus_shell_num, const double *nucleus_range,
-	const int32_t *restrict nucleus_max_ang_mom,
-	const int32_t *restrict shell_ang_mom, const double *restrict ao_factor,
-	double *shell_vgl, double *restrict const ao_vgl) {
+	const double *coord, const double *nucl_coord,
+	const int64_t *nucleus_index,
+	const int64_t *nucleus_shell_num, const double *nucleus_range,
+	const int32_t *nucleus_max_ang_mom,
+	const int32_t *shell_ang_mom, const double *ao_factor,
+	double *shell_vgl, double *const ao_vgl) {
 
 	double cutoff = 27.631021115928547;
 
@@ -133,16 +134,19 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 	int64_t num_sub_iters = (num_iters + chunk_size - 1) / chunk_size;
 	int64_t poly_dim = 5 * ao_num * chunk_size;
 
-	sycl::queue queue;
+	qmckl_context_struct_device *const ctx =
+		reinterpret_cast<qmckl_context_struct_device *>(context);
+
+    sycl::queue queue = ctx->q;
 
 	double *poly_vgl_shared =
-		qmckl_malloc_device(queue, context, sizeof(double) * poly_dim);
+		(double *)qmckl_malloc_device(context, sizeof(double) * poly_dim);
 	int64_t *ao_index =
-		qmckl_malloc_device(queue, context, sizeof(int64_t) * shell_num);
-	int64_t *lstart = qmckl_malloc_device(queue, context, sizeof(int64_t) * 21);
+		(int64_t *)qmckl_malloc_device(context, sizeof(int64_t) * shell_num);
+	int64_t *lstart = (int64_t *)qmckl_malloc_device(context, sizeof(int64_t) * 21);
 
 	int lmax = -1;
-	queue.submit([&](handler &h) {
+	queue.submit([&](sycl::handler &h) {
 		for (int i = 0; i < nucl_num; i++) {
 			if (lmax < nucleus_max_ang_mom[i]) {
 				lmax = nucleus_max_ang_mom[i];
@@ -150,20 +154,27 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 		}
 	}).wait();
 
+		/*h.single_task([=]() {
+			for (int i = 0; i < nucl_num; i++) {
+				if (lmax < nucleus_max_ang_mom[i]) {
+					lmax = nucleus_max_ang_mom[i];
+				}
+			}
+		});*/
 	size_t pows_dim = (lmax + 3) * 3 * chunk_size;
 	double *pows_shared =
-		qmckl_malloc_device(queue, context, sizeof(double) * pows_dim);
+		(double *)qmckl_malloc_device(context, sizeof(double) * pows_dim);
 	
-	queue.submit([&](handler &h) {
+	queue.submit([&](sycl::handler &h) {
 		for (int l = 0; l < 21; l++) {
 			lstart[l] = l * (l + 1) * (l + 2) / 6 + 1;
 		}
 	}).wait();
 
 	int k = 1;
-	int *shell_to_nucl = qmckl_malloc_device(queue, context, sizeof(int) * shell_num);
+	int *shell_to_nucl = (int *)qmckl_malloc_device(context, sizeof(int) * shell_num);
 
-	queue.submit([&](handler &h) {
+	queue.submit([&](sycl::handler &h) {
 		for (int inucl = 0; inucl < nucl_num; inucl++) {
 			int ishell_start = nucleus_index[inucl];
 			int ishell_end =
@@ -181,8 +192,8 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 	double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
 
 	for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++) {
-		queue.submit([&](handler &h) {
-			h.parallel_for(range<1>(chunk_size), [=](id<1> iter) {
+		queue.submit([&](sycl::handler &h) {
+			h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter) {
 				int step = iter + sub_iter * chunk_size;
 				if (step >= num_iters)
 					continue;
@@ -323,8 +334,8 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 			});
 		}).wait();
 
-		queue.submit([&](handler &h) {
-			h.parallel_for(range<1>(chunk_size / nucl_num), [=](id<1> iter_new) {
+		queue.submit([&](sycl::handler &h) {
+			h.parallel_for(sycl::range<1>(chunk_size / nucl_num), [=](sycl::id<1> iter_new) {
 				for (int ishell = 0; ishell < shell_num; ishell++) {
 
 					int ipoint = iter_new + chunk_size / nucl_num * sub_iter;
@@ -422,11 +433,11 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 
 	}
 	// End of target data region
-	qmckl_free_device(queue, context, ao_index);
-	qmckl_free_device(queue, context, poly_vgl_shared);
-	qmckl_free_device(queue, context, pows_shared);
-	qmckl_free_device(queue, context, shell_to_nucl);
-	qmckl_free_device(queue, context, lstart);
+	qmckl_free_device(context, ao_index);
+	qmckl_free_device(context, poly_vgl_shared);
+	qmckl_free_device(context, pows_shared);
+	qmckl_free_device(context, shell_to_nucl);
+	qmckl_free_device(context, lstart);
 
 	return QMCKL_SUCCESS_DEVICE;
 }
@@ -436,12 +447,12 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 	const qmckl_context_device context, const int64_t ao_num,
 	const int64_t shell_num, const int64_t point_num, const int64_t nucl_num,
-	const double *restrict coord, const double *restrict nucl_coord,
-	const int64_t *restrict nucleus_index,
-	const int64_t *restrict nucleus_shell_num, const double *nucleus_range,
-	const int32_t *restrict nucleus_max_ang_mom,
-	const int32_t *restrict shell_ang_mom, const double *restrict ao_factor,
-	double *shell_vgl, double *restrict const ao_value) {
+	const double *coord, const double *nucl_coord,
+	const int64_t *nucleus_index,
+	const int64_t *nucleus_shell_num, const double *nucleus_range,
+	const int32_t *nucleus_max_ang_mom,
+	const int32_t *shell_ang_mom, const double *ao_factor,
+	double *shell_vgl, double *const ao_value) {
 
 	double cutoff = 27.631021115928547;
 
@@ -454,18 +465,21 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 	int64_t num_sub_iters = (num_iters + chunk_size - 1) / chunk_size;
 	int64_t poly_dim = ao_num * chunk_size;
 
-	sycl::queue queue;
+	qmckl_context_struct_device *const ctx =
+		reinterpret_cast<qmckl_context_struct_device *>(context);
+
+    sycl::queue queue = ctx->q;
 
 	double *poly_vgl_shared =
-		qmckl_malloc_device(queue, context, sizeof(double) * poly_dim);
+		(double *)qmckl_malloc_device(context, sizeof(double) * poly_dim);
 	int64_t *ao_index =
-		qmckl_malloc_device(queue, context, sizeof(int64_t) * shell_num);
-	int64_t *lstart = qmckl_malloc_device(queue, context, sizeof(int64_t) * 21);
+		(int64_t *)qmckl_malloc_device(context, sizeof(int64_t) * shell_num);
+	int64_t *lstart = (int64_t *)qmckl_malloc_device(context, sizeof(int64_t) * 21);
 
 
 	// Specific calling function
 	int lmax = -1;
-	queue.submit([&](handler &h) {
+	queue.submit([&](sycl::handler &h) {
 		for (int i = 0; i < nucl_num; i++) {
 			if (lmax < nucleus_max_ang_mom[i]) {
 				lmax = nucleus_max_ang_mom[i];
@@ -474,18 +488,18 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 	}).wait();
 	size_t pows_dim = (lmax + 3) * 3 * chunk_size;
 	double *pows_shared =
-		qmckl_malloc_device(queue, context, sizeof(double) * pows_dim);
+		(double *)qmckl_malloc_device(context, sizeof(double) * pows_dim);
 
-	queue.submit([&](handler &h) {
+	queue.submit([&](sycl::handler &h) {
 		for (int l = 0; l < 21; l++) {
 			lstart[l] = l * (l + 1) * (l + 2) / 6 + 1;
 		}
 	}).wait();
 
 	int k = 1;
-	int *shell_to_nucl = qmckl_malloc_device(queue, context, sizeof(int) * shell_num);
+	int *shell_to_nucl = (int *)qmckl_malloc_device(context, sizeof(int) * shell_num);
 
-	queue.submit([&](handler &h) {
+	queue.submit([&](sycl::handler &h) {
 		for (int inucl = 0; inucl < nucl_num; inucl++) {
 			int ishell_start = nucleus_index[inucl];
 			int ishell_end =
@@ -503,8 +517,8 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 	double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
 
 	for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++) {
-		queue.submit([&](handler &h) {
-			h.parallel_for(range<1>(chunk_size), [=](id<1> iter) {
+		queue.submit([&](sycl::handler &h) {
+			h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter) {
 				int step = iter + sub_iter * chunk_size;
 				if (step >= num_iters)
 					continue;
@@ -644,8 +658,8 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 			// poly_vgl is now set from here
 		}).wait();
 
-		queue.submit([&](handler &h) {
-			h.parallel_for(range<1>(chunk_size / nucl_num), [=](id<1> iter_new) {
+		queue.submit([&](sycl::handler &h) {
+			h.parallel_for(sycl::range<1>(chunk_size / nucl_num), [=](sycl::id<1> iter_new) {
 				for (int ishell = 0; ishell < shell_num; ishell++) {
 
 					int ipoint = iter_new + chunk_size / nucl_num * sub_iter;
@@ -692,11 +706,11 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 	}
 
 	// End of target data region
-	qmckl_free_device(queue, context, ao_index);
-	qmckl_free_device(queue, context, poly_vgl_shared);
-	qmckl_free_device(queue, context, pows_shared);
-	qmckl_free_device(queue, context, shell_to_nucl);
-	qmckl_free_device(queue, context, lstart);
+	qmckl_free_device(context, ao_index);
+	qmckl_free_device(context, poly_vgl_shared);
+	qmckl_free_device(context, pows_shared);
+	qmckl_free_device(context, shell_to_nucl);
+	qmckl_free_device(context, lstart);
 
 	return QMCKL_SUCCESS_DEVICE;
 }
@@ -721,7 +735,7 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context) {
 		(qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
 
-	sycl::queue queue;
+	sycl::queue queue = ctx->q;
 
 	if (!ctx->ao_basis.provided) {
 		return qmckl_failwith_device(context, QMCKL_NOT_PROVIDED_DEVICE,
@@ -756,7 +770,7 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context) {
 			int point_num = ctx->point.num;
 			int ao_num = ctx->ao_basis.ao_num;
 
-			queue.submit([&](handler &h) {
+			queue.submit([&](sycl::handler &h) {
 				for (int i = 0; i < point_num; ++i) {
 					for (int k = 0; k < ao_num; ++k) {
 						v[i * ao_num + k] = vgl[i * ao_num * 5 + k];
@@ -788,8 +802,397 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context) {
 											 "qmckl_ao_basis_ao_value", NULL);
 			}
 		}
-
-
-
 	}
+	if (rc != QMCKL_SUCCESS_DEVICE) {
+		return rc;
+	}
+
+	ctx->ao_basis.ao_value_date = ctx->date;
+
+	return QMCKL_SUCCESS_DEVICE;
+}
+
+//**********
+// FINALIZE AO BASIS
+//**********
+
+qmckl_exit_code_device
+qmckl_finalize_ao_basis_hpc_device(qmckl_context_device context) {
+
+	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
+	qmckl_memory_info_struct_device mem_info =
+		qmckl_memory_info_struct_zero_device;
+
+	int device_id = qmckl_get_device_id(context);
+
+	sycl::queue queue = ctx->q;
+
+	ctx->ao_basis.prim_num_per_nucleus = (int32_t *)qmckl_malloc_device(
+		context, ctx->nucleus.num * sizeof(int32_t));
+
+	/* Find max number of primitives per nucleus */
+
+	// Extract arrays from context
+	int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
+	int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
+	int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
+	int32_t *prim_num_per_nucleus = ctx->ao_basis.prim_num_per_nucleus;
+
+	int64_t shell_max = 0;
+	int64_t prim_max = 0;
+	int64_t nucl_num = ctx->nucleus.num;
+
+	int64_t *shell_max_ptr = &shell_max;
+	int64_t *prim_max_ptr = &prim_max;
+
+	queue.submit([&](sycl::handler &h) {
+		for (int inucl = 0; inucl < nucl_num; ++inucl) {
+			shell_max_ptr[0] = nucleus_shell_num[inucl] > shell_max_ptr[0]
+								   ? nucleus_shell_num[inucl]
+								   : shell_max_ptr[0];
+
+			int64_t prim_num = 0;
+			int64_t ishell_start = nucleus_index[inucl];
+			int64_t ishell_end =
+				nucleus_index[inucl] + nucleus_shell_num[inucl];
+			for (int64_t ishell = ishell_start; ishell < ishell_end; ++ishell) {
+				prim_num += shell_prim_num[ishell];
+			}
+			prim_max_ptr[0] =
+				prim_num > prim_max_ptr[0] ? prim_num : prim_max_ptr[0];
+			prim_num_per_nucleus[inucl] = prim_num;
+		}
+	}).wait();
+
+	int64_t size[3] = {prim_max, shell_max, nucl_num};
+	ctx->ao_basis.coef_per_nucleus =
+		qmckl_tensor_alloc_device(context, 3, size);
+	ctx->ao_basis.coef_per_nucleus =
+		qmckl_tensor_set_device(ctx->ao_basis.coef_per_nucleus, 0.);
+
+	ctx->ao_basis.expo_per_nucleus =
+		qmckl_matrix_alloc_device(context, prim_max, nucl_num);
+	ctx->ao_basis.expo_per_nucleus =
+		qmckl_matrix_set_device(ctx->ao_basis.expo_per_nucleus, 0.);
+
+	// To avoid offloading structures, expo is split in two arrays :
+	// struct combined expo[prim_max];
+	// ... gets replaced by :
+	double *expo_expo = qmckl_malloc_device(context, prim_max * sizeof(double));
+	int64_t *expo_index =
+		qmckl_malloc_device(context, prim_max * sizeof(double));
+
+	double *coef =
+		qmckl_malloc_device(context, shell_max * prim_max * sizeof(double));
+	double *newcoef = qmckl_malloc_device(context, prim_max * sizeof(double));
+
+	int64_t *newidx = qmckl_malloc_device(context, prim_max * sizeof(int64_t));
+
+	int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
+	double *exponent = ctx->ao_basis.exponent;
+	double *coefficient_normalized = ctx->ao_basis.coefficient_normalized;
+
+	double *expo_per_nucleus_data = ctx->ao_basis.expo_per_nucleus.data;
+	int expo_per_nucleus_s0 = ctx->ao_basis.expo_per_nucleus.size[0];
+
+	double *coef_per_nucleus_data = ctx->ao_basis.coef_per_nucleus.data;
+	int coef_per_nucleus_s0 = ctx->ao_basis.coef_per_nucleus.size[0];
+	int coef_per_nucleus_s1 = ctx->ao_basis.coef_per_nucleus.size[1];
+
+	queue.submit([&](sycl::handler &h) {
+		for (int64_t inucl = 0; inucl < nucl_num; ++inucl) {
+			for (int i = 0; i < prim_max; i++) {
+				expo_expo[i] = 0.;
+				expo_index[i] = 0;
+			}
+			for (int i = 0; i < shell_max * prim_max; i++) {
+				coef[i] = 0.;
+			}
+
+			int64_t idx = 0;
+			int64_t ishell_start = nucleus_index[inucl];
+			int64_t ishell_end =
+				nucleus_index[inucl] + nucleus_shell_num[inucl];
+
+			for (int64_t ishell = ishell_start; ishell < ishell_end; ++ishell) {
+
+				int64_t iprim_start = shell_prim_index[ishell];
+				int64_t iprim_end =
+					shell_prim_index[ishell] + shell_prim_num[ishell];
+				for (int64_t iprim = iprim_start; iprim < iprim_end; ++iprim) {
+					expo_expo[idx] = exponent[iprim];
+					expo_index[idx] = idx;
+					idx += 1;
+				}
+			}
+
+			/* Sort exponents */
+			// In the CPU version :
+			// qsort( expo, (size_t) idx, sizeof(struct combined),
+			// compare_basis );
+			// ... is replaced by a hand written bubble sort on
+			// expo_expo :
+			double tmp;
+			for (int i = 0; i < idx - 1; i++) {
+				for (int j = 0; j < idx - i - 1; j++) {
+					if (expo_expo[j + 1] < expo_expo[j]) {
+						tmp = expo_expo[j + 1];
+						expo_expo[j + 1] = expo_expo[j];
+						expo_expo[j] = tmp;
+
+						tmp = expo_index[j + 1];
+						expo_index[j + 1] = expo_index[j];
+						expo_index[j] = tmp;
+					}
+				}
+			}
+
+			idx = 0;
+			int64_t idx2 = 0;
+			for (int64_t ishell = ishell_start; ishell < ishell_end; ++ishell) {
+
+				for (int i = 0; i < prim_max; i++) {
+					newcoef[i] = 0;
+				}
+				int64_t iprim_start = shell_prim_index[ishell];
+				int64_t iprim_end =
+					shell_prim_index[ishell] + shell_prim_num[ishell];
+
+				for (int64_t iprim = iprim_start; iprim < iprim_end; ++iprim) {
+					newcoef[idx] = coefficient_normalized[iprim];
+					idx += 1;
+				}
+				for (int32_t i = 0; i < prim_num_per_nucleus[inucl]; ++i) {
+					idx2 = expo_index[i];
+					coef[(ishell - ishell_start) * prim_max + i] =
+						newcoef[idx2];
+				}
+			}
+
+			/* Apply ordering to coefficients */
+
+			/* Remove duplicates */
+			int64_t idxmax = 0;
+			idx = 0;
+			newidx[0] = 0;
+
+			for (int32_t i = 1; i < prim_num_per_nucleus[inucl]; ++i) {
+				if (expo_expo[i] != expo_expo[i - 1]) {
+					idx += 1;
+				}
+				newidx[i] = idx;
+			}
+			idxmax = idx;
+
+			for (int32_t j = 0; j < ishell_end - ishell_start; ++j) {
+				for (int i = 0; i < prim_max; i++) {
+					newcoef[i] = 0.;
+				}
+
+				for (int32_t i = 0; i < prim_num_per_nucleus[inucl]; ++i) {
+					newcoef[newidx[i]] += coef[j * prim_max + i];
+				}
+				for (int32_t i = 0; i < prim_num_per_nucleus[inucl]; ++i) {
+					coef[j * prim_max + i] = newcoef[i];
+				}
+			}
+
+			for (int32_t i = 0; i < prim_num_per_nucleus[inucl]; ++i) {
+				expo_expo[newidx[i]] = expo_expo[i];
+			}
+			prim_num_per_nucleus[inucl] = (int32_t)idxmax + 1;
+
+			for (int32_t i = 0; i < prim_num_per_nucleus[inucl]; ++i) {
+				expo_per_nucleus_data[i + inucl * expo_per_nucleus_s0] =
+					expo_expo[i];
+			}
+
+			for (int32_t j = 0; j < ishell_end - ishell_start; ++j) {
+				for (int32_t i = 0; i < prim_num_per_nucleus[inucl]; ++i) {
+					coef_per_nucleus_data[(i) + coef_per_nucleus_s0 *
+													((j) + coef_per_nucleus_s1 *
+															   (inucl))] =
+						coef[j * prim_max + i];
+				}
+			}
+		}
+	}).wait();
+	// End of target region
+
+	qmckl_free_device(context, expo_expo);
+	qmckl_free_device(context, expo_index);
+	qmckl_free_device(context, coef);
+	qmckl_free_device(context, newcoef);
+	qmckl_free_device(context, newidx);
+
+	return QMCKL_SUCCESS_DEVICE;
+}
+
+qmckl_exit_code_device
+qmckl_finalize_ao_basis_device(qmckl_context_device context) {
+
+	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE) {
+		return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
+									 "qmckl_finalize_ao_basis_device", NULL);
+	}
+
+	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
+	assert(ctx != NULL);
+
+	int64_t nucl_num = 0;
+
+	qmckl_exit_code_device rc =
+		qmckl_get_nucleus_num_device(context, &nucl_num);
+	if (rc != QMCKL_SUCCESS_DEVICE)
+		return rc;
+
+	/* nucleus_prim_index */
+	{
+
+		ctx->ao_basis.nucleus_prim_index = (int64_t *)qmckl_malloc_device(
+			context, (ctx->nucleus.num + (int64_t)1) * sizeof(int64_t));
+
+		if (ctx->ao_basis.nucleus_prim_index == NULL) {
+			return qmckl_failwith_device(context,
+										 QMCKL_ALLOCATION_FAILED_DEVICE,
+										 "ao_basis.nucleus_prim_index", NULL);
+		}
+
+		// Extract arrays from context
+		int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
+		int64_t *nucleus_prim_index = ctx->ao_basis.nucleus_prim_index;
+		int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
+
+		int prim_num = ctx->ao_basis.prim_num;
+
+		queue.submit([&](sycl::handler &h) {
+			h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) {
+				for (int64_t i = 0; i < nucl_num; ++i) {
+					int64_t shell_idx = nucleus_index[i];
+					nucleus_prim_index[i] = shell_prim_index[shell_idx];
+				}
+
+				nucleus_prim_index[nucl_num] = prim_num;
+			});
+		}).wait();
+	}
+
+	/* Normalize coefficients */
+	{
+
+		ctx->ao_basis.coefficient_normalized = (double *)qmckl_malloc_device(
+			context, ctx->ao_basis.prim_num * sizeof(double));
+
+		if (ctx->ao_basis.coefficient_normalized == NULL) {
+			return qmckl_failwith_device(
+				context, QMCKL_ALLOCATION_FAILED_DEVICE,
+				"ao_basis.coefficient_normalized", NULL);
+		}
+
+		// Extract arrays from context
+		int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
+		int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
+		double *coefficient_normalized = ctx->ao_basis.coefficient_normalized;
+		double *coefficient = ctx->ao_basis.coefficient;
+		double *prim_factor = ctx->ao_basis.prim_factor;
+		double *shell_factor = ctx->ao_basis.shell_factor;
+
+		int shell_num = ctx->ao_basis.shell_num;
+
+		queue.submit([&](sycl::handler &h) {
+			for (int64_t ishell = 0; ishell < shell_num; ++ishell) {
+				for (int64_t iprim = shell_prim_index[ishell];
+					 iprim < shell_prim_index[ishell] + shell_prim_num[ishell];
+					 ++iprim) {
+					coefficient_normalized[iprim] = coefficient[iprim] *
+													prim_factor[iprim] *
+													shell_factor[ishell];
+				}
+			}
+		}).wait();
+	}
+
+	/* Find max angular momentum on each nucleus */
+	{
+
+		ctx->ao_basis.nucleus_max_ang_mom = (int32_t *)qmckl_malloc_device(
+			context, ctx->nucleus.num * sizeof(int32_t));
+
+		if (ctx->ao_basis.nucleus_max_ang_mom == NULL) {
+			return qmckl_failwith_device(context,
+										 QMCKL_ALLOCATION_FAILED_DEVICE,
+										 "ao_basis.nucleus_max_ang_mom", NULL);
+		}
+
+		// Extract arrays from context
+		int32_t *nucleus_max_ang_mom = ctx->ao_basis.nucleus_max_ang_mom;
+		int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
+		int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
+		int32_t *shell_ang_mom = ctx->ao_basis.shell_ang_mom;
+
+		queue.submit([&](sycl::handler &h) {
+			h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> inucl) {
+				nucleus_max_ang_mom[inucl] = 0;
+				for (int64_t ishell = nucleus_index[inucl];
+					 ishell < nucleus_index[inucl] + nucleus_shell_num[inucl];
+					 ++ishell) {
+					nucleus_max_ang_mom[inucl] =
+						nucleus_max_ang_mom[inucl] > shell_ang_mom[ishell]
+							? nucleus_max_ang_mom[inucl]
+							: shell_ang_mom[ishell];
+				}
+			});
+		}).wait();
+	}
+
+	/* Find distance beyond which all AOs are zero.
+	   The distance is obtained by sqrt(log(cutoff)*range) */
+	{
+		if (ctx->ao_basis.type == 'G') {
+
+			ctx->ao_basis.nucleus_range = (double *)qmckl_malloc_device(
+				context, ctx->nucleus.num * sizeof(double));
+
+			if (ctx->ao_basis.nucleus_range == NULL) {
+				return qmckl_failwith_device(context,
+											 QMCKL_ALLOCATION_FAILED_DEVICE,
+											 "ao_basis.nucleus_range", NULL);
+			}
+
+			// Extract arrays from context
+			double *nucleus_range = ctx->ao_basis.nucleus_range;
+			int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
+			int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
+			int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
+			int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
+			double *exponent = ctx->ao_basis.exponent;
+
+			int nucleus_num = ctx->nucleus.num;
+
+			queue.submit([&](sycl::handler &h) {
+				for (int64_t inucl = 0; inucl < nucleus_num; ++inucl) {
+					nucleus_range[inucl] = 0.;
+					for (int64_t ishell = nucleus_index[inucl];
+						 ishell <
+						 nucleus_index[inucl] + nucleus_shell_num[inucl];
+						 ++ishell) {
+						for (int64_t iprim = shell_prim_index[ishell];
+							 iprim <
+							 shell_prim_index[ishell] + shell_prim_num[ishell];
+							 ++iprim) {
+							double range = 1. / exponent[iprim];
+							nucleus_range[inucl] = nucleus_range[inucl] > range
+													   ? nucleus_range[inucl]
+													   : range;
+						}
+					}
+				}
+			}).wait();
+		}
+	}
+
+	rc = qmckl_finalize_ao_basis_hpc_device(context);
+
+	return rc;
+
 }
