@@ -139,6 +139,8 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 
     sycl::queue queue = ctx->q;
 
+
+
 	double *poly_vgl_shared =
 		reinterpret_cast<double*>(qmckl_malloc_device(context, sizeof(double) * poly_dim));
 	int64_t *ao_index =
@@ -154,13 +156,6 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 		}
 	}).wait();
 
-		/*h.single_task([=]() {
-			for (int i = 0; i < nucl_num; i++) {
-				if (lmax < nucleus_max_ang_mom[i]) {
-					lmax = nucleus_max_ang_mom[i];
-				}
-			}
-		});*/
 	size_t pows_dim = (lmax + 3) * 3 * chunk_size;
 	double *pows_shared =
 		(double *)qmckl_malloc_device(context, sizeof(double) * pows_dim);
@@ -189,17 +184,24 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 	}).wait();
 
 	//double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
-	double (*poly_vgl)[chunk_size] = reinterpret_cast<double(*)[chunk_size]>(poly_vgl_shared);
-	double (*poly_vgl)[chunk_size] = reinterpret_cast<double(*)[chunk_size]>(
-    									static_cast<void*>(poly_vgl_shared));
-	double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
+	//double (*poly_vgl)[chunk_size] = reinterpret_cast<double(*)[chunk_size]>(poly_vgl_shared);
+	
+	
+	//double *poly_vgl[chunk_size] = static_cast<double(*)[chunk_size]>(poly_vgl_shared);
+	//double *pows[chunk_size] = (double(*)[chunk_size])pows_shared;
+	
+	double **poly_vgl = (double**)qmckl_malloc_device(context, sizeof(poly_vgl_shared));
+	double **pows = (double**)qmckl_malloc_device(context, sizeof(pows_shared));
 
 	for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++) {
 		queue.submit([&](sycl::handler &h) {
 			h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter) {
 				int step = iter + sub_iter * chunk_size;
-				if (step >= num_iters)
-					continue;
+				for(int con=0; con<1; con++) {
+					if (step >= num_iters) {
+						continue;
+					}
+				}
 
 				int ipoint = step / nucl_num;
 				int inucl = step % nucl_num;
@@ -218,8 +220,10 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 
 				double r2 = x * x + y * y + z * z;
 
-				if (r2 > cutoff * nucleus_range[inucl]) {
-					continue;
+				for(int con=0; con<1; con++) {
+					if (r2 > cutoff * nucleus_range[inucl]) {
+						continue;
+					}
 				}
 
 				// Beginning of ao_polynomial computation (now inlined)
@@ -281,6 +285,8 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 
 					n = 3;
 				}
+
+				
 
 				double xy, yz, xz;
 				double da, db, dc, dd;
@@ -435,6 +441,9 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
 		}).wait();
 
 	}
+	
+
+	
 	// End of target data region
 	qmckl_free_device(context, ao_index);
 	qmckl_free_device(context, poly_vgl_shared);
@@ -523,8 +532,9 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 		queue.submit([&](sycl::handler &h) {
 			h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter) {
 				int step = iter + sub_iter * chunk_size;
-				if (step >= num_iters)
+				if (step >= num_iters) {
 					continue;
+				}
 
 				int ipoint = step / nucl_num;
 				int inucl = step % nucl_num;
@@ -881,15 +891,17 @@ qmckl_finalize_ao_basis_hpc_device(qmckl_context_device context) {
 	// To avoid offloading structures, expo is split in two arrays :
 	// struct combined expo[prim_max];
 	// ... gets replaced by :
-	double *expo_expo = qmckl_malloc_device(context, prim_max * sizeof(double));
+	double *expo_expo = 
+		reinterpret_cast<double*>(qmckl_malloc_device(context, prim_max * sizeof(double)));
 	int64_t *expo_index =
-		qmckl_malloc_device(context, prim_max * sizeof(double));
+		reinterpret_cast<int64_t*>(qmckl_malloc_device(context, prim_max * sizeof(double)));
 
 	double *coef =
-		qmckl_malloc_device(context, shell_max * prim_max * sizeof(double));
-	double *newcoef = qmckl_malloc_device(context, prim_max * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, shell_max * prim_max * sizeof(double)));
+	double *newcoef = 
+		reinterpret_cast<double*>(qmckl_malloc_device(context, prim_max * sizeof(double)));
 
-	int64_t *newidx = qmckl_malloc_device(context, prim_max * sizeof(int64_t));
+	int64_t *newidx = reinterpret_cast<int64_t*>(qmckl_malloc_device(context, prim_max * sizeof(int64_t)));
 
 	int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
 	double *exponent = ctx->ao_basis.exponent;
@@ -1041,6 +1053,8 @@ qmckl_finalize_ao_basis_device(qmckl_context_device context) {
 
 	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
+
+	sycl::queue queue = ctx->q;
 
 	int64_t nucl_num = 0;
 
