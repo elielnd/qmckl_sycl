@@ -525,15 +525,20 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 		}
 	}).wait();
 
-	double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
-	double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
+	// double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
+	// double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
+
+	double **poly_vgl = (double**)qmckl_malloc_device(context, sizeof(poly_vgl_shared));
+	double **pows = (double**)qmckl_malloc_device(context, sizeof(pows_shared));
 
 	for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++) {
 		queue.submit([&](sycl::handler &h) {
 			h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter) {
 				int step = iter + sub_iter * chunk_size;
-				if (step >= num_iters) {
-					continue;
+				for(int con=0; con<1; con++) {
+					if (step >= num_iters) {
+						continue;
+					}
 				}
 
 				int ipoint = step / nucl_num;
@@ -553,8 +558,10 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 
 				double r2 = x * x + y * y + z * z;
 
-				if (r2 > cutoff * nucleus_range[inucl]) {
-					continue;
+				for(int con=0; con<1; con++) {
+					if (r2 > cutoff * nucleus_range[inucl]) {
+						continue;
+					}
 				}
 
 				// Beginning of ao_polynomial computation (now inlined)
@@ -731,6 +738,72 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 //**********
 // PROVIDE
 //**********
+
+/* shell_vgl */
+
+qmckl_exit_code_device
+qmckl_provide_ao_basis_shell_vgl_device(qmckl_context_device context) {
+
+	if (qmckl_context_check_device((qmckl_context_device)context) ==
+		QMCKL_NULL_CONTEXT_DEVICE) {
+		return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
+									 "qmckl_provide_ao_basis_ao_vgl_device",
+									 NULL);
+	}
+
+	qmckl_context_struct_device *const ctx =
+		(qmckl_context_struct_device *)context;
+	assert(ctx != NULL);
+
+	if (!ctx->ao_basis.provided) {
+		return qmckl_failwith_device(context, QMCKL_NOT_PROVIDED_DEVICE,
+									 "qmckl_provide_ao_basis_shell_vgl_device",
+									 NULL);
+	}
+
+	/* Compute if necessary */
+	if (ctx->point.date > ctx->ao_basis.shell_vgl_date) {
+
+		/* Allocate array */
+		if (ctx->ao_basis.shell_vgl == NULL) {
+
+			double *shell_vgl = (double *)qmckl_malloc_device(
+				context,
+				ctx->ao_basis.shell_num * 5 * ctx->point.num * sizeof(double));
+
+			if (shell_vgl == NULL) {
+				return qmckl_failwith_device(
+					context, QMCKL_ALLOCATION_FAILED_DEVICE,
+					"qmckl_ao_basis_shell_vgl_device", NULL);
+			}
+			ctx->ao_basis.shell_vgl = shell_vgl;
+		}
+
+		qmckl_exit_code_device rc;
+		if (ctx->ao_basis.type == 'G') {
+			rc = qmckl_compute_ao_basis_shell_gaussian_vgl_device(
+				context, ctx->ao_basis.prim_num, ctx->ao_basis.shell_num,
+				ctx->point.num, ctx->nucleus.num,
+				ctx->ao_basis.nucleus_shell_num, ctx->ao_basis.nucleus_index,
+				ctx->ao_basis.nucleus_range, ctx->ao_basis.shell_prim_index,
+				ctx->ao_basis.shell_prim_num, ctx->point.coord.data,
+				ctx->nucleus.coord.data, ctx->ao_basis.exponent,
+				ctx->ao_basis.coefficient_normalized, ctx->ao_basis.shell_vgl);
+		} else {
+			return qmckl_failwith_device(
+				context, QMCKL_FAILURE_DEVICE, "compute_ao_basis_shell_vgl",
+				"Not yet implemented for basis type != 'G'");
+		}
+		if (rc != QMCKL_SUCCESS_DEVICE) {
+
+			return rc;
+		}
+
+		ctx->ao_basis.shell_vgl_date = ctx->date;
+	}
+
+	return QMCKL_SUCCESS_DEVICE;
+}
 
 /* ao_value */
 
