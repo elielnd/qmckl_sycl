@@ -92,11 +92,20 @@ try
 
   std::cout << "Device end:  " << ctx->q.get_device().get_info<info::device::name>() << "\n";
   std::cout << "Size : " << ctx->memory.array_size << "\n";
-}
-catch (const sycl::exception &e)
-{
-  std::cerr <<"3: " << e.what() << '\n';
-}
+  }
+  catch (const sycl::exception &e)
+  {
+    std::cerr <<"3: " << e.what() << '\n';
+  }
+
+  // Get the device associated with the queue
+  //sycl::device myDevice = ctx->q.get_device();
+
+  // Get the device ID from the device
+  //sycl::device::id myDeviceID = myDevice.get_info<sycl::info::device::device_id>();
+
+  // Print the device ID
+  //std::cout << "Device ID: " << myDeviceID << std::endl;
 
   return 0;
 }
