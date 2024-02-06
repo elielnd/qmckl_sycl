@@ -1,49 +1,38 @@
-#include <CL/sycl.hpp>
-#include <vector>
-#include <iostream>
-#include "../include/qmckl_memory.hpp"
+// #include <CL/sycl.hpp>
+// #include <vector>
+// #include <iostream>
+// #include "../include/qmckl_memory.hpp"
 
-using namespace sycl;
+// using namespace sycl;
+// static const int N = 4;
 
-void displayMatrix(int* mat, int rows, int cols) {
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            std::cout << mat[i * cols + j] << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+// int main()
+// {
+//     queue q;
 
-int main() {
-    qmckl_context_device context;
-    int size_type = 3;
-    int *matrix_a = static_cast<int*>(qmckl_malloc_device(context, sizeof(int) * size_type * size_type));
-    int *matrix_b = static_cast<int*>(qmckl_malloc_device(context, sizeof(int) * size_type * size_type));
-    int *matrix_c = static_cast<int*>(qmckl_malloc_device(context, sizeof(int) * size_type * size_type));
+//     try
+//     {
+//         // define queue with accelerator selector
+//         q = queue(cl::sycl::accelerator_selector_v);
+//     }
+//     catch (const sycl::exception &e)
+//     {
+//         q = queue();
+//         std::cerr << "Could not create GPU queue. Using default queue.\n";
+//     };
 
-    for (int i = 0; i < size_type; i++) {
-        for (int j = 0; j < size_type; j++) {
-            matrix_a[i * size_type + j] = 2;
-            matrix_b[i * size_type + j] = 2;
-        }    
-    }
+//     std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
 
-    for (int i = 0; i < size_type; ++i) {
-        for (int j = 0; j < size_type; ++j) {
-            matrix_c[i * size_type + j] = 0;
-            for (int k = 0; k < size_type; ++k) {
-                matrix_c[i * size_type + j] += matrix_a[i * size_type + k] * matrix_b[k * size_type + j];
-            }
-        }
-    }
+//     int point = 0;
+//     int *ptr_point = &point;
 
-    // Display the result
-    std::cout << "Result of matrix multiplication:" << std::endl;
-    displayMatrix(matrix_c, size_type, size_type);
+//     q.parallel_for(range<1>(N), [=](id<1> i)
+//                    { 
+//                 *ptr_point += 1; 
+//     });
+//     q.wait();
 
-    qmckl_free_device(context, matrix_a);
-    qmckl_free_device(context, matrix_b);
-    qmckl_free_device(context, matrix_c);
+//     std::cout << "Point: " << point << std::endl;
 
-    return 0;
-}
+//     return 0;
+// }
