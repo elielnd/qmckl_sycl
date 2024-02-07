@@ -124,7 +124,7 @@ qmckl_exit_code_device qmckl_init_point_device(qmckl_context_device context)
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
     assert(ctx != nullptr);
 
-    std::memset(&(ctx->point), 0, sizeof(qmckl_point_struct_device));
+    memset(&(ctx->point), 0, sizeof(qmckl_point_struct_device));
 
     return QMCKL_SUCCESS_DEVICE;
 }
@@ -206,7 +206,7 @@ qmckl_exit_code_device qmckl_init_jastrow_device(qmckl_context_device context)
 qmckl_context_device qmckl_context_create_device(queue q)
 {
 
-    qmckl_context_struct_device *const ctx = new (std::nothrow) qmckl_context_struct_device;
+    qmckl_context_struct_device *const ctx =  (qmckl_context_struct_device*) malloc(sizeof(qmckl_context_struct_device));
 
     if (ctx == nullptr)
     {
@@ -215,7 +215,7 @@ qmckl_context_device qmckl_context_create_device(queue q)
 
     /* Set all pointers and values to NULL */
     {
-        std::memset(ctx, 0, sizeof(qmckl_context_struct_device));
+        memset(ctx, 0, sizeof(qmckl_context_struct_device));
     }
 
     /* Initialize lock */
@@ -320,8 +320,6 @@ qmckl_exit_code_device qmckl_context_destroy_device(const qmckl_context_device c
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 
     assert(ctx != nullptr); /* Shouldn't be possible because the context is valid */
-
-    int device_id = qmckl_get_device_id(context);
 
     /* Memory: Remove all allocated data */
     for (size_t pos = (size_t)0; pos < ctx->memory.array_size; ++pos)

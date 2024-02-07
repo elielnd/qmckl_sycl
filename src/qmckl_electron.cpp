@@ -1,6 +1,6 @@
 #include "../include/qmckl_electron.hpp"
 
-
+using namespace sycl;
 //**********
 // SETTERS
 //**********
@@ -302,7 +302,7 @@ qmckl_exit_code_device qmckl_provide_en_distance_device(qmckl_context_device con
 
 qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_device context, const int64_t point_num,
                                                         const int64_t nucl_num, const double *elec_coord, const double *nucl_coord,
-                                                        double *const en_distance, sycl::queue &q)
+                                                        double *const en_distance, queue &q)
 {
     qmckl_exit_code_device rc = QMCKL_SUCCESS_DEVICE;
 
@@ -332,7 +332,7 @@ qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_devi
 }
 
 qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_device context, const int64_t elec_num,
-                                                        const int64_t walk_num, const double *coord, double *const ee_distance, sycl::queue &q)
+                                                        const int64_t walk_num, const double *coord, double *const ee_distance, queue &q)
 {
 
     int k, i, j;

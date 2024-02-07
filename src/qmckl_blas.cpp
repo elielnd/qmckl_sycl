@@ -154,9 +154,6 @@ qmckl_exit_code_device qmckl_matrix_of_double_device(const qmckl_context_device 
 {
 
 	// (assuming the matrix is already allocated)
-
-	int device_id = qmckl_get_device_id(context);
-
 	qmckl_matrix_device matrix = *matrix_out;
 	/* Always true by construction */
 	assert(((qmckl_context_device)context) != QMCKL_NULL_CONTEXT_DEVICE);
@@ -260,6 +257,7 @@ qmckl_tensor_device qmckl_tensor_alloc_device(qmckl_context_device context,
 
 	if (result.data == NULL)
 	{
+		qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 		memset(&result, 0, sizeof(qmckl_tensor_device));
 	}
 
