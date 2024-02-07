@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/intel/oneapi/compiler/2023.0.0/linux/include/",
+                "/opt/intel/oneapi/compiler/2023.0.0/linux/include",
                 "/opt/intel/oneapi/compiler/2023.0.0/linux/include/sycl"
             ],
             "defines": [],
