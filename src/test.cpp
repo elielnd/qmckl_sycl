@@ -1,9 +1,12 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <CL/sycl.hpp>
 #include <vector>
 #include <iostream>
+#include "chbrclf.hpp"
 #include "../include/qmckl_gpu.hpp"
-
-#define chbrclf_nucl_num ((int64_t)5)
 
 using namespace sycl;
 static const int N = 4;
@@ -15,7 +18,7 @@ int main()
   try
   {
     // define queue with accelerator selector
-    q = queue(cl::sycl::accelerator_selector_v);
+    q = queue(accelerator_selector_v);
   }
   catch (const sycl::exception &e)
   {
