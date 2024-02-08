@@ -18,25 +18,15 @@
 int main() {
 	qmckl_context_device context;
 
-	sycl::queue q;
-
-	try
-	{
-		// define queue with accelerator selector
-		q = sycl::queue(cl::sycl::accelerator_selector_v);
-	}
-	catch (const sycl::exception &e)
-	{
-		q = queue();
-		std::cerr << "Could not create GPU queue. Using default queue.\n";
-	};
+	sycl::queue queue;
 
 	/* if (omp_get_num_devices() <= 0) {
 		printf("Error : no device found. Aborting execution\n");
 		exit(1);
 	} */
 
-	context = qmckl_context_create_device(omp_get_default_device());
+	// context = qmckl_context_create_device(omp_get_default_device());
+	context = qmckl_context_create_device(queue);
 
 	int64_t nucl_num = chbrclf_nucl_num;
 
@@ -46,9 +36,9 @@ int main() {
 
 	// Put nucleus stuff in GPU arrays
 	double *nucl_charge_d =
-		qmckl_malloc_device(context, nucl_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, nucl_num * sizeof(double)));
 	double *nucl_coord_d =
-		qmckl_malloc_device(context, 3 * nucl_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, 3 * nucl_num * sizeof(double)));
 
 	qmckl_memcpy_H2D(context, nucl_charge_d, nucl_charge,
 					 nucl_num * sizeof(double));
@@ -91,24 +81,25 @@ int main() {
 
     // Put other stuff in GPU arrays
 	int64_t *nucleus_index_d =
-		qmckl_malloc_device(context, nucl_num * sizeof(int64_t));
+		reinterpret_cast<int64_t*>(qmckl_malloc_device(context, nucl_num * sizeof(int64_t)));
 	int64_t *nucleus_shell_num_d =
-		qmckl_malloc_device(context, nucl_num * sizeof(int64_t));
+		reinterpret_cast<int64_t*>(qmckl_malloc_device(context, nucl_num * sizeof(int64_t)));
 	int32_t *shell_ang_mom_d =
-		qmckl_malloc_device(context, shell_num * sizeof(int32_t));
+		reinterpret_cast<int32_t*>(qmckl_malloc_device(context, shell_num * sizeof(int32_t)));
 	int64_t *shell_prim_num_d =
-		qmckl_malloc_device(context, shell_num * sizeof(int64_t));
+		reinterpret_cast<int64_t*>(qmckl_malloc_device(context, shell_num * sizeof(int64_t)));
 	int64_t *shell_prim_index_d =
-		qmckl_malloc_device(context, shell_num * sizeof(int64_t));
+		reinterpret_cast<int64_t*>(qmckl_malloc_device(context, shell_num * sizeof(int64_t)));
 	double *shell_factor_d =
-		qmckl_malloc_device(context, shell_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, shell_num * sizeof(double)));
 	double *exponent_d =
-		qmckl_malloc_device(context, prim_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, prim_num * sizeof(double)));
 	double *coefficient_d =
-		qmckl_malloc_device(context, prim_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, prim_num * sizeof(double)));
 	double *prim_factor_d =
-		qmckl_malloc_device(context, prim_num * sizeof(double));
-	double *ao_factor_d = qmckl_malloc_device(context, ao_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, prim_num * sizeof(double)));
+	double *ao_factor_d = 
+		reinterpret_cast<double*>(qmckl_malloc_device(context, ao_num * sizeof(double)));
 
 	qmckl_memcpy_H2D(context, nucleus_index_d, nucleus_index,
 					 nucl_num * sizeof(int64_t));
@@ -243,16 +234,54 @@ int main() {
 	qmckl_context_struct_device *const ctx =
 		reinterpret_cast<qmckl_context_struct_device *>(context);
 
-	sycl::queue queue = ctx->q;
-
 	bool wrong_val = false;
 
-	queue.submit([&](sycl::handler &h) {
+	/*queue.submit([&](sycl::handler &h) {
 		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) {
 			if (nucleus_index_test[i] != nucleus_index_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+	// Create buffer for wrong_val
+	sycl::buffer<bool, 1> wrong_val_buffer(&wrong_val, sycl::range<1>(1));
+
+	queue.submit([&](sycl::handler &h) {
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (nucleus_index_test[i] != nucleus_index_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
+		});
 	}).wait();
+
+	sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    wrong_val = wrong_val_host_accessor[0];
+
+	// After the parallel_for loop, you can access wrong_val
+	// wrong_val = wrong_val_buffer.get_host_access<sycl::access::mode::read>()[0];
+
+
+/*
+	// Create buffers for the data
+	sycl::buffer<int64_t, 1> nucleus_index_test_buffer(nucleus_index_test, sycl::range<1>(nucl_num));
+	sycl::buffer<int64_t, 1> nucleus_index_d_buffer(nucleus_index_d, sycl::range<1>(nucl_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = nucleus_index_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = nucleus_index_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
+	}).wait();*/
+
+
 	qmckl_free_device(context, nucleus_index_test);
 	if (wrong_val)
 		return 1;
@@ -264,12 +293,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) {
-			if (nucleus_shell_num_test[i] != nucleus_shell_num_d[i])
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(nucl_num), [&](sycl::id<1> i) mutable {
+		if (nucleus_shell_num_test[i] != nucleus_shell_num_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+	
+	// Create buffers for the data
+	sycl::buffer<int64_t, 1> nucleus_shell_num_test_buffer(nucleus_shell_num_test, sycl::range<1>(nucl_num));
+	sycl::buffer<int64_t, 1> nucleus_shell_num_d_buffer(nucleus_shell_num_d, sycl::range<1>(nucl_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = nucleus_shell_num_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = nucleus_shell_num_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, nucleus_shell_num_test);
 	if (wrong_val)
 		return 1;
@@ -281,12 +326,29 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 	
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(shell_num), [&](sycl::id<1> i) mutable {
 			if (shell_ang_mom_test[i] != shell_ang_mom_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+
+	// Create buffers for the data
+	sycl::buffer<int32_t, 1> shell_ang_mom_test_buffer(shell_ang_mom_test, sycl::range<1>(shell_num));
+	sycl::buffer<int32_t, 1> shell_ang_mom_d_buffer(shell_ang_mom_d, sycl::range<1>(shell_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = shell_ang_mom_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = shell_ang_mom_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, shell_ang_mom_test);
 	if (wrong_val)
 		return 1;
@@ -298,12 +360,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(shell_num), [&](sycl::id<1> i) mutable {
 			if (shell_factor_test[i] != shell_factor_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+	
+	// Create buffers for the data
+	sycl::buffer<double, 1> shell_factor_test_buffer(shell_factor_test, sycl::range<1>(shell_num));
+	sycl::buffer<double, 1> shell_factor_d_buffer(shell_factor_d, sycl::range<1>(shell_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = shell_factor_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = shell_factor_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, shell_factor_test);
 	if (wrong_val)
 		return 1;
@@ -322,12 +400,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(shell_num), [&](sycl::id<1> i) mutable {
 			if (shell_prim_index_test[i] != shell_prim_index_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+	// Create buffers for the data
+	sycl::buffer<int64_t, 1> shell_prim_index_test_buffer(shell_prim_index_test, sycl::range<1>(shell_num));
+	sycl::buffer<int64_t, 1> shell_prim_index_d_buffer(shell_prim_index_d, sycl::range<1>(shell_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = shell_prim_index_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = shell_prim_index_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, shell_prim_index_test);
 	if (wrong_val)
 		return 1;
@@ -338,12 +432,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(prim_num), [&](sycl::id<1> i) mutable {
 			if (exponent_test[i] != exponent_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+	// Create buffers for the data
+	sycl::buffer<double, 1> exponent_test_buffer(exponent_test, sycl::range<1>(prim_num));
+	sycl::buffer<double, 1> exponent_d_buffer(exponent_d, sycl::range<1>(prim_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = exponent_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = exponent_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, exponent_test);
 	if (wrong_val)
 		return 1;
@@ -355,12 +465,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(prim_num), [&](sycl::id<1> i) mutable {
 			if (coefficient_test[i] != coefficient_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+	// Create buffers for the data
+	sycl::buffer<double, 1> coefficient_test_buffer(coefficient_test, sycl::range<1>(prim_num));
+	sycl::buffer<double, 1> coefficient_d_buffer(coefficient_d, sycl::range<1>(prim_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = coefficient_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = coefficient_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, coefficient_test);
 	if (wrong_val)
 		return 1;
@@ -372,12 +498,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(prim_num), [&](sycl::id<1> i) mutable {
 			if (prim_factor_test[i] != prim_factor_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+	// Create buffers for the data
+	sycl::buffer<double, 1> prim_factor_test_buffer(prim_factor_test, sycl::range<1>(prim_num));
+	sycl::buffer<double, 1> prim_factor_d_buffer(prim_factor_d, sycl::range<1>(prim_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = prim_factor_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = prim_factor_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+	
 	qmckl_free_device(context, prim_factor_test);
 	if (wrong_val)
 		return 1;
@@ -392,12 +534,28 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(ao_num), [=](sycl::id<1> i) {
+	/*queue.submit([&](sycl::handler &h) {
+		h.parallel_for(sycl::range<1>(ao_num), [&](sycl::id<1> i) mutable {
 			if (ao_factor_test[i] != ao_factor_d[i])
 				wrong_val = true;
-		}):
+		});
+	}).wait();*/
+
+	// Create buffers for the data
+	sycl::buffer<double, 1> ao_factor_test_buffer(ao_factor_test, sycl::range<1>(ao_num));
+	sycl::buffer<double, 1> ao_factor_d_buffer(ao_factor_d, sycl::range<1>(ao_num));
+
+	// Submit kernel
+	queue.submit([&](sycl::handler &h) {
+		auto test_accessor = ao_factor_test_buffer.get_access<sycl::access::mode::read>(h);
+		auto d_accessor = ao_factor_d_buffer.get_access<sycl::access::mode::read>(h);
+		
+		h.parallel_for(sycl::range<1>(ao_num), [=](sycl::id<1> i) mutable {
+			if (test_accessor[i] != d_accessor[i])
+				wrong_val = true;
+		});
 	}).wait();
+
 	qmckl_free_device(context, ao_factor_test);
 	if (wrong_val)
 		return 1;
@@ -409,7 +567,7 @@ int main() {
 	double *elec_coord = &(chbrclf_elec_coord[0][0][0]);
 	int64_t point_num = elec_num;
 	double *elec_coord_d =
-		qmckl_malloc_device(context, 3 * point_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, 3 * point_num * sizeof(double)));
 
 	qmckl_memcpy_H2D(context, elec_coord_d, elec_coord,
 					 3 * point_num * sizeof(double));
@@ -425,8 +583,9 @@ int main() {
 
 	// Get & test ao_value values
 	double *ao_value_d =
-		qmckl_malloc_device(context, point_num * ao_num * sizeof(double));
-	double *ao_value = malloc(point_num * ao_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, point_num * ao_num * sizeof(double)));
+	double *ao_value = 
+		reinterpret_cast<double*>(malloc(point_num * ao_num * sizeof(double)));
 
 	printf("About to get values\n");
 	rc = qmckl_get_ao_basis_ao_value_device(context, ao_value_d,
@@ -457,8 +616,8 @@ int main() {
 
 	// Get & test ao_vgl values
 	double *ao_vgl_d =
-		qmckl_malloc_device(context, point_num * 5 * ao_num * sizeof(double));
-	double *ao_vgl = malloc(point_num * 5 * ao_num * sizeof(double));
+		reinterpret_cast<double*>(qmckl_malloc_device(context, point_num * 5 * ao_num * sizeof(double)));
+	double *ao_vgl = reinterpret_cast<double*>(malloc(point_num * 5 * ao_num * sizeof(double)));
 
 	printf("About to get vgl\n");
 	rc = qmckl_get_ao_basis_ao_vgl_device(context, ao_vgl_d,
@@ -545,7 +704,7 @@ int main() {
 	}
 
 	double ref;
-	printf("%ld %ld\n", point_num, ao_num);
+	printf("%ld %ld\n", point_num, (long)ao_num);
 	for (int i = 0; i < point_num; i++) {
 		for (int j = 0; j < 5; j++) {
 			for (int k = 0; k < ao_num; k++) {
