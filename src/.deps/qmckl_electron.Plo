@@ -527,19 +527,14 @@ src/qmckl_electron.lo: src/qmckl_electron.cpp \
   /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/ext/oneapi/matrix/static-query-use.hpp \
   /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/ext/oneapi/owner_less.hpp \
   /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/ext/oneapi/weak_object.hpp \
-  include/../include/qmckl_types.hpp \
+  include/qmckl_distance.hpp include/qmckl_types.hpp \
   /usr/lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/iostream \
   /usr/lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/cstdbool \
   /opt/intel/oneapi/compiler/2023.2.0/linux/lib/clang/17/include/stdbool.h \
-  include/../include/qmckl_basic_functions.hpp include/qmckl_types.hpp \
-  include/qmckl_context.hpp \
+  include/qmckl_basic_functions.hpp include/qmckl_context.hpp \
   /usr/lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/thread \
-  include/qmckl_basic_functions.hpp include/qmckl_memory.hpp \
-  include/qmckl_blas.hpp include/qmckl_nucleus.hpp \
-  include/../include/qmckl_context.hpp \
-  include/../include/qmckl_memory.hpp include/../include/qmckl_blas.hpp \
-  include/../include/qmckl_point.hpp \
-  include/../include/qmckl_distance.hpp
+  include/qmckl_memory.hpp include/qmckl_blas.hpp \
+  include/qmckl_nucleus.hpp include/qmckl_point.hpp
 src/../include/qmckl_electron.hpp:
 /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/CL/sycl.hpp:
 /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/sycl.hpp:
@@ -1086,20 +1081,15 @@ src/../include/qmckl_electron.hpp:
 /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/ext/oneapi/matrix/static-query-use.hpp:
 /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/ext/oneapi/owner_less.hpp:
 /opt/intel/oneapi/compiler/2023.2.0/linux/bin-llvm/../include/sycl/ext/oneapi/weak_object.hpp:
-include/../include/qmckl_types.hpp:
+include/qmckl_distance.hpp:
+include/qmckl_types.hpp:
 /usr/lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/iostream:
 /usr/lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/cstdbool:
 /opt/intel/oneapi/compiler/2023.2.0/linux/lib/clang/17/include/stdbool.h:
-include/../include/qmckl_basic_functions.hpp:
-include/qmckl_types.hpp:
+include/qmckl_basic_functions.hpp:
 include/qmckl_context.hpp:
 /usr/lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/thread:
-include/qmckl_basic_functions.hpp:
 include/qmckl_memory.hpp:
 include/qmckl_blas.hpp:
 include/qmckl_nucleus.hpp:
-include/../include/qmckl_context.hpp:
-include/../include/qmckl_memory.hpp:
-include/../include/qmckl_blas.hpp:
-include/../include/qmckl_point.hpp:
-include/../include/qmckl_distance.hpp:
+include/qmckl_point.hpp:

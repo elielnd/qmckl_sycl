@@ -480,13 +480,13 @@ AUTOHEADER = ${SHELL} /home/enditar/qmckl_sycl/missing autoheader
 AUTOMAKE = ${SHELL} /home/enditar/qmckl_sycl/missing automake-1.16
 AWK = gawk
 CC = gcc
-CCDEPMODE = depmode=none
+CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPP = gcc -E
 CPPFLAGS = 
 CXX = icpx
 CXXCPP = icpx -E
-CXXDEPMODE = depmode=none
+CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -Iinclude -O2 
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"qmckl_gpu\" -DPACKAGE_TARNAME=\"qmckl_gpu\" -DPACKAGE_VERSION=\"0.0.1\" -DPACKAGE_STRING=\"qmckl_gpu\ 0.0.1\" -DPACKAGE_BUGREPORT=\"BUG-REPORT-ADDRESS\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qmckl_gpu\" -DVERSION=\"0.0.1\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_LIBTREXIO=1 -DHAVE_TREXIO_H=1 -DHAVE_TREXIO=1
@@ -762,20 +762,20 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-#include src/$(DEPDIR)/qmckl_ao.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_basic_functions.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_blas.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_context.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_electron.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_jastrow.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_memory.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_mo.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_nucleus.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_point.Plo # am--include-marker
-#include src/$(DEPDIR)/qmckl_trexio.Plo # am--include-marker
-#include tests/$(DEPDIR)/test_qmckl_ao.Po # am--include-marker
-#include tests/$(DEPDIR)/test_qmckl_jastrow.Po # am--include-marker
-#include tests/$(DEPDIR)/test_qmckl_mo.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_ao.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_basic_functions.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_blas.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_context.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_electron.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_jastrow.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_memory.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_mo.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_nucleus.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_point.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_trexio.Plo # am--include-marker
+include tests/$(DEPDIR)/test_qmckl_ao.Po # am--include-marker
+include tests/$(DEPDIR)/test_qmckl_jastrow.Po # am--include-marker
+include tests/$(DEPDIR)/test_qmckl_mo.Po # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -784,28 +784,28 @@ $(am__depfiles_remade):
 am--depfiles: $(am__depfiles_remade)
 
 .cpp.o:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
-#	$(AM_V_CXX)source='$<' object='$@' libtool=no 
-#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ $<
+	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)source='$<' object='$@' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXXCOMPILE) -c -o $@ $<
 
 .cpp.obj:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-#	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Po
-#	$(AM_V_CXX)source='$<' object='$@' libtool=no 
-#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CXX)source='$<' object='$@' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cpp.lo:
-#	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-#	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-#	$(am__mv) $$depbase.Tpo $$depbase.Plo
-#	$(AM_V_CXX)source='$<' object='$@' libtool=yes 
-#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) 
-	$(AM_V_CXX)$(LTCXXCOMPILE) -c -o $@ $<
+	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Plo
+#	$(AM_V_CXX)source='$<' object='$@' libtool=yes \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(LTCXXCOMPILE) -c -o $@ $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
