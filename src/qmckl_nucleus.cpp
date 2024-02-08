@@ -13,8 +13,7 @@ bool qmckl_nucleus_provided_device(qmckl_context_device context)
 		return false;
 	}
 
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
+	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
 
 	return ctx->nucleus.provided;
@@ -24,11 +23,9 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
 {
 
 	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
-	qmckl_memory_info_struct_device mem_info =
-		qmckl_memory_info_struct_zero_device;
+	qmckl_memory_info_struct_device mem_info = qmckl_memory_info_struct_zero_device;
 
-	ctx->ao_basis.prim_num_per_nucleus = (int32_t *)qmckl_malloc_device(
-		context, ctx->nucleus.num * sizeof(int32_t));
+	ctx->ao_basis.prim_num_per_nucleus = (int32_t *)qmckl_malloc_device(context, ctx->nucleus.num * sizeof(int32_t));
 
 	/* Find max number of primitives per nucleus */
 
@@ -46,26 +43,19 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
 	int64_t *prim_max_ptr = &prim_max;
 
 	queue q;
-	q.submit([&](handler &h)
-			 {
-        auto shell_max_ptr_device = shell_max_ptr;
-        auto prim_max_ptr_device = prim_max_ptr;
+	q.parallel_for(range<1>(nucl_num), [=](id<1> i)
+				   {
+					   shell_max_ptr[0] = nucleus_shell_num[i] > shell_max_ptr[0] ? nucleus_shell_num[i] : shell_max_ptr[0];
 
-        h.parallel_for<class find_max_primitives_kernel>(range<1>(nucl_num), [=](id<1> inucl) {
-            int64_t i = inucl[0];
+					   int64_t prim_num = 0;
+					   for (int64_t ishell = nucleus_index[i]; ishell < nucleus_index[i] + nucleus_shell_num[i]; ++ishell)
+					   {
+						   prim_num += shell_prim_num[ishell];
+					   }
 
-            shell_max_ptr_device[0] = nucleus_shell_num[i] > shell_max_ptr_device[0] ? nucleus_shell_num[i] : shell_max_ptr_device[0];
-            
-            int64_t prim_num = 0;
-            for (int64_t ishell = nucleus_index[i]; ishell < nucleus_index[i] + nucleus_shell_num[i]; ++ishell) {
-                prim_num += shell_prim_num[ishell];
-            }
-
-            prim_max_ptr_device[0] = prim_num > prim_max_ptr_device[0] ? prim_num : prim_max_ptr_device[0];
-            prim_num_per_nucleus[i] = prim_num;
-           
-        }); })
-		.wait();
+					   prim_max_ptr[0] = prim_num > prim_max_ptr[0] ? prim_num : prim_max_ptr[0];
+					   prim_num_per_nucleus[i] = prim_num; });
+	q.wait();
 
 	int64_t size[3] = {prim_max, shell_max, nucl_num};
 	ctx->ao_basis.coef_per_nucleus = qmckl_tensor_alloc_device(context, 3, size);
@@ -95,44 +85,29 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
 	int coef_per_nucleus_s0 = ctx->ao_basis.coef_per_nucleus.size[0];
 	int coef_per_nucleus_s1 = ctx->ao_basis.coef_per_nucleus.size[1];
 
-	q.submit([&](handler &h)
-			 {
-        auto expo_expo_device = expo_expo;
-        auto expo_index_device = expo_index;
-        auto coef_device = coef;
-        auto newcoef_device = newcoef;
-        auto newidx_device = newidx;
-        auto nucleus_index_device = nucleus_index;
-        auto shell_prim_index_device = shell_prim_index;
-        auto nucleus_shell_num_device = nucleus_shell_num;
-        auto exponent_device = exponent;
-        auto coefficient_normalized_device = coefficient_normalized;
-        auto expo_per_nucleus_data_device = expo_per_nucleus_data;
-        auto coef_per_nucleus_data_device = coef_per_nucleus_data;
-        auto prim_num_per_nucleus_device = prim_num_per_nucleus;
-
-        h.parallel_for<class process_data_kernel>(range<1>(nucl_num), [=](id<1> inucl) {
-            int64_t inucl_val = inucl[0];
+	q.parallel_for(range<1>(nucl_num), [=](id<1> inucl_val)
+				   {
 
             for (int i = 0; i < prim_max; i++) {
-                expo_expo_device[i] = 0.;
-                expo_index_device[i] = 0;
+                expo_expo[i] = 0.;
+                expo_index[i] = 0;
+
             }
             for (int i = 0; i < shell_max * prim_max; i++) {
-                coef_device[i] = 0.;
+                coef[i] = 0.;
             }
 
             int64_t idx = 0;
-            int64_t ishell_start = nucleus_index_device[inucl_val];
-            int64_t ishell_end = nucleus_index_device[inucl_val] + nucleus_shell_num_device[inucl_val];
+            int64_t ishell_start = nucleus_index[inucl_val];
+            int64_t ishell_end = nucleus_index[inucl_val] + nucleus_shell_num[inucl_val];
 
             for (int64_t ishell = ishell_start; ishell < ishell_end; ++ishell) {
-                int64_t iprim_start = shell_prim_index_device[ishell];
-                int64_t iprim_end = shell_prim_index_device[ishell] + shell_prim_num[ishell];
+                int64_t iprim_start = shell_prim_index[ishell];
+                int64_t iprim_end = shell_prim_index[ishell] + shell_prim_num[ishell];
 
                 for (int64_t iprim = iprim_start; iprim < iprim_end; ++iprim) {
-                    expo_expo_device[idx] = exponent_device[iprim];
-                    expo_index_device[idx] = idx;
+                    expo_expo[idx] = exponent[iprim];
+                    expo_index[idx] = idx;
                     idx += 1;
                 }
             }
@@ -141,14 +116,14 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
             double tmp;
             for (int i = 0; i < idx - 1; i++) {
                 for (int j = 0; j < idx - i - 1; j++) {
-                    if (expo_expo_device[j + 1] < expo_expo_device[j]) {
-                        tmp = expo_expo_device[j + 1];
-                        expo_expo_device[j + 1] = expo_expo_device[j];
-                        expo_expo_device[j] = tmp;
+                    if (expo_expo[j + 1] < expo_expo[j]) {
+                        tmp = expo_expo[j + 1];
+                        expo_expo[j + 1] = expo_expo[j];
+                        expo_expo[j] = tmp;
 
-                        tmp = expo_index_device[j + 1];
-                        expo_index_device[j + 1] = expo_index_device[j];
-                        expo_index_device[j] = tmp;
+                        tmp = expo_index[j + 1];
+                        expo_index[j + 1] = expo_index[j];
+                        expo_index[j] = tmp;
                     }
                 }
             }
@@ -157,20 +132,20 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
             int64_t idx2 = 0;
             for (int64_t ishell = ishell_start; ishell < ishell_end; ++ishell) {
                 for (int i = 0; i < prim_max; i++) {
-                    newcoef_device[i] = 0;
+                    newcoef[i] = 0;
                 }
 
-                int64_t iprim_start = shell_prim_index_device[ishell];
-                int64_t iprim_end = shell_prim_index_device[ishell] + shell_prim_num[ishell];
+                int64_t iprim_start = shell_prim_index[ishell];
+                int64_t iprim_end = shell_prim_index[ishell] + shell_prim_num[ishell];
 
                 for (int64_t iprim = iprim_start; iprim < iprim_end; ++iprim) {
-                    newcoef_device[idx] = coefficient_normalized_device[iprim];
+                    newcoef[idx] = coefficient_normalized[iprim];
                     idx += 1;
                 }
 
-                for (int32_t i = 0; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-                    idx2 = expo_index_device[i];
-                    coef_device[(ishell - ishell_start) * prim_max + i] = newcoef_device[idx2];
+                for (int32_t i = 0; i < prim_num_per_nucleus[inucl_val]; ++i) {
+                    idx2 = expo_index[i];
+                    coef[(ishell - ishell_start) * prim_max + i] = newcoef[idx2];
                 }
             }
             // Apply ordering to coefficients
@@ -178,44 +153,43 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_hpc_device(qmckl_context_dev
             // Remove duplicates
             int64_t idxmax = 0;
             idx = 0;
-            newidx_device[0] = 0;
+            newidx[0] = 0;
 
-            for (int32_t i = 1; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-                if (expo_expo_device[i] != expo_expo_device[i - 1]) {
+            for (int32_t i = 1; i < prim_num_per_nucleus[inucl_val]; ++i) {
+                if (expo_expo[i] != expo_expo[i - 1]) {
                     idx += 1;
                 }
-                newidx_device[i] = idx;
+                newidx[i] = idx;
             }
             idxmax = idx;
 
             for (int32_t j = 0; j < ishell_end - ishell_start; ++j) {
                 for (int i = 0; i < prim_max; i++) {
-                    newcoef_device[i] = 0.;
+                    newcoef[i] = 0.;
                 }
-                for (int32_t i = 0; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-                    newcoef_device[newidx_device[i]] += coef_device[j * prim_max +i];
+                for (int32_t i = 0; i < prim_num_per_nucleus[inucl_val]; ++i) {
+                    newcoef[newidx[i]] += coef[j * prim_max +i];
                 }
-                for (int32_t i = 0; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-					coef_device[j * prim_max + i] = newcoef_device[i];
+                for (int32_t i = 0; i < prim_num_per_nucleus[inucl_val]; ++i) {
+					coef[j * prim_max + i] = newcoef[i];
 				}
             }
-            for (int32_t i = 0; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-				expo_expo_device[newidx_device[i]] = expo_expo_device[i];
+            for (int32_t i = 0; i < prim_num_per_nucleus[inucl_val]; ++i) {
+				expo_expo[newidx[i]] = expo_expo[i];
 			}
 
-            prim_num_per_nucleus_device[inucl_val] = (int32_t)idxmax + 1;
+            prim_num_per_nucleus[inucl_val] = (int32_t)idxmax + 1;
 
-            for (int32_t i = 0; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-				expo_per_nucleus_data_device[i + inucl_val * expo_per_nucleus_s0] = expo_expo_device[i];
+            for (int32_t i = 0; i < prim_num_per_nucleus[inucl_val]; ++i) {
+				expo_per_nucleus_data[i + inucl_val * expo_per_nucleus_s0] = expo_expo[i];
 			}
 
             for (int32_t j = 0; j < ishell_end - ishell_start; ++j) {
-				for (int32_t i = 0; i < prim_num_per_nucleus_device[inucl_val]; ++i) {
-					coef_per_nucleus_data_device[(i) + coef_per_nucleus_s0 * ((j) + coef_per_nucleus_s1 * (inucl))] = coef[j * prim_max + i];
+				for (int32_t i = 0; i < prim_num_per_nucleus[inucl_val]; ++i) {
+					coef_per_nucleus_data[(i) + coef_per_nucleus_s0 * ((j) + coef_per_nucleus_s1 * (inucl_val))] = coef[j * prim_max + i];
 				}
-			}
-        }); })
-		.wait();
+			} });
+	q.wait();
 
 	qmckl_free_device(context, expo_expo);
 	qmckl_free_device(context, expo_index);
@@ -238,7 +212,6 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_device(qmckl_context_device 
 
 	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
-	int device_id = qmckl_get_device_id(context);
 
 	int64_t nucl_num = 0;
 
@@ -270,6 +243,7 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_device(qmckl_context_device 
 					   {
             int64_t shell_idx = nucleus_index[i];
             nucleus_prim_index[i] = shell_prim_index[shell_idx]; });
+		q.wait();
 
 		nucleus_prim_index[nucl_num] = prim_num;
 	}
@@ -299,9 +273,11 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_device(qmckl_context_device 
 		queue q;
 		q.parallel_for(shell_num, [=](id<1> ishell)
 					   {
-            for (int64_t iprim = shell_prim_index[ishell]; iprim < shell_prim_index[ishell] + shell_prim_num[ishell]; ++iprim) {
+            for (int64_t iprim = shell_prim_index[ishell]; iprim < shell_prim_index[ishell] + shell_prim_num[ishell]; ++iprim) 
+			{
                 coefficient_normalized[iprim] = coefficient[iprim] * prim_factor[iprim] * shell_factor[ishell];
             } });
+		q.wait();
 	}
 
 	/* Find max angular momentum on each nucleus */
@@ -329,6 +305,7 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_device(qmckl_context_device 
             for (int64_t ishell = nucleus_index[i]; ishell < nucleus_index[i] + nucleus_shell_num[i]; ++ishell) {
                 nucleus_max_ang_mom[i] = nucleus_max_ang_mom[i] > shell_ang_mom[ishell] ? nucleus_max_ang_mom[i] : shell_ang_mom[ishell];
             } });
+		q.wait();
 	}
 
 	/* Find distance beyond which all AOs are zero.
@@ -366,6 +343,7 @@ qmckl_exit_code_device qmckl_finalize_nucleus_basis_device(qmckl_context_device 
                         nucleus_range[inucl] = nucleus_range[inucl] > range ? nucleus_range[inucl] : range;
                     }
                 } });
+			q.wait();
 		}
 	}
 
@@ -438,8 +416,7 @@ qmckl_exit_code_device qmckl_get_nucleus_coord_device(const qmckl_context_device
 									 "coord is a null pointer");
 	}
 
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
+	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
 
 	int32_t mask = 1 << 2;
@@ -474,16 +451,13 @@ qmckl_exit_code_device qmckl_get_nucleus_coord_device(const qmckl_context_device
 		// Copy content of ctx->nucleus.coord onto coord
 		// rc = qmckl_double_of_matrix_device(context, ctx->nucleus.coord,
 		// coord, 							size_max);
-		qmckl_memcpy_D2D(context, coord, ctx->nucleus.coord.data,
-						 ctx->nucleus.coord.size[0] *
-							 ctx->nucleus.coord.size[1] * sizeof(double));
+		qmckl_memcpy_D2D(context, coord, ctx->nucleus.coord.data, ctx->nucleus.coord.size[0] * ctx->nucleus.coord.size[1] * sizeof(double));
 	}
 
 	return rc;
 }
 
-qmckl_exit_code_device
-qmckl_get_nucleus_charge_device(const qmckl_context_device context,
+qmckl_exit_code_device qmckl_get_nucleus_charge_device(const qmckl_context_device context,
 								double *const charge, const int64_t size_max)
 {
 
@@ -499,8 +473,7 @@ qmckl_get_nucleus_charge_device(const qmckl_context_device context,
 									 "charge is a null pointer");
 	}
 
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
+	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
 
 	int32_t mask = 1 << 1;
@@ -524,8 +497,7 @@ qmckl_get_nucleus_charge_device(const qmckl_context_device context,
 	// Copy content of ctx->nucleus.charge onto charge
 	// rc = qmckl_double_of_vector_device(context, ctx->nucleus.charge, charge,
 	// size_max);
-	qmckl_memcpy_D2D(context, charge, ctx->nucleus.charge.data,
-					 ctx->nucleus.charge.size * sizeof(double));
+	qmckl_memcpy_D2D(context, charge, ctx->nucleus.charge.data, ctx->nucleus.charge.size * sizeof(double));
 
 	return QMCKL_SUCCESS_DEVICE;
 }

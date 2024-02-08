@@ -44,8 +44,7 @@ qmckl_exit_code_device qmckl_get_point_device(const qmckl_context_device context
 
         // Copy content of At into coord
         // rc = qmckl_double_of_matrix_device(context, At, coord, size_max);
-        qmckl_memcpy_D2D(context, coord, At.data,
-                         At.size[0] * At.size[1] * sizeof(double));
+        qmckl_memcpy_D2D(context, coord, At.data, At.size[0] * At.size[1] * sizeof(double));
 
         if (rc != QMCKL_SUCCESS_DEVICE)
             return rc;
@@ -118,18 +117,18 @@ qmckl_exit_code_device qmckl_set_point_device(qmckl_context_device context, char
 
     if (transp == 'T')
     {
-        q.parallel_for(sycl::range<1>(3 * num), [=](id<1> i)
-                       { a[i] = coord[i]; })
-            .wait();
+        q.parallel_for(range<1>(3 * num), [=](id<1> i)
+                       { a[i] = coord[i]; });
+        q.wait();
     }
     else
     {
-        q.parallel_for(sycl::range<1>(num), [=](sycl::id<1> i)
+        q.parallel_for(range<1>(num), [=](id<1> i)
                        {
             a[i] = coord[3 * i];
             a[i + size_0] = coord[3 * i + 1];
-            a[i + 2 * size_0] = coord[3 * i + 2]; })
-            .wait();
+            a[i + 2 * size_0] = coord[3 * i + 2]; });
+        q.wait();
     }
     rc = qmckl_context_touch_device(context);
     assert(rc == QMCKL_SUCCESS_DEVICE);
