@@ -2,8 +2,7 @@
 #include "config.h"
 #endif
 
-
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include <vector>
 #include <iostream>
 #include "chbrclf.hpp"
