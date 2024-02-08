@@ -954,12 +954,12 @@ qmckl_finalize_ao_basis_hpc_device(qmckl_context_device context) {
 	ctx->ao_basis.coef_per_nucleus =
 		qmckl_tensor_alloc_device(context, 3, size);
 	ctx->ao_basis.coef_per_nucleus =
-		qmckl_tensor_set_device(ctx->ao_basis.coef_per_nucleus, 0.);
+		qmckl_tensor_set_device(ctx->ao_basis.coef_per_nucleus, 0., queue);
 
 	ctx->ao_basis.expo_per_nucleus =
 		qmckl_matrix_alloc_device(context, prim_max, nucl_num);
 	ctx->ao_basis.expo_per_nucleus =
-		qmckl_matrix_set_device(ctx->ao_basis.expo_per_nucleus, 0.);
+		qmckl_matrix_set_device(ctx->ao_basis.expo_per_nucleus, 0., queue);
 
 	// To avoid offloading structures, expo is split in two arrays :
 	// struct combined expo[prim_max];

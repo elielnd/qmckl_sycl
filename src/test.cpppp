@@ -1,4 +1,4 @@
-#include <CL/sycl.hpp>
+/*#include <CL/sycl.hpp>
 #include <vector>
 #include <iostream>
 #include "../include/qmckl_gpu.hpp"
@@ -109,3 +109,4 @@ try
 
   return 0;
 }
+*/

@@ -257,30 +257,11 @@ int main() {
 				wrong_val_accessor[0] = true;
 		});
 	}).wait();
-
-	sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
-    wrong_val = wrong_val_host_accessor[0];
-
-	// After the parallel_for loop, you can access wrong_val
-	// wrong_val = wrong_val_buffer.get_host_access<sycl::access::mode::read>()[0];
-
-
-/*
-	// Create buffers for the data
-	sycl::buffer<int64_t, 1> nucleus_index_test_buffer(nucleus_index_test, sycl::range<1>(nucl_num));
-	sycl::buffer<int64_t, 1> nucleus_index_d_buffer(nucleus_index_d, sycl::range<1>(nucl_num));
-
-	// Submit kernel
-	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = nucleus_index_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = nucleus_index_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
-		});
-	}).wait();*/
-
+	
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
 
 	qmckl_free_device(context, nucleus_index_test);
 	if (wrong_val)
@@ -299,22 +280,24 @@ int main() {
 				wrong_val = true;
 		});
 	}).wait();*/
-	
-	// Create buffers for the data
-	sycl::buffer<int64_t, 1> nucleus_shell_num_test_buffer(nucleus_shell_num_test, sycl::range<1>(nucl_num));
-	sycl::buffer<int64_t, 1> nucleus_shell_num_d_buffer(nucleus_shell_num_d, sycl::range<1>(nucl_num));
 
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = nucleus_shell_num_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = nucleus_shell_num_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (nucleus_shell_num_test[i] !=nucleus_shell_num_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
 
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
+	
 	qmckl_free_device(context, nucleus_shell_num_test);
 	if (wrong_val)
 		return 1;
@@ -333,21 +316,22 @@ int main() {
 		});
 	}).wait();*/
 
-
-	// Create buffers for the data
-	sycl::buffer<int32_t, 1> shell_ang_mom_test_buffer(shell_ang_mom_test, sycl::range<1>(shell_num));
-	sycl::buffer<int32_t, 1> shell_ang_mom_d_buffer(shell_ang_mom_d, sycl::range<1>(shell_num));
-
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = shell_ang_mom_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = shell_ang_mom_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (shell_ang_mom_test[i] !=shell_ang_mom[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
+
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
 
 	qmckl_free_device(context, shell_ang_mom_test);
 	if (wrong_val)
@@ -366,22 +350,24 @@ int main() {
 				wrong_val = true;
 		});
 	}).wait();*/
-	
-	// Create buffers for the data
-	sycl::buffer<double, 1> shell_factor_test_buffer(shell_factor_test, sycl::range<1>(shell_num));
-	sycl::buffer<double, 1> shell_factor_d_buffer(shell_factor_d, sycl::range<1>(shell_num));
 
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = shell_factor_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = shell_factor_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (shell_factor_test[i] !=shell_factor_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
 
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
+	
 	qmckl_free_device(context, shell_factor_test);
 	if (wrong_val)
 		return 1;
@@ -407,20 +393,22 @@ int main() {
 		});
 	}).wait();*/
 
-	// Create buffers for the data
-	sycl::buffer<int64_t, 1> shell_prim_index_test_buffer(shell_prim_index_test, sycl::range<1>(shell_num));
-	sycl::buffer<int64_t, 1> shell_prim_index_d_buffer(shell_prim_index_d, sycl::range<1>(shell_num));
-
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = shell_prim_index_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = shell_prim_index_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(shell_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (shell_prim_index_test[i] !=shell_prim_index_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
+
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
 
 	qmckl_free_device(context, shell_prim_index_test);
 	if (wrong_val)
@@ -439,20 +427,22 @@ int main() {
 		});
 	}).wait();*/
 
-	// Create buffers for the data
-	sycl::buffer<double, 1> exponent_test_buffer(exponent_test, sycl::range<1>(prim_num));
-	sycl::buffer<double, 1> exponent_d_buffer(exponent_d, sycl::range<1>(prim_num));
-
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = exponent_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = exponent_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (exponent_test[i] !=exponent_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
+
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
 
 	qmckl_free_device(context, exponent_test);
 	if (wrong_val)
@@ -472,20 +462,22 @@ int main() {
 		});
 	}).wait();*/
 
-	// Create buffers for the data
-	sycl::buffer<double, 1> coefficient_test_buffer(coefficient_test, sycl::range<1>(prim_num));
-	sycl::buffer<double, 1> coefficient_d_buffer(coefficient_d, sycl::range<1>(prim_num));
-
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = coefficient_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = coefficient_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (coefficient_test[i] !=coefficient_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
+
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
 
 	qmckl_free_device(context, coefficient_test);
 	if (wrong_val)
@@ -505,21 +497,23 @@ int main() {
 		});
 	}).wait();*/
 
-	// Create buffers for the data
-	sycl::buffer<double, 1> prim_factor_test_buffer(prim_factor_test, sycl::range<1>(prim_num));
-	sycl::buffer<double, 1> prim_factor_d_buffer(prim_factor_d, sycl::range<1>(prim_num));
-
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = prim_factor_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = prim_factor_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(prim_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (prim_factor_test[i] !=prim_factor_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
-	
+
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
+
 	qmckl_free_device(context, prim_factor_test);
 	if (wrong_val)
 		return 1;
@@ -541,20 +535,22 @@ int main() {
 		});
 	}).wait();*/
 
-	// Create buffers for the data
-	sycl::buffer<double, 1> ao_factor_test_buffer(ao_factor_test, sycl::range<1>(ao_num));
-	sycl::buffer<double, 1> ao_factor_d_buffer(ao_factor_d, sycl::range<1>(ao_num));
-
-	// Submit kernel
 	queue.submit([&](sycl::handler &h) {
-		auto test_accessor = ao_factor_test_buffer.get_access<sycl::access::mode::read>(h);
-		auto d_accessor = ao_factor_d_buffer.get_access<sycl::access::mode::read>(h);
-		
-		h.parallel_for(sycl::range<1>(ao_num), [=](sycl::id<1> i) mutable {
-			if (test_accessor[i] != d_accessor[i])
-				wrong_val = true;
+		// Create accessors for buffers
+		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
+
+		h.parallel_for(sycl::range<1>(ao_num), [=](sycl::id<1> i) {
+			// Inside the parallel_for loop
+			if (ao_factor_test[i] !=ao_factor_d[i])
+				// Update wrong_val using the accessor
+				wrong_val_accessor[0] = true;
 		});
 	}).wait();
+
+	{
+		sycl::host_accessor<bool, 1, sycl::access::mode::read> wrong_val_host_accessor(wrong_val_buffer);
+    	wrong_val = wrong_val_host_accessor[0];
+	}
 
 	qmckl_free_device(context, ao_factor_test);
 	if (wrong_val)
