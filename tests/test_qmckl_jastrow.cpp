@@ -11,7 +11,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "n2.h"
+#include "n2.hpp"
 #include "../include/qmckl_gpu.hpp"
 
 int main()

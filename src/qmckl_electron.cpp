@@ -302,7 +302,7 @@ qmckl_exit_code_device qmckl_provide_en_distance_device(qmckl_context_device con
 
 qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_device context, const int64_t point_num,
                                                         const int64_t nucl_num, const double *elec_coord, const double *nucl_coord,
-                                                        double *const en_distance, queue &q)
+                                                        const double *en_distance, queue &q)
 {
     qmckl_exit_code_device rc = QMCKL_SUCCESS_DEVICE;
 
@@ -359,10 +359,10 @@ qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_devi
 
     for (k = 0; k < walk_num; k++)
     {
-        info = qmckl_distance_device(
-            context, 'T', 'T', elec_num, elec_num, coord + k * elec_num,
-            elec_num * walk_num, coord + k * elec_num, elec_num * walk_num,
-            ee_distance + k * elec_num * elec_num, elec_num, q);
+        // info = qmckl_distance_device(
+        //     context, 'T', 'T', elec_num, elec_num, coord + k * elec_num,
+        //     elec_num * walk_num, coord + k * elec_num, elec_num * walk_num,
+        //     ee_distance + k * elec_num * elec_num, elec_num, q);
         if (info != QMCKL_SUCCESS_DEVICE)
         {
             return info;

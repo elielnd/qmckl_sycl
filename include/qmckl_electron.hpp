@@ -1,12 +1,12 @@
 #include <CL/sycl.hpp>
 
-#include "../include/qmckl_types.hpp"
-#include "../include/qmckl_basic_functions.hpp"
-#include "../include/qmckl_context.hpp"
-#include "../include/qmckl_memory.hpp"
-#include "../include/qmckl_blas.hpp"
-#include "../include/qmckl_point.hpp"
-#include "../include/qmckl_distance.hpp"
+#include "qmckl_types.hpp"
+#include "qmckl_basic_functions.hpp"
+#include "qmckl_context.hpp"
+#include "qmckl_memory.hpp"
+#include "qmckl_blas.hpp"
+#include "qmckl_point.hpp"
+#include "qmckl_distance.hpp"
 
 
 //**********

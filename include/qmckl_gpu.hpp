@@ -12,16 +12,6 @@
 #include <thread>
 #include <mutex>
 
-#ifdef HAVE_CUBLAS
-#include <cublas_v2.h>
-#include <cusolverDn.h>
-#endif
-
-#ifdef HAVE_CUSPARSE
-#include <cuda_runtime_api.h>
-#include <cusparse_v2.h>
-#endif
-
 // //**********
 // // TYPES
 // //**********
@@ -514,6 +504,11 @@ qmckl_exit_code_device qmckl_distance_rescaled_device(
 	const int64_t m, const int64_t n, const double *A, const int64_t lda,
 	const double *B, const int64_t ldb, double *const C, const int64_t ldc,
 	const double rescale_factor_kappa);
+
+qmckl_exit_code_device qmckl_distance_device(const qmckl_context_device context, const char transa,
+											 const char transb, const int64_t m, const int64_t n,
+											 const double *A, const int64_t lda, const double *B,
+											 const int64_t ldb, double *const C, const int64_t ldc, sycl::queue &q);
 
 //**********
 // POINT

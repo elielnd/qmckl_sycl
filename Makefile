@@ -140,7 +140,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libqmckl_gpu_la_LIBADD =
-am__libqmckl_gpu_la_SOURCES_DIST = "" src/qmckl_context.cpp \
+am__libqmckl_gpu_la_SOURCES_DIST = src/qmckl_context.cpp \
 	src/qmckl_basic_functions.cpp src/qmckl_point.cpp \
 	src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp \
 	src/qmckl_nucleus.cpp src/qmckl_ao.cpp src/qmckl_mo.cpp \
@@ -598,10 +598,10 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 ACLOCAL_AMFLAGS = -I m4 -I include 
-AM_CPPFLAGS = -fsycl -I$(top_builddir)/src -I$(top_builddir)/include 
+AM_CXXFLAGS = -fsycl -I$(top_builddir)/src -I$(top_builddir)/include
 include_HEADERS = include/qmckl_gpu.hpp
 lib_LTLIBRARIES = libqmckl_gpu.la
-libqmckl_gpu_la_SOURCES = "" src/qmckl_context.cpp \
+libqmckl_gpu_la_SOURCES = src/qmckl_context.cpp \
 	src/qmckl_basic_functions.cpp src/qmckl_point.cpp \
 	src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp \
 	src/qmckl_nucleus.cpp src/qmckl_ao.cpp src/qmckl_mo.cpp \
@@ -610,7 +610,7 @@ tests_test_qmckl_ao_SOURCES = tests/test_qmckl_ao.cpp chbrclf.hpp
 tests_test_qmckl_ao_LDFLAGS = -pthread
 tests_test_qmckl_mo_SOURCES = tests/test_qmckl_mo.cpp chbrclf.hpp
 tests_test_qmckl_mo_LDFLAGS = -pthread 
-tests_test_qmckl_jastrow_SOURCES = tests/test_qmckl_jastrow.cpp n2.h
+tests_test_qmckl_jastrow_SOURCES = tests/test_qmckl_jastrow.cpp n2.hpp
 tests_test_qmckl_jastrow_LDFLAGS = -pthread 
 
 # This shoud be added whether we use OpenMP or ACC
