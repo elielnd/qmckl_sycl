@@ -58,7 +58,7 @@ int main()
 
     // Put nucleus stuff in GPU arrays
     double *nucl_charge_d = (double *)qmckl_malloc_device(context, nucl_num * sizeof(double));
-    double *nucl_coord_d = (double *)qmckl_malloc_device(context, 3 * nucl_num * sizeof(double));
+    double *nucl_coord_d = (double *)qmckl_malloc_device(context, 4 * nucl_num * sizeof(double));
 
     assert(nucl_charge_d != nullptr);
     assert(nucl_coord_d != nullptr);
