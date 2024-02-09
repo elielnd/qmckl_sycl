@@ -1,3 +1,4 @@
+#pragma once
 // // This is the header file meant to be included by the users.
 // // It contains prototypes for all GPU public functions, and definition of
 // // the _device context variant.
@@ -11,16 +12,6 @@
 #include <vector>
 #include <thread>
 #include <mutex>
-
-#ifdef HAVE_CUBLAS
-#include <cublas_v2.h>
-#include <cusolverDn.h>
-#endif
-
-#ifdef HAVE_CUSPARSE
-#include <cuda_runtime_api.h>
-#include <cusparse_v2.h>
-#endif
 
 // //**********
 // // TYPES

@@ -1,3 +1,4 @@
+#pragma once
 #include "qmckl_types.hpp"
 #include "qmckl_basic_functions.hpp"
 #include "qmckl_context.hpp"

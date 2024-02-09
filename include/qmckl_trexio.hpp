@@ -1,4 +1,4 @@
-// #pragma once
+#pragma once
 
 // // This file contains functions prototypes for functions initializing the
 // // context from a TREXIO file
