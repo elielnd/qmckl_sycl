@@ -2,10 +2,10 @@
 
 using namespace sycl;
 
-qmckl_exit_code_device qmckl_distance_device(const qmckl_context_device context, const char transa,
-                                             const char transb, const int64_t m, const int64_t n,
-                                             const double *A, const int64_t lda, const double *B,
-                                             const int64_t ldb, double *const C, const int64_t ldc, queue &q)
+qmckl_exit_code_device qmckl_distance_devices(const qmckl_context_device context, const char transa,
+                                              const char transb, const int64_t m, const int64_t n,
+                                              const double *A, const int64_t lda, const double *B,
+                                              const int64_t ldb, double* const C, const int64_t ldc)
 {
     int transab;
 
@@ -116,6 +116,10 @@ qmckl_exit_code_device qmckl_distance_device(const qmckl_context_device context,
         info = QMCKL_INVALID_ARG_11_DEVICE;
         return info;
     }
+
+    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
+
+    queue q = ctx->q;
 
     switch (transab)
     {

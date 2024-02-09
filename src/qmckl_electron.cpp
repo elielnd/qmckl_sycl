@@ -189,7 +189,6 @@ bool qmckl_electron_provided_device(qmckl_context_device context)
     return ctx->electron.provided;
 }
 
-
 qmckl_exit_code_device qmckl_provide_ee_distance_device(qmckl_context_device context)
 {
 
@@ -228,7 +227,7 @@ qmckl_exit_code_device qmckl_provide_ee_distance_device(qmckl_context_device con
         }
 
         qmckl_exit_code_device rc = qmckl_compute_ee_distance_device(context, ctx->electron.num, ctx->electron.walker.num,
-                                                                     ctx->electron.walker.point.coord.data, ctx->electron.ee_distance, ctx->q);
+                                                                     ctx->electron.walker.point.coord.data, ctx->electron.ee_distance);
         if (rc != QMCKL_SUCCESS_DEVICE)
         {
             return rc;
@@ -284,7 +283,7 @@ qmckl_exit_code_device qmckl_provide_en_distance_device(qmckl_context_device con
         }
 
         qmckl_exit_code_device rc = qmckl_compute_en_distance_device(context, ctx->point.num, ctx->nucleus.num, ctx->point.coord.data,
-                                                                     ctx->nucleus.coord.data, ctx->electron.en_distance, ctx->q);
+                                                                     ctx->nucleus.coord.data, ctx->electron.en_distance);
         if (rc != QMCKL_SUCCESS_DEVICE)
         {
             return rc;
@@ -301,8 +300,8 @@ qmckl_exit_code_device qmckl_provide_en_distance_device(qmckl_context_device con
 //**********
 
 qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_device context, const int64_t point_num,
-                                                        const int64_t nucl_num, const double *elec_coord, const double *nucl_coord,
-                                                        double *const en_distance, queue &q)
+                                                        const int64_t nucl_num, const double *elec_coord,
+                                                        const double *nucl_coord, double *const en_distance)
 {
     qmckl_exit_code_device rc = QMCKL_SUCCESS_DEVICE;
 
@@ -326,13 +325,13 @@ qmckl_exit_code_device qmckl_compute_en_distance_device(const qmckl_context_devi
 
     rc = qmckl_distance_device(context, 'T', 'T', nucl_num, point_num,
                                nucl_coord, nucl_num, elec_coord, point_num,
-                               en_distance, nucl_num, q);
+                               en_distance, nucl_num);
 
     return rc;
 }
 
 qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_device context, const int64_t elec_num,
-                                                        const int64_t walk_num, const double *coord, double *const ee_distance, queue &q)
+                                                        const int64_t walk_num, const double *coord, double *const ee_distance)
 {
 
     int k, i, j;
@@ -359,10 +358,9 @@ qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_devi
 
     for (k = 0; k < walk_num; k++)
     {
-        info = qmckl_distance_device(
-            context, 'T', 'T', elec_num, elec_num, coord + k * elec_num,
-            elec_num * walk_num, coord + k * elec_num, elec_num * walk_num,
-            ee_distance + k * elec_num * elec_num, elec_num, q);
+        info = qmckl_distance_device(context, 'T', 'T', elec_num, elec_num, coord + k * elec_num,
+                                      elec_num * walk_num, coord + k * elec_num, elec_num * walk_num,
+                                      ee_distance + k * elec_num * elec_num, elec_num);
         if (info != QMCKL_SUCCESS_DEVICE)
         {
             return info;
@@ -370,4 +368,186 @@ qmckl_exit_code_device qmckl_compute_ee_distance_device(const qmckl_context_devi
     }
 
     return info;
+}
+
+qmckl_exit_code_device qmckl_distance_device(const qmckl_context_device context, const char transa,
+                                            const char transb, const int64_t m, const int64_t n,
+                                            const double *A, const int64_t lda, const double *B,
+                                            const int64_t ldb, double *const C, const int64_t ldc)
+{
+    int transab;
+
+    qmckl_exit_code_device info = QMCKL_SUCCESS_DEVICE;
+
+    if (context == QMCKL_NULL_CONTEXT_DEVICE)
+    {
+        info = QMCKL_INVALID_CONTEXT_DEVICE;
+        return info;
+    }
+
+    if (m <= 0)
+    {
+        info = QMCKL_INVALID_ARG_4_DEVICE;
+        return info;
+    }
+
+    if (n <= 0)
+    {
+        info = QMCKL_INVALID_ARG_5_DEVICE;
+        return info;
+    }
+
+    if (transa == 'N' || transa == 'n')
+    {
+        transab = 0;
+    }
+    else if (transa == 'T' || transa == 't')
+    {
+        transab = 1;
+    }
+    else
+    {
+        transab = -100;
+    }
+
+    if (transb == 'N' || transb == 'n')
+    {
+    }
+    else if (transb == 'T' || transb == 't')
+    {
+        transab = transab + 2;
+    }
+    else
+    {
+        transab = -100;
+    }
+
+    if (transab < 0)
+    {
+        info = QMCKL_INVALID_ARG_1_DEVICE;
+        return info;
+    }
+
+    // check for LDA
+    if ((transab & 1) == 0 && lda < 3)
+    {
+        info = QMCKL_INVALID_ARG_7_DEVICE;
+        return info;
+    }
+
+    if ((transab & 1) == 1 && lda < m)
+    {
+        info = QMCKL_INVALID_ARG_7_DEVICE;
+        return info;
+    }
+
+    if ((transab & 2) == 0 && lda < 3)
+    {
+        info = QMCKL_INVALID_ARG_7_DEVICE;
+        return info;
+    }
+
+    if ((transab & 2) == 2 && lda < m)
+    {
+        info = QMCKL_INVALID_ARG_7_DEVICE;
+        return info;
+    }
+
+    // check for LDB
+    if ((transab & 1) == 0 && ldb < 3)
+    {
+        info = QMCKL_INVALID_ARG_9_DEVICE;
+        return info;
+    }
+
+    if ((transab & 1) == 1 && ldb < n)
+    {
+        info = QMCKL_INVALID_ARG_9_DEVICE;
+        return info;
+    }
+
+    if ((transab & 2) == 0 && ldb < 3)
+    {
+        info = QMCKL_INVALID_ARG_9_DEVICE;
+        return info;
+    }
+
+    if ((transab & 2) == 2 && ldb < n)
+    {
+        info = QMCKL_INVALID_ARG_9_DEVICE;
+        return info;
+    }
+
+    // check for LDC
+    if (ldc < m)
+    {
+        info = QMCKL_INVALID_ARG_11_DEVICE;
+        return info;
+    }
+
+    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
+
+    queue q = ctx->q;
+
+    switch (transab)
+    {
+    case 0:
+        q.parallel_for(range<2>(n, m), [=](id<2> idx)
+                       {
+            int j = idx[0];
+            int i = idx[1];
+            double x = A[0 + i * lda] - B[0 + j * ldb];
+            double y = A[1 + i * lda] - B[1 + j * ldb];
+            double z = A[2 + i * lda] - B[2 + j * ldb];
+            C[i + j * ldc] = x * x + y * y + z * z;
+            for (int k = 0; k < ldc; k++) {
+                C[k + j * ldc] = sqrt(C[k + j * ldc]);
+            } });
+        q.wait();
+        break;
+    case 1:
+        q.parallel_for(range<2>(n, m), [=](id<2> idx)
+                       {
+            int j = idx[0];
+            int i = idx[1];
+            double x = A[i + 0 * lda] - B[0 + j * ldb];
+            double y = A[i + 1 * lda] - B[1 + j * ldb];
+            double z = A[i + 2 * lda] - B[2 + j * ldb];
+            C[i + j * ldc] = x * x + y * y + z * z;
+            for (int k = 0; k < j; k++) {
+                C[k + j * ldc] = sqrt(C[k + j * ldc]);
+            } });
+        q.wait();
+        break;
+    case 2:
+        q.parallel_for(range<2>(n, m), [=](id<2> idx)
+                       {
+            int j = idx[0];
+            int i = idx[1];
+            double x = A[0 + i * lda] - B[j + 0 * ldb];
+            double y = A[1 + i * lda] - B[j + 1 * ldb];
+            double z = A[2 + i * lda] - B[j + 2 * ldb];
+            C[i + j * ldc] = x * x + y * y + z * z;
+            for (int k = 0; k < ldc; k++) {
+                C[k + j * ldc] = sqrt(C[k + j * ldc]);
+            } });
+        q.wait();
+        break;
+    case 3:
+        q.parallel_for(range<2>(n, m), [=](id<2> idx)
+                       {
+            int j = idx[0];
+            int i = idx[1];
+            double x = A[i + 0 * lda] - B[j + 0 * ldb];
+            double y = A[i + 1 * lda] - B[j + 1 * ldb];
+            double z = A[i + 2 * lda] - B[j + 2 * ldb];
+            C[i + j * ldc] = x * x + y * y + z * z;
+            for (int k = 0; k < ldc; k++) {
+                C[k + j * ldc] = sqrt(C[k + j * ldc]);
+            } });
+        q.wait();
+        break;
+    }
+
+    return QMCKL_SUCCESS_DEVICE;
 }

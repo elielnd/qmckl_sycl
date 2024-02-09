@@ -1,0 +1,1 @@
+src/qmckl_trexio.lo: src/qmckl_trexio.cpp

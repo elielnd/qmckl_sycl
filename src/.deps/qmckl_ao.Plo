@@ -1,0 +1,1 @@
+src/qmckl_ao.lo: src/qmckl_ao.cpp
