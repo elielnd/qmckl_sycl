@@ -45,3 +45,15 @@ tests_test_qmckl_jastrow_LDADD = libqmckl_gpu.la
 ###
 
 TESTS = $(check_PROGRAMS)
+
+clean-local: 
+	-rm -rf autom4te.cache/ m4/
+	-rm -f aclocal.m4 ar-lib compile
+	-rm -f config.* configure
+	-rm -f depcomp install-sh libtool ltmain.sh missing
+	-rm -f Makefile  Makefile.in
+	-rm -f test-driver
+	
+
+
+

@@ -1,4 +1,4 @@
-
+#pragma once
 #include <CL/sycl.hpp>
 
 #include "qmckl_types.hpp"

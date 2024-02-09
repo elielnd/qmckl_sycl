@@ -1,3 +1,4 @@
+#pragma once
 // // This is the header file meant to be included by the users.
 // // It contains prototypes for all GPU public functions, and definition of
 // // the _device context variant.
