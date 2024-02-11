@@ -236,13 +236,6 @@ int main() {
 
 	bool wrong_val = false;
 
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> i) {
-			if (nucleus_index_test[i] != nucleus_index_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
-
 	// Create buffer for wrong_val
 	sycl::buffer<bool, 1> wrong_val_buffer(&wrong_val, sycl::range<1>(1));
 
@@ -274,13 +267,6 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(nucl_num), [&](sycl::id<1> i) mutable {
-		if (nucleus_shell_num_test[i] != nucleus_shell_num_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
-
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
 		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
@@ -308,13 +294,6 @@ int main() {
 												 shell_num);
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
-	
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(shell_num), [&](sycl::id<1> i) mutable {
-			if (shell_ang_mom_test[i] != shell_ang_mom_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
 
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
@@ -343,13 +322,6 @@ int main() {
 												shell_num);
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
-
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(shell_num), [&](sycl::id<1> i) mutable {
-			if (shell_factor_test[i] != shell_factor_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
 
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
@@ -386,13 +358,6 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(shell_num), [&](sycl::id<1> i) mutable {
-			if (shell_prim_index_test[i] != shell_prim_index_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
-
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
 		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
@@ -419,13 +384,6 @@ int main() {
 	rc = qmckl_get_ao_basis_exponent_device(context, exponent_test, prim_num);
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
-
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(prim_num), [&](sycl::id<1> i) mutable {
-			if (exponent_test[i] != exponent_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
 
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
@@ -455,13 +413,6 @@ int main() {
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
 
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(prim_num), [&](sycl::id<1> i) mutable {
-			if (coefficient_test[i] != coefficient_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
-
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
 		auto wrong_val_accessor = wrong_val_buffer.get_access<sycl::access::mode::write>(h);
@@ -489,13 +440,6 @@ int main() {
 											   prim_num);
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
-
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(prim_num), [&](sycl::id<1> i) mutable {
-			if (prim_factor_test[i] != prim_factor_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
 
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
@@ -527,13 +471,6 @@ int main() {
 	rc = qmckl_get_ao_basis_ao_factor_device(context, ao_factor_test, ao_num);
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return 1;
-
-	/*queue.submit([&](sycl::handler &h) {
-		h.parallel_for(sycl::range<1>(ao_num), [&](sycl::id<1> i) mutable {
-			if (ao_factor_test[i] != ao_factor_d[i])
-				wrong_val = true;
-		});
-	}).wait();*/
 
 	queue.submit([&](sycl::handler &h) {
 		// Create accessors for buffers
@@ -584,9 +521,10 @@ int main() {
 		reinterpret_cast<double*>(malloc(point_num * ao_num * sizeof(double)));
 
 	printf("About to get values\n");
+
 	rc = qmckl_get_ao_basis_ao_value_device(context, ao_value_d,
 											(int64_t)(point_num * ao_num));
-
+	
 	qmckl_memcpy_D2H(context, ao_value, ao_value_d,
 					 point_num * ao_num * sizeof(double));
 
