@@ -13,7 +13,7 @@ lib_LTLIBRARIES = libqmckl_gpu.la
 
 libqmckl_gpu_la_SOURCES = src/qmckl_context.cpp src/qmckl_basic_functions.cpp src/qmckl_point.cpp \
 src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp src/qmckl_nucleus.cpp \
-src/qmckl_ao.cpp src/qmckl_mo.cpp src/qmckl_jastrow.cpp
+src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp src/qmckl_mo.cpp src/qmckl_jastrow.cpp
 
 # Enable TREXIO interfacing
 if HAVE_TREXIO

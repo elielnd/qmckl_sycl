@@ -68,7 +68,7 @@ qmckl_exit_code_device qmckl_get_point_device(const qmckl_context_device context
 qmckl_exit_code_device qmckl_set_point_device(qmckl_context_device context, char transp, int64_t num, double *coord, int64_t size_max)
 {
 
-    size_t device_id = qmckl_get_device_id(context);
+	queue q = qmckl_get_device_queue(context);
     if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
     {
         return QMCKL_NULL_CONTEXT_DEVICE;
@@ -112,8 +112,6 @@ qmckl_exit_code_device qmckl_set_point_device(qmckl_context_device context, char
 
     double *a = ctx->point.coord.data;
     int size_0 = ctx->point.coord.size[0];
-
-    queue q;
 
     if (transp == 'T')
     {
