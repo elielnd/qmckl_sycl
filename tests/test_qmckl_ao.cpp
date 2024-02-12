@@ -14,20 +14,20 @@ static const int N = 4;
 
 int main()
 {
-    // queue q;
+    queue q;
 
-    // try
-    // {
-    //     // define queue with accelerator selector
-    //     q = queue(accelerator_selector_v);
-    // }
-    // catch (const sycl::exception &e)
-    // {
-    //     q = queue();
-    //     std::cerr << "Could not create GPU queue. Using default queue.\n";
-    // };
+    try
+    {
+        // define queue with accelerator selector
+        q = queue(accelerator_selector_v);
+    }
+    catch (const sycl::exception &e)
+    {
+        q = queue();
+        std::cerr << "Could not create GPU queue. Using default queue.\n";
+    };
 
-    // std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
+    std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
 
     // int point = 0;
     // int *ptr_point = &point;

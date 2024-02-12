@@ -52,7 +52,7 @@ qmckl_exit_code_device qmckl_set_electron_coord_device(qmckl_context_device cont
                                                        int64_t size_max)
 {
 
-    size_t device_id = qmckl_get_device_id(context);
+	queue q = qmckl_get_device_queue(context);
     int32_t mask = 0; // coord can be changed
 
     if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
