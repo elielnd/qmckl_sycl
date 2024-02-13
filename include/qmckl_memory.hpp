@@ -29,7 +29,7 @@ qmckl_exit_code_device qmckl_memcpy_H2D(qmckl_context_device context,
 										void *const dest, void *const src,
 										size_t size);
 qmckl_exit_code_device qmckl_memcpy_D2H(qmckl_context_device context,
-										void *const dest, void *const src,
+										void *dest, void *const src,
 										size_t size);
 qmckl_exit_code_device qmckl_memcpy_D2D(qmckl_context_device context,
 										void *const dest, void *const src,

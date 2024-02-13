@@ -271,7 +271,7 @@ qmckl_exit_code_device qmckl_memcpy_H2D(qmckl_context_device context,
 }
 
 qmckl_exit_code_device qmckl_memcpy_D2H(qmckl_context_device context,
-										void *const dest, void *const src,
+										void *dest, void *const src,
 										size_t size)
 {
 	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
@@ -301,7 +301,6 @@ qmckl_exit_code_device qmckl_memcpy_D2H(qmckl_context_device context,
 		try
 		{
 			q.memcpy(dest, src, size);
-
 		}
 		catch (sycl::exception const &e)
 		{

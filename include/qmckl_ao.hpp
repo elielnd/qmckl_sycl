@@ -76,8 +76,7 @@ qmckl_get_ao_basis_ao_num_device(qmckl_context_device context, int64_t *ao_num);
 qmckl_exit_code_device
 qmckl_finalize_ao_basis_hpc_device(qmckl_context_device context);
 
-qmckl_exit_code_device
-qmckl_finalize_ao_basis_device(qmckl_context_device context);
+qmckl_exit_code_device qmckl_finalize_ao_basis_device(qmckl_context_device context);
 
 qmckl_exit_code_device
 qmckl_set_ao_basis_type_device(qmckl_context_device context, char basis_type);

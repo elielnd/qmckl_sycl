@@ -27,13 +27,13 @@ endif
 check_PROGRAMS = tests/test_qmckl_ao tests/test_qmckl_mo tests/test_qmckl_jastrow
 
 tests_test_qmckl_ao_SOURCES = tests/test_qmckl_ao.cpp chbrclf.hpp
-tests_test_qmckl_ao_LDFLAGS = -pthread
+tests_test_qmckl_ao_LDFLAGS = 
 
 tests_test_qmckl_mo_SOURCES = tests/test_qmckl_mo.cpp chbrclf.hpp
-tests_test_qmckl_mo_LDFLAGS = -pthread 
+tests_test_qmckl_mo_LDFLAGS =  
 
 tests_test_qmckl_jastrow_SOURCES = tests/test_qmckl_jastrow.cpp n2.hpp
-tests_test_qmckl_jastrow_LDFLAGS = -pthread 
+tests_test_qmckl_jastrow_LDFLAGS =  
 
 # This shoud be added whether we use OpenMP or ACC
 tests_test_qmckl_ao_LDADD = libqmckl_gpu.la 
