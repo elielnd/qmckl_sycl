@@ -1222,6 +1222,7 @@ qmckl_exit_code_device qmckl_set_ao_basis_ao_factor_device(qmckl_context_device 
 	ctx->ao_basis.provided = (ctx->ao_basis.uninitialized == 0);
 	if (ctx->ao_basis.provided)
 	{
+		// std::cout << "\nESSAI 4\n\n";
 		qmckl_exit_code_device rc_ = qmckl_finalize_ao_basis_device(context);
 		if (rc_ != QMCKL_SUCCESS_DEVICE)
 			return rc_;
@@ -1797,18 +1798,17 @@ qmckl_exit_code_device qmckl_finalize_ao_basis_device(qmckl_context_device conte
 
 		int prim_num = ctx->ao_basis.prim_num;
 
-		std::cout << "\nESSAI 5\n\n";
-		std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
+		// std::cout << "\nMY KERNEL START\n\n";
 		try
 		{
 			q.submit([&](handler &h)
 					 { 
-				h.parallel_for<class MyKernel>(range<1>(nucl_num), [=](id<1> i)
-									{
+				// h.parallel_for<class MyKernal>(range<1>(nucl_num), [=](id<1> i)
+				// 					{
 						
-							// int64_t shell_idx = nucleus_index[i];
-							// nucleus_prim_index[i] = shell_prim_index[shell_idx];
-									});
+				// 			// int64_t shell_idx = nucleus_index[i];
+				// 			// nucleus_prim_index[i] = shell_prim_index[shell_idx];
+				// 					});
 				nucleus_prim_index[nucl_num] = prim_num; 
 						});
 			q.wait();
@@ -1816,8 +1816,9 @@ qmckl_exit_code_device qmckl_finalize_ao_basis_device(qmckl_context_device conte
 		catch(const std::exception& e)
 		{
 			std::cerr << e.what() << '\n';
-			std::cout << "\nESSAI 6\n\n";
 		}
+
+		std::cout << "\nMY KERNEL END\n\n";
 		
 	}
 		

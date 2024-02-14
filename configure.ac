@@ -18,7 +18,7 @@ AC_ENABLE_SHARED
 AC_ENABLE_STATIC
 
 # Add mandatory CXXFLAGS
-CXXFLAGS="-Iinclude ${CXXFLAGS}"
+CXXFLAGS="-Iinclude ${CXXFLAGS}" 
 
 
 ###
@@ -45,7 +45,7 @@ AS_CASE([$have_trexio],
   [yes],
   [AC_CHECK_LIB([trexio], [trexio_open], [],
                 [PKG_CHECK_MODULES([TREXIO], [trexio]) ])
-  CXXFLAGS="$CXXFLAGS $TREXIO_CFLAGS"
+  CXXFLAGS="$CXXFLAGS $TREXIO_CXXFLAGS"
   LIBS="$LIBS $TREXIO_LIBS"
   AC_CHECK_HEADERS([trexio.h], [
       ARGS="${ARGS} trexio"
@@ -56,7 +56,7 @@ AS_CASE([$have_trexio],
     "Warning: TREXIO not found. Library will be built without it."
     have_trexio=no
   ])
-  ARGS="${ARGS} trexio"],
+  ARGS="${ARGS}"],
 
   # Default case : explicitely enabled with specified path (mandatory)
   [AS_IF([test ! -d "$enableval"], [
@@ -64,8 +64,8 @@ AS_CASE([$have_trexio],
     AC_MSG_ERROR([--enable-trexio=$enableval: argument is not a directory])])
     AC_CHECK_HEADERS([trexio.h], [
       TREXIO_LIBS="-L$have_trexio/lib -ltrexio"
-      TREXIO_CFLAGS="-I$have_trexio/include"
-      CXXFLAGS="$CXXFLAGS $TREXIO_CFLAGS"
+      TREXIO_CXXFLAGS="-I$have_trexio/include"
+      CXXFLAGS="$CXXFLAGS $TREXIO_CXXFLAGS"
       LIBS="$LIBS $TREXIO_LIBS"
       ARGS="${ARGS} trexio"
       have_trexio=yes
@@ -110,6 +110,8 @@ Prefix: '${prefix}'
 CXX..................: ${CXX}
 CXXFLAGS.............: ${CXXFLAGS}
 LDFLAGS:.............: ${LDFLAGS}
+LIBS:................: ${LIBS}
+ARGS:................: ${ARGS}
 
 Autoflags ...........: ${have_autoflags}
 

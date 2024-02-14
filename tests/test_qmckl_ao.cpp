@@ -7,10 +7,16 @@
 #include "chbrclf.hpp"
 #include "../include/qmckl_gpu.hpp"
 
-using namespace sycl;
+#if FPGA_HARDWARE || FPGA_EMULATOR || FPGA_SIMULATOR
+#include <sycl/ext/intel/fpga_extensions.hpp>
+#endif
 
 #define AO_VALUE_ID(x, y) ao_num *x + y
 #define AO_VGL_ID(x, y, z) 5 * ao_num *x + ao_num *y + z
+
+using namespace sycl;
+
+
 
 int main()
 {
@@ -20,7 +26,7 @@ int main()
     {
         // Essayer d'initialiser la file d'attente avec le sélecteur d'accélérateur
         q = queue(accelerator_selector_v);
-        std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
+        std::cout << "Running on Device: " << q.get_device().get_info<info::device::name>() << "\n";
     }
     catch (const sycl::exception &accelerator_exception)
     {
@@ -29,42 +35,20 @@ int main()
             // S'il y a une exception lors de l'utilisation du sélecteur d'accélérateur,
             // essayez d'initialiser la file d'attente avec le sélecteur GPU
             q = queue(gpu_selector_v);
-            std::cout << "Device: " << q.get_device().get_info<info::device::name>() << "\n";
+            std::cout << "Running on Device: " << q.get_device().get_info<info::device::name>() << "\n";
         }
         catch (const sycl::exception &gpu_exception)
         {
             // Si l'initialisation avec le sélecteur GPU échoue également, utilisez la file d'attente par défaut
             q = queue();
             std::cerr << "Warning: No device found";
-            std::cout << "Host: " << q.get_device().get_info<info::device::name>() << "\n";
+            std::cout << "Running on Host: " << q.get_device().get_info<info::device::name>() << "\n";
         }
     };
 
     qmckl_context_device context;
 
     context = qmckl_context_create_device(q);
-
-    auto essai = (double *)qmckl_malloc_device(context, 4 * sizeof(double));
-
-    q.submit([&](sycl::handler &h)
-             { h.parallel_for(sycl::range<1>(4), [=](sycl::id<1> i)
-                              {
-    				for (int64_t i = 0; i < 4; ++i) 
-                    {
-                        essai[i] = 10;
-                    }
-
-                    }); });
-    q.wait();
-
-    
-    auto poi = (double *)malloc((4 * sizeof(double)));
-    qmckl_memcpy_D2H(context, poi, essai, 4 );
-
-    for (size_t i = 0; i < 4; i++)
-    {
-        std::cout << "essai[" << i << "]" << " = " << poi[i] << "\n";
-    }
 
     int64_t nucl_num = chbrclf_nucl_num;
 
@@ -189,13 +173,13 @@ int main()
     if (rc != QMCKL_SUCCESS_DEVICE)
         return 1;
 
-    std::cout << "\nESSAI 1\n\n";
+    //  std::cout << "\n START\n\n";
 
     rc = qmckl_set_ao_basis_ao_factor_device(context, ao_factor_d, ao_num);
     if (rc != QMCKL_SUCCESS_DEVICE)
         return 1;
 
-    std::cout << "\nESSAI 4\n\n";
+    // std::cout << "\n END 4\n\n";
 
     if (!qmckl_ao_basis_provided_device(context))
         return 1;
