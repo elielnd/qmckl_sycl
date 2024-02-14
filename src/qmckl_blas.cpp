@@ -56,7 +56,7 @@ qmckl_vector_of_double_device(const qmckl_context_device context,
 							  qmckl_vector_device *vector_out)
 {
 
-	int device_id = qmckl_get_device_id(context);
+	queue q = qmckl_get_device_queue(context);
 
 	qmckl_vector_device vector = *vector_out;
 	/* Always true by construction */

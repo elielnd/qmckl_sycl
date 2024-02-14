@@ -1,5 +1,13 @@
-tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
-  /usr/include/c++/10/bits/stl_algobase.h \
+src/qmckl_ao_sycl.lo: src/qmckl_ao_sycl.cpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/CL/sycl.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/sycl.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/accessor.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/CL/__spirv/spirv_types.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines_elementary.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/half_type.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/aspects.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines.hpp \
+  /usr/include/c++/10/climits \
   /usr/include/x86_64-linux-gnu/c++/10/bits/c++config.h \
   /usr/include/x86_64-linux-gnu/c++/10/bits/os_defines.h \
   /usr/include/features.h /usr/include/stdc-predef.h \
@@ -11,50 +19,31 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
   /usr/include/x86_64-linux-gnu/c++/10/bits/cpu_defines.h \
   /usr/include/c++/10/pstl/pstl_config.h \
   /opt/intel/oneapi/tbb/2021.11/env/../include/tbb/tbb.h \
-  /usr/include/c++/10/bits/functexcept.h \
-  /usr/include/c++/10/bits/exception_defines.h \
-  /usr/include/c++/10/bits/cpp_type_traits.h \
-  /usr/include/c++/10/ext/type_traits.h \
-  /usr/include/c++/10/ext/numeric_traits.h \
-  /usr/include/c++/10/bits/stl_pair.h /usr/include/c++/10/bits/move.h \
-  /usr/include/c++/10/type_traits \
-  /usr/include/c++/10/bits/stl_iterator_base_types.h \
-  /usr/include/c++/10/bits/stl_iterator_base_funcs.h \
-  /usr/include/c++/10/bits/concept_check.h \
-  /usr/include/c++/10/debug/assertions.h \
-  /usr/include/c++/10/bits/stl_iterator.h \
-  /usr/include/c++/10/bits/ptr_traits.h \
-  /usr/include/c++/10/debug/debug.h \
-  /usr/include/c++/10/bits/predefined_ops.h \
-  /usr/include/c++/10/bits/allocator.h \
-  /usr/include/x86_64-linux-gnu/c++/10/bits/c++allocator.h \
-  /usr/include/c++/10/ext/new_allocator.h /usr/include/c++/10/new \
-  /usr/include/c++/10/exception /usr/include/c++/10/bits/exception.h \
-  /usr/include/c++/10/bits/exception_ptr.h \
-  /usr/include/c++/10/bits/cxxabi_init_exception.h \
+  /opt/intel/oneapi/compiler/2024.0/opt/compiler/include/limits.h \
+  /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/limits.h \
+  /usr/include/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects.def \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects_deprecated.def \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/bit_cast.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/memcpy.hpp \
+  /usr/include/c++/10/cstddef \
   /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stddef.h \
   /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/__stddef_max_align_t.h \
-  /usr/include/c++/10/typeinfo /usr/include/c++/10/bits/hash_bytes.h \
-  /usr/include/c++/10/bits/nested_exception.h \
-  /usr/include/c++/10/bits/memoryfwd.h \
-  /usr/include/c++/10/bits/stl_construct.h \
-  /usr/include/c++/10/bits/stl_uninitialized.h \
-  /usr/include/c++/10/ext/alloc_traits.h \
-  /usr/include/c++/10/bits/alloc_traits.h \
-  /usr/include/c++/10/bits/stl_vector.h \
-  /usr/include/c++/10/initializer_list \
-  /usr/include/c++/10/bits/stl_bvector.h \
-  /usr/include/c++/10/bits/functional_hash.h \
-  /usr/include/c++/10/bits/range_access.h \
-  /usr/include/c++/10/bits/iterator_concepts.h \
-  /usr/include/c++/10/concepts /usr/include/c++/10/bits/range_cmp.h \
-  /usr/include/c++/10/bits/vector.tcc /usr/include/c++/10/iostream \
-  /usr/include/c++/10/ostream /usr/include/c++/10/ios \
+  /usr/include/c++/10/type_traits \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/export.hpp \
+  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/iostream_proxy.hpp \
+  /usr/include/c++/10/istream /usr/include/c++/10/ios \
   /usr/include/c++/10/iosfwd /usr/include/c++/10/bits/stringfwd.h \
+  /usr/include/c++/10/bits/memoryfwd.h \
   /usr/include/c++/10/bits/postypes.h /usr/include/c++/10/cwchar \
-  /usr/include/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/wchar.h /usr/include/x86_64-linux-gnu/bits/floatn.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
   /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stdarg.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
@@ -65,7 +54,28 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
   /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/c++/10/bits/char_traits.h /usr/include/c++/10/cstdint \
+  /usr/include/c++/10/exception /usr/include/c++/10/bits/exception.h \
+  /usr/include/c++/10/bits/exception_ptr.h \
+  /usr/include/c++/10/bits/exception_defines.h \
+  /usr/include/c++/10/bits/cxxabi_init_exception.h \
+  /usr/include/c++/10/typeinfo /usr/include/c++/10/bits/hash_bytes.h \
+  /usr/include/c++/10/new /usr/include/c++/10/bits/move.h \
+  /usr/include/c++/10/bits/nested_exception.h \
+  /usr/include/c++/10/bits/char_traits.h \
+  /usr/include/c++/10/bits/stl_algobase.h \
+  /usr/include/c++/10/bits/functexcept.h \
+  /usr/include/c++/10/bits/cpp_type_traits.h \
+  /usr/include/c++/10/ext/type_traits.h \
+  /usr/include/c++/10/ext/numeric_traits.h \
+  /usr/include/c++/10/bits/stl_pair.h \
+  /usr/include/c++/10/bits/stl_iterator_base_types.h \
+  /usr/include/c++/10/bits/stl_iterator_base_funcs.h \
+  /usr/include/c++/10/bits/concept_check.h \
+  /usr/include/c++/10/debug/assertions.h \
+  /usr/include/c++/10/bits/stl_iterator.h \
+  /usr/include/c++/10/bits/ptr_traits.h \
+  /usr/include/c++/10/debug/debug.h \
+  /usr/include/c++/10/bits/predefined_ops.h /usr/include/c++/10/cstdint \
   /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stdint.h \
   /usr/include/stdint.h /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/timesize.h \
@@ -105,12 +115,23 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/c++/10/bits/atomic_word.h \
   /usr/include/c++/10/bits/locale_classes.h /usr/include/c++/10/string \
+  /usr/include/c++/10/bits/allocator.h \
+  /usr/include/x86_64-linux-gnu/c++/10/bits/c++allocator.h \
+  /usr/include/c++/10/ext/new_allocator.h \
   /usr/include/c++/10/bits/ostream_insert.h \
   /usr/include/c++/10/bits/cxxabi_forced.h \
   /usr/include/c++/10/bits/stl_function.h \
   /usr/include/c++/10/backward/binders.h \
+  /usr/include/c++/10/bits/range_access.h \
+  /usr/include/c++/10/initializer_list \
+  /usr/include/c++/10/bits/iterator_concepts.h \
+  /usr/include/c++/10/concepts /usr/include/c++/10/bits/range_cmp.h \
   /usr/include/c++/10/bits/basic_string.h \
+  /usr/include/c++/10/ext/alloc_traits.h \
+  /usr/include/c++/10/bits/alloc_traits.h \
+  /usr/include/c++/10/bits/stl_construct.h \
   /usr/include/c++/10/string_view \
+  /usr/include/c++/10/bits/functional_hash.h \
   /usr/include/c++/10/bits/string_view.tcc \
   /usr/include/c++/10/ext/string_conversions.h \
   /usr/include/c++/10/cstdlib /usr/include/stdlib.h \
@@ -154,34 +175,9 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
   /usr/include/c++/10/bits/streambuf_iterator.h \
   /usr/include/x86_64-linux-gnu/c++/10/bits/ctype_inline.h \
   /usr/include/c++/10/bits/locale_facets.tcc \
-  /usr/include/c++/10/bits/basic_ios.tcc \
-  /usr/include/c++/10/bits/ostream.tcc /usr/include/c++/10/istream \
-  /usr/include/c++/10/bits/istream.tcc tests/chbrclf.hpp \
-  tests/../include/qmckl_gpu.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/CL/sycl.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/sycl.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/accessor.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/CL/__spirv/spirv_types.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines_elementary.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/half_type.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/aspects.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines.hpp \
-  /usr/include/c++/10/climits \
-  /opt/intel/oneapi/compiler/2024.0/opt/compiler/include/limits.h \
-  /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/limits.h \
-  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects.def \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects_deprecated.def \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/bit_cast.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/memcpy.hpp \
-  /usr/include/c++/10/cstddef \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/export.hpp \
-  /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/iostream_proxy.hpp \
+  /usr/include/c++/10/bits/basic_ios.tcc /usr/include/c++/10/ostream \
+  /usr/include/c++/10/bits/ostream.tcc \
+  /usr/include/c++/10/bits/istream.tcc \
   /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/vector_traits.hpp \
   /usr/include/c++/10/algorithm /usr/include/c++/10/utility \
   /usr/include/c++/10/bits/stl_relops.h \
@@ -202,7 +198,11 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
   /usr/include/c++/10/bits/enable_special_members.h \
   /usr/include/c++/10/bits/node_handle.h /usr/include/c++/10/optional \
   /usr/include/c++/10/bits/unordered_map.h \
-  /usr/include/c++/10/bits/erase_if.h \
+  /usr/include/c++/10/bits/erase_if.h /usr/include/c++/10/vector \
+  /usr/include/c++/10/bits/stl_uninitialized.h \
+  /usr/include/c++/10/bits/stl_vector.h \
+  /usr/include/c++/10/bits/stl_bvector.h \
+  /usr/include/c++/10/bits/vector.tcc \
   /usr/include/c++/10/pstl/execution_defs.h \
   /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/stl_type_traits.hpp \
   /usr/include/c++/10/iterator \
@@ -492,9 +492,27 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
   /opt/intel/oneapi/compiler/2024.0/include/sycl/ext/oneapi/owner_less.hpp \
   /opt/intel/oneapi/compiler/2024.0/include/sycl/ext/oneapi/weak_object.hpp \
   /opt/intel/oneapi/compiler/2024.0/include/sycl/ext/oneapi/sub_group.hpp \
-  /usr/include/c++/10/thread
-/usr/include/c++/10/vector:
-/usr/include/c++/10/bits/stl_algobase.h:
+  src/../include/qmckl_ao.hpp \
+  /opt/intel/oneapi/compiler/2024.0/opt/compiler/include/math.h \
+  /usr/include/c++/10/math.h \
+  /opt/intel/oneapi/compiler/2024.0/opt/compiler/include/math_common_define.h \
+  /opt/intel/oneapi/compiler/2024.0/opt/compiler/include/math_common_undefine.h \
+  src/../include/qmckl_basic_functions.hpp \
+  src/../include/qmckl_types.hpp /usr/include/c++/10/iostream \
+  /usr/include/c++/10/cstdbool \
+  /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stdbool.h \
+  src/../include/qmckl_context.hpp /usr/include/c++/10/thread \
+  src/../include/qmckl_memory.hpp src/../include/qmckl_blas.hpp \
+  src/../include/qmckl_nucleus.hpp
+/opt/intel/oneapi/compiler/2024.0/include/sycl/CL/sycl.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/sycl.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/accessor.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/CL/__spirv/spirv_types.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines_elementary.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/half_type.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/aspects.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines.hpp:
+/usr/include/c++/10/climits:
 /usr/include/x86_64-linux-gnu/c++/10/bits/c++config.h:
 /usr/include/x86_64-linux-gnu/c++/10/bits/os_defines.h:
 /usr/include/features.h:
@@ -507,58 +525,34 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
 /usr/include/x86_64-linux-gnu/c++/10/bits/cpu_defines.h:
 /usr/include/c++/10/pstl/pstl_config.h:
 /opt/intel/oneapi/tbb/2021.11/env/../include/tbb/tbb.h:
-/usr/include/c++/10/bits/functexcept.h:
-/usr/include/c++/10/bits/exception_defines.h:
-/usr/include/c++/10/bits/cpp_type_traits.h:
-/usr/include/c++/10/ext/type_traits.h:
-/usr/include/c++/10/ext/numeric_traits.h:
-/usr/include/c++/10/bits/stl_pair.h:
-/usr/include/c++/10/bits/move.h:
-/usr/include/c++/10/type_traits:
-/usr/include/c++/10/bits/stl_iterator_base_types.h:
-/usr/include/c++/10/bits/stl_iterator_base_funcs.h:
-/usr/include/c++/10/bits/concept_check.h:
-/usr/include/c++/10/debug/assertions.h:
-/usr/include/c++/10/bits/stl_iterator.h:
-/usr/include/c++/10/bits/ptr_traits.h:
-/usr/include/c++/10/debug/debug.h:
-/usr/include/c++/10/bits/predefined_ops.h:
-/usr/include/c++/10/bits/allocator.h:
-/usr/include/x86_64-linux-gnu/c++/10/bits/c++allocator.h:
-/usr/include/c++/10/ext/new_allocator.h:
-/usr/include/c++/10/new:
-/usr/include/c++/10/exception:
-/usr/include/c++/10/bits/exception.h:
-/usr/include/c++/10/bits/exception_ptr.h:
-/usr/include/c++/10/bits/cxxabi_init_exception.h:
+/opt/intel/oneapi/compiler/2024.0/opt/compiler/include/limits.h:
+/opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/limits.h:
+/usr/include/limits.h:
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
+/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+/usr/include/x86_64-linux-gnu/bits/local_lim.h:
+/usr/include/linux/limits.h:
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
+/usr/include/x86_64-linux-gnu/bits/xopen_lim.h:
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects.def:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects_deprecated.def:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/bit_cast.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/memcpy.hpp:
+/usr/include/c++/10/cstddef:
 /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stddef.h:
 /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/__stddef_max_align_t.h:
-/usr/include/c++/10/typeinfo:
-/usr/include/c++/10/bits/hash_bytes.h:
-/usr/include/c++/10/bits/nested_exception.h:
-/usr/include/c++/10/bits/memoryfwd.h:
-/usr/include/c++/10/bits/stl_construct.h:
-/usr/include/c++/10/bits/stl_uninitialized.h:
-/usr/include/c++/10/ext/alloc_traits.h:
-/usr/include/c++/10/bits/alloc_traits.h:
-/usr/include/c++/10/bits/stl_vector.h:
-/usr/include/c++/10/initializer_list:
-/usr/include/c++/10/bits/stl_bvector.h:
-/usr/include/c++/10/bits/functional_hash.h:
-/usr/include/c++/10/bits/range_access.h:
-/usr/include/c++/10/bits/iterator_concepts.h:
-/usr/include/c++/10/concepts:
-/usr/include/c++/10/bits/range_cmp.h:
-/usr/include/c++/10/bits/vector.tcc:
-/usr/include/c++/10/iostream:
-/usr/include/c++/10/ostream:
+/usr/include/c++/10/type_traits:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/export.hpp:
+/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/iostream_proxy.hpp:
+/usr/include/c++/10/istream:
 /usr/include/c++/10/ios:
 /usr/include/c++/10/iosfwd:
 /usr/include/c++/10/bits/stringfwd.h:
+/usr/include/c++/10/bits/memoryfwd.h:
 /usr/include/c++/10/bits/postypes.h:
 /usr/include/c++/10/cwchar:
 /usr/include/wchar.h:
-/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stdarg.h:
@@ -570,7 +564,31 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
 /usr/include/x86_64-linux-gnu/bits/types/locale_t.h:
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
+/usr/include/c++/10/exception:
+/usr/include/c++/10/bits/exception.h:
+/usr/include/c++/10/bits/exception_ptr.h:
+/usr/include/c++/10/bits/exception_defines.h:
+/usr/include/c++/10/bits/cxxabi_init_exception.h:
+/usr/include/c++/10/typeinfo:
+/usr/include/c++/10/bits/hash_bytes.h:
+/usr/include/c++/10/new:
+/usr/include/c++/10/bits/move.h:
+/usr/include/c++/10/bits/nested_exception.h:
 /usr/include/c++/10/bits/char_traits.h:
+/usr/include/c++/10/bits/stl_algobase.h:
+/usr/include/c++/10/bits/functexcept.h:
+/usr/include/c++/10/bits/cpp_type_traits.h:
+/usr/include/c++/10/ext/type_traits.h:
+/usr/include/c++/10/ext/numeric_traits.h:
+/usr/include/c++/10/bits/stl_pair.h:
+/usr/include/c++/10/bits/stl_iterator_base_types.h:
+/usr/include/c++/10/bits/stl_iterator_base_funcs.h:
+/usr/include/c++/10/bits/concept_check.h:
+/usr/include/c++/10/debug/assertions.h:
+/usr/include/c++/10/bits/stl_iterator.h:
+/usr/include/c++/10/bits/ptr_traits.h:
+/usr/include/c++/10/debug/debug.h:
+/usr/include/c++/10/bits/predefined_ops.h:
 /usr/include/c++/10/cstdint:
 /opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stdint.h:
 /usr/include/stdint.h:
@@ -618,12 +636,24 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
 /usr/include/x86_64-linux-gnu/c++/10/bits/atomic_word.h:
 /usr/include/c++/10/bits/locale_classes.h:
 /usr/include/c++/10/string:
+/usr/include/c++/10/bits/allocator.h:
+/usr/include/x86_64-linux-gnu/c++/10/bits/c++allocator.h:
+/usr/include/c++/10/ext/new_allocator.h:
 /usr/include/c++/10/bits/ostream_insert.h:
 /usr/include/c++/10/bits/cxxabi_forced.h:
 /usr/include/c++/10/bits/stl_function.h:
 /usr/include/c++/10/backward/binders.h:
+/usr/include/c++/10/bits/range_access.h:
+/usr/include/c++/10/initializer_list:
+/usr/include/c++/10/bits/iterator_concepts.h:
+/usr/include/c++/10/concepts:
+/usr/include/c++/10/bits/range_cmp.h:
 /usr/include/c++/10/bits/basic_string.h:
+/usr/include/c++/10/ext/alloc_traits.h:
+/usr/include/c++/10/bits/alloc_traits.h:
+/usr/include/c++/10/bits/stl_construct.h:
 /usr/include/c++/10/string_view:
+/usr/include/c++/10/bits/functional_hash.h:
 /usr/include/c++/10/bits/string_view.tcc:
 /usr/include/c++/10/ext/string_conversions.h:
 /usr/include/c++/10/cstdlib:
@@ -677,36 +707,9 @@ tests/test_qmckl_mo.o: tests/test_qmckl_mo.cpp /usr/include/c++/10/vector \
 /usr/include/x86_64-linux-gnu/c++/10/bits/ctype_inline.h:
 /usr/include/c++/10/bits/locale_facets.tcc:
 /usr/include/c++/10/bits/basic_ios.tcc:
+/usr/include/c++/10/ostream:
 /usr/include/c++/10/bits/ostream.tcc:
-/usr/include/c++/10/istream:
 /usr/include/c++/10/bits/istream.tcc:
-tests/chbrclf.hpp:
-tests/../include/qmckl_gpu.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/CL/sycl.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/sycl.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/accessor.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/CL/__spirv/spirv_types.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines_elementary.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/half_type.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/aspects.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/defines.hpp:
-/usr/include/c++/10/climits:
-/opt/intel/oneapi/compiler/2024.0/opt/compiler/include/limits.h:
-/opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/limits.h:
-/usr/include/limits.h:
-/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
-/usr/include/x86_64-linux-gnu/bits/local_lim.h:
-/usr/include/linux/limits.h:
-/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
-/usr/include/x86_64-linux-gnu/bits/xopen_lim.h:
-/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects.def:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/info/aspects_deprecated.def:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/bit_cast.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/memcpy.hpp:
-/usr/include/c++/10/cstddef:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/export.hpp:
-/opt/intel/oneapi/compiler/2024.0/include/sycl/detail/iostream_proxy.hpp:
 /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/vector_traits.hpp:
 /usr/include/c++/10/algorithm:
 /usr/include/c++/10/utility:
@@ -734,6 +737,11 @@ tests/../include/qmckl_gpu.hpp:
 /usr/include/c++/10/optional:
 /usr/include/c++/10/bits/unordered_map.h:
 /usr/include/c++/10/bits/erase_if.h:
+/usr/include/c++/10/vector:
+/usr/include/c++/10/bits/stl_uninitialized.h:
+/usr/include/c++/10/bits/stl_vector.h:
+/usr/include/c++/10/bits/stl_bvector.h:
+/usr/include/c++/10/bits/vector.tcc:
 /usr/include/c++/10/pstl/execution_defs.h:
 /opt/intel/oneapi/compiler/2024.0/include/sycl/detail/stl_type_traits.hpp:
 /usr/include/c++/10/iterator:
@@ -1037,4 +1045,18 @@ tests/../include/qmckl_gpu.hpp:
 /opt/intel/oneapi/compiler/2024.0/include/sycl/ext/oneapi/owner_less.hpp:
 /opt/intel/oneapi/compiler/2024.0/include/sycl/ext/oneapi/weak_object.hpp:
 /opt/intel/oneapi/compiler/2024.0/include/sycl/ext/oneapi/sub_group.hpp:
+src/../include/qmckl_ao.hpp:
+/opt/intel/oneapi/compiler/2024.0/opt/compiler/include/math.h:
+/usr/include/c++/10/math.h:
+/opt/intel/oneapi/compiler/2024.0/opt/compiler/include/math_common_define.h:
+/opt/intel/oneapi/compiler/2024.0/opt/compiler/include/math_common_undefine.h:
+src/../include/qmckl_basic_functions.hpp:
+src/../include/qmckl_types.hpp:
+/usr/include/c++/10/iostream:
+/usr/include/c++/10/cstdbool:
+/opt/intel/oneapi/compiler/2024.0/lib/clang/17/include/stdbool.h:
+src/../include/qmckl_context.hpp:
 /usr/include/c++/10/thread:
+src/../include/qmckl_memory.hpp:
+src/../include/qmckl_blas.hpp:
+src/../include/qmckl_nucleus.hpp:

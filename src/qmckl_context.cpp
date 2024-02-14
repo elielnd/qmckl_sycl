@@ -129,25 +129,6 @@ qmckl_exit_code_device qmckl_init_point_device(qmckl_context_device context)
     return QMCKL_SUCCESS_DEVICE;
 }
 
-qmckl_exit_code_device qmckl_init_ao_basis_device(qmckl_context_device context)
-{
-
-    if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE)
-    {
-        return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
-                                     "qmckl_init_ao_basis_device", NULL);
-    }
-
-    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
-    assert(ctx != NULL);
-
-    ctx->ao_basis.uninitialized = (1 << 14) - 1;
-
-    /* Default values */
-    ctx->ao_basis.ao_cartesian = true;
-
-    return QMCKL_SUCCESS_DEVICE;
-}
 
 qmckl_exit_code_device qmckl_init_mo_basis_device(qmckl_context_device context)
 {

@@ -19,10 +19,10 @@
 #include "qmckl_memory.hpp"
 #include "qmckl_blas.hpp"
 
-static inline size_t qmckl_get_device_id(qmckl_context_device context)
+static inline sycl::queue qmckl_get_device_queue(qmckl_context_device context)
 {
 	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
-	return ctx->device_id;
+	return ctx->q;
 }
 
 //**********
