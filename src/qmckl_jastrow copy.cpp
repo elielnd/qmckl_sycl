@@ -2,7 +2,6 @@
     
     sycl::queue queue = ctx->q;
 
-    
     queue.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(type_nucl_num), [=](sycl::id<1> idx) {
 
