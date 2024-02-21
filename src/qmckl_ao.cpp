@@ -1798,154 +1798,145 @@ qmckl_exit_code_device qmckl_finalize_ao_basis_device(qmckl_context_device conte
 
 		int prim_num = ctx->ao_basis.prim_num;
 
-		// std::cout << "\nMY KERNEL START\n\n";
-		try
-		{
-			q.submit([&](handler &h)
-					 { 
-				// h.parallel_for<class MyKernal>(range<1>(nucl_num), [=](id<1> i)
-				// 					{
+		std::cout << "\nMY KERNEL START\n\n";
+
+		q.submit([&](handler &h)
+				 { 
+				h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+									{
 						
-				// 			// int64_t shell_idx = nucleus_index[i];
-				// 			// nucleus_prim_index[i] = shell_prim_index[shell_idx];
-				// 					});
+							int64_t shell_idx = nucleus_index[i];
+							nucleus_prim_index[i] = shell_prim_index[shell_idx];
+									});
 				nucleus_prim_index[nucl_num] = prim_num; 
-						});
-			q.wait();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-		}
-
-		std::cout << "\nMY KERNEL END\n\n";
-		
-	}
-		
-	
-
-	/* Normalize coefficients */
-	{
-		
-
-		ctx->ao_basis.coefficient_normalized = (double *)qmckl_malloc_device(context, ctx->ao_basis.prim_num * sizeof(double));
-
-		if (ctx->ao_basis.coefficient_normalized == NULL)
-		{
-			return qmckl_failwith_device(context, QMCKL_ALLOCATION_FAILED_DEVICE,
-										 "ao_basis.coefficient_normalized", NULL);
-		}
-
-		// Extract arrays from context
-		int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
-		int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
-		double *coefficient_normalized = ctx->ao_basis.coefficient_normalized;
-		double *coefficient = ctx->ao_basis.coefficient;
-		double *prim_factor = ctx->ao_basis.prim_factor;
-		double *shell_factor = ctx->ao_basis.shell_factor;
-
-		int shell_num = ctx->ao_basis.shell_num;
-
-		q.submit([&](sycl::handler &h)
-				 {
-    			for (int64_t ishell = 0; ishell < shell_num; ++ishell) 
-                {
-    				for (int64_t iprim = shell_prim_index[ishell];
-    					 iprim < shell_prim_index[ishell] + shell_prim_num[ishell];
-    					 ++iprim) 
-                        {
-    					    coefficient_normalized[iprim] = coefficient[iprim] *
-    													prim_factor[iprim] *
-    													shell_factor[ishell];
-    				    }
-    			} });
+				});
 		q.wait();
+
+		// std::cout << "\nMY KERNEL END\n\n";
 	}
 
-	/* Find max angular momentum on each nucleus */
-	{
+	// /* Normalize coefficients */
+	// {
 
-		ctx->ao_basis.nucleus_max_ang_mom = (int32_t *)qmckl_malloc_device(context, ctx->nucleus.num * sizeof(int32_t));
+	// 	ctx->ao_basis.coefficient_normalized = (double *)qmckl_malloc_device(context, ctx->ao_basis.prim_num * sizeof(double));
 
-		if (ctx->ao_basis.nucleus_max_ang_mom == NULL)
-		{
-			return qmckl_failwith_device(context,
-										 QMCKL_ALLOCATION_FAILED_DEVICE,
-										 "ao_basis.nucleus_max_ang_mom", NULL);
-		}
+	// 	if (ctx->ao_basis.coefficient_normalized == NULL)
+	// 	{
+	// 		return qmckl_failwith_device(context, QMCKL_ALLOCATION_FAILED_DEVICE,
+	// 									 "ao_basis.coefficient_normalized", NULL);
+	// 	}
 
-		// Extract arrays from context
-		int32_t *nucleus_max_ang_mom = ctx->ao_basis.nucleus_max_ang_mom;
-		int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
-		int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
-		int32_t *shell_ang_mom = ctx->ao_basis.shell_ang_mom;
+	// 	// Extract arrays from context
+	// 	int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
+	// 	int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
+	// 	double *coefficient_normalized = ctx->ao_basis.coefficient_normalized;
+	// 	double *coefficient = ctx->ao_basis.coefficient;
+	// 	double *prim_factor = ctx->ao_basis.prim_factor;
+	// 	double *shell_factor = ctx->ao_basis.shell_factor;
 
-		q.submit([&](sycl::handler &h)
-				 { h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> inucl)
-								  {
-    				nucleus_max_ang_mom[inucl] = 0;
-    				for (int64_t ishell = nucleus_index[inucl];
-    					 ishell < nucleus_index[inucl] + nucleus_shell_num[inucl];
-    					 ++ishell) 
-                        {
-    					nucleus_max_ang_mom[inucl] =
-    						nucleus_max_ang_mom[inucl] > shell_ang_mom[ishell]
-    							? nucleus_max_ang_mom[inucl]
-    							: shell_ang_mom[ishell];
-    				    } }); });
-		q.wait();
-	}
+	// 	int shell_num = ctx->ao_basis.shell_num;
 
-	/* Find distance beyond which all AOs are zero.
-	   The distance is obtained by sqrt(log(cutoff)*range) */
-	{
-		if (ctx->ao_basis.type == 'G')
-		{
+	// 	q.submit([&](sycl::handler &h)
+	// 			 {
+	// 			for (int64_t ishell = 0; ishell < shell_num; ++ishell)
+	//             {
+	// 				for (int64_t iprim = shell_prim_index[ishell];
+	// 					 iprim < shell_prim_index[ishell] + shell_prim_num[ishell];
+	// 					 ++iprim)
+	//                     {
+	// 					    coefficient_normalized[iprim] = coefficient[iprim] *
+	// 													prim_factor[iprim] *
+	// 													shell_factor[ishell];
+	// 				    }
+	// 			} });
+	// 	q.wait();
+	// }
 
-			ctx->ao_basis.nucleus_range = (double *)qmckl_malloc_device(
-				context, ctx->nucleus.num * sizeof(double));
+	// /* Find max angular momentum on each nucleus */
+	// {
 
-			if (ctx->ao_basis.nucleus_range == NULL)
-			{
-				return qmckl_failwith_device(context,
-											 QMCKL_ALLOCATION_FAILED_DEVICE,
-											 "ao_basis.nucleus_range", NULL);
-			}
+	// 	ctx->ao_basis.nucleus_max_ang_mom = (int32_t *)qmckl_malloc_device(context, ctx->nucleus.num * sizeof(int32_t));
 
-			// Extract arrays from context
-			double *nucleus_range = ctx->ao_basis.nucleus_range;
-			int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
-			int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
-			int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
-			int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
-			double *exponent = ctx->ao_basis.exponent;
+	// 	if (ctx->ao_basis.nucleus_max_ang_mom == NULL)
+	// 	{
+	// 		return qmckl_failwith_device(context,
+	// 									 QMCKL_ALLOCATION_FAILED_DEVICE,
+	// 									 "ao_basis.nucleus_max_ang_mom", NULL);
+	// 	}
 
-			int nucleus_num = ctx->nucleus.num;
+	// 	// Extract arrays from context
+	// 	int32_t *nucleus_max_ang_mom = ctx->ao_basis.nucleus_max_ang_mom;
+	// 	int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
+	// 	int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
+	// 	int32_t *shell_ang_mom = ctx->ao_basis.shell_ang_mom;
 
-			q.submit([&](sycl::handler &h)
-					 {
-    				for (int64_t inucl = 0; inucl < nucleus_num; ++inucl) {
-    					nucleus_range[inucl] = 0.;
-    					for (int64_t ishell = nucleus_index[inucl];
-    						 ishell <
-    						 nucleus_index[inucl] + nucleus_shell_num[inucl];
-    						 ++ishell) {
-    						for (int64_t iprim = shell_prim_index[ishell];
-    							 iprim <
-    							 shell_prim_index[ishell] + shell_prim_num[ishell];
-    							 ++iprim) {
-    							double range = 1. / exponent[iprim];
-    							nucleus_range[inucl] = nucleus_range[inucl] > range
-    													   ? nucleus_range[inucl]
-    													   : range;
-    						}
-    					}
-    				} });
-			q.wait();
-		}
-	}
+	// 	q.submit([&](sycl::handler &h)
+	// 			 { h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> inucl)
+	// 							  {
+	// 				nucleus_max_ang_mom[inucl] = 0;
+	// 				for (int64_t ishell = nucleus_index[inucl];
+	// 					 ishell < nucleus_index[inucl] + nucleus_shell_num[inucl];
+	// 					 ++ishell)
+	//                     {
+	// 					nucleus_max_ang_mom[inucl] =
+	// 						nucleus_max_ang_mom[inucl] > shell_ang_mom[ishell]
+	// 							? nucleus_max_ang_mom[inucl]
+	// 							: shell_ang_mom[ishell];
+	// 				    } }); });
+	// 	q.wait();
+	// }
 
-	rc = qmckl_finalize_ao_basis_hpc_device(context);
+	// /* Find distance beyond which all AOs are zero.
+	//    The distance is obtained by sqrt(log(cutoff)*range) */
+	// {
+	// 	if (ctx->ao_basis.type == 'G')
+	// 	{
+
+	// 		ctx->ao_basis.nucleus_range = (double *)qmckl_malloc_device(
+	// 			context, ctx->nucleus.num * sizeof(double));
+
+	// 		if (ctx->ao_basis.nucleus_range == NULL)
+	// 		{
+	// 			return qmckl_failwith_device(context,
+	// 										 QMCKL_ALLOCATION_FAILED_DEVICE,
+	// 										 "ao_basis.nucleus_range", NULL);
+	// 		}
+
+	// 		// Extract arrays from context
+	// 		double *nucleus_range = ctx->ao_basis.nucleus_range;
+	// 		int64_t *nucleus_index = ctx->ao_basis.nucleus_index;
+	// 		int64_t *nucleus_shell_num = ctx->ao_basis.nucleus_shell_num;
+	// 		int64_t *shell_prim_index = ctx->ao_basis.shell_prim_index;
+	// 		int64_t *shell_prim_num = ctx->ao_basis.shell_prim_num;
+	// 		double *exponent = ctx->ao_basis.exponent;
+
+	// 		int nucleus_num = ctx->nucleus.num;
+
+	// 		q.submit([&](sycl::handler &h)
+	// 				 {
+	// 				for (int64_t inucl = 0; inucl < nucleus_num; ++inucl) {
+	// 					nucleus_range[inucl] = 0.;
+	// 					for (int64_t ishell = nucleus_index[inucl];
+	// 						 ishell <
+	// 						 nucleus_index[inucl] + nucleus_shell_num[inucl];
+	// 						 ++ishell) {
+	// 						for (int64_t iprim = shell_prim_index[ishell];
+	// 							 iprim <
+	// 							 shell_prim_index[ishell] + shell_prim_num[ishell];
+	// 							 ++iprim) {
+	// 							double range = 1. / exponent[iprim];
+	// 							nucleus_range[inucl] = nucleus_range[inucl] > range
+	// 													   ? nucleus_range[inucl]
+	// 													   : range;
+	// 						}
+	// 					}
+	// 				} });
+	// 		q.wait();
+	// 	}
+	// }
+
+	rc = QMCKL_SUCCESS_DEVICE;
+	// qmckl_finalize_ao_basis_hpc_device(context);
 
 	return rc;
 }
