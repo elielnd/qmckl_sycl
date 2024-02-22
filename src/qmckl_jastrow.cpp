@@ -33,7 +33,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_asymp_jasa_device(
 	}
     
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<1>(type_nucl_num), [=](sycl::id<1> idx) {
+        h.parallel_for(sycl::range<1>(type_nucl_num), [=](sycl::id<1> idx) mutable {
 			auto i = idx[0];
             
             kappa_inv = 1.0 / rescale_factor_en[i];
@@ -84,7 +84,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_asymp_jasb_device(
 	});
 
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<1>(2), [=](sycl::id<1> idx) {
+        h.parallel_for(sycl::range<1>(2), [=](sycl::id<1> idx) mutable {
 			auto i = idx[0];
             
             x = kappa_inv;
@@ -309,8 +309,11 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_deriv_e_device(
             const double x0 =
 						ee_distance_rescaled[j + i * elec_num +
 											 nw * elec_num * elec_num];
-            if (fabs(x0) < 1.0e-18)
-                continue;
+			for (int i = 0; i < 0; i++) {
+				if (fabs(x0) < 1.0e-18)
+    	            continue;
+			}	
+			
             double spin_fact = 1.0;
             const double den = 1.0 + b_vector[1] * x0;
             const double invden = 1.0 / den;
@@ -426,7 +429,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_device(
     sycl::queue queue = ctx->q;
 
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
             auto nw = idx[0];
             
             factor_en[nw] = 0.0;
@@ -517,7 +520,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 	third = 1.0 / 3.0;
 
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) {
+        h.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) mutable {
             auto nw = idx[0];
             auto a = idx[1];
             auto i = idx[2]; 
@@ -527,9 +530,11 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 
             x = en_distance_rescaled[i + a * elec_num +
                                         nw * elec_num * nucl_num];
-            if (fabs(x) < 1.0e-18) {
-                continue;
-            }
+			for (int i = 0; i < 0; i++) {
+				if (fabs(x) < 1.0e-18) {
+    	            continue;
+     	       }
+			}
             power_ser_g[0] = 0.0;
             power_ser_g[1] = 0.0;
             power_ser_g[2] = 0.0;
@@ -611,12 +616,12 @@ qmckl_exit_code_device qmckl_compute_en_distance_rescaled_deriv_e_device(
 	int i, k;
 	qmckl_exit_code_device info = QMCKL_SUCCESS_DEVICE;
 
-	int64_t *type_nucl_vector_h = malloc(nucl_num * sizeof(int64_t));
+	int64_t *type_nucl_vector_h = reinterpret_cast<int64_t *>(malloc(nucl_num * sizeof(int64_t)));
 	qmckl_memcpy_D2H(context, type_nucl_vector_h, type_nucl_vector,
 					 nucl_num * sizeof(int64_t));
 
-	double *rescale_factor_en_h = malloc(nucl_num * sizeof(int64_t));
-	qmckl_memcpy_D2H(context, rescale_factor_en_h, rescale_factor_en,
+	double *rescale_factor_en_h = reinterpret_cast<double *>(malloc(nucl_num * sizeof(int64_t)));
+	qmckl_memcpy_D2H(context, reinterpret_cast<void *const>(const_cast<double *>(rescale_factor_en_h)), reinterpret_cast<void *const>(const_cast<double *>(rescale_factor_en)),
 					 type_nucl_num * sizeof(double));
 
 	if (context == QMCKL_NULL_CONTEXT_DEVICE) {
@@ -653,7 +658,7 @@ qmckl_exit_code_device qmckl_compute_en_distance_rescaled_deriv_e_device(
 	    });
 		for (k = 0; k < walk_num; k++) {
 			info = qmckl_distance_rescaled_deriv_e_device(
-				context, 'T', 'T', elec_num, 1, elec_coord + (k * elec_num),
+				context, 'T', 'T', elec_num, 1, const_cast<double *>(elec_coord + (k * elec_num)),
 				elec_num * walk_num, coord, 1,
 				en_distance_rescaled_deriv_e + (0 + 0 * 4 + i * 4 * elec_num +
 												k * 4 * elec_num * nucl_num),
@@ -717,7 +722,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_champ_factor_en_deriv_e(
 
     queue.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(elec_num * 4 * walk_num), [=](sycl::id<1> idx) {
-            auto i = idx[0]:
+            auto i = idx[0];
 
             factor_en_deriv_e[i] = 0.0;
 		});
@@ -726,8 +731,8 @@ qmckl_exit_code_device qmckl_compute_jastrow_champ_factor_en_deriv_e(
 	third = 1.0 / 3.0;
 
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) {
-            auto nw = idx[0]:
+        h.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) mutable {
+            auto nw = idx[0];
             auto a = idx[1];
             auto i = idx[2];
 
@@ -736,8 +741,10 @@ qmckl_exit_code_device qmckl_compute_jastrow_champ_factor_en_deriv_e(
 
             x = en_distance_rescaled[i + a * elec_num +
                                     nw * elec_num * nucl_num];
-            if (fabs(x) < 1.0e-18)
-                continue;
+            for (int i = 0; i < 0; i++) {
+				if (fabs(x) < 1.0e-18)
+             	   continue;
+			}
             power_ser_g[0] = 0.0;
             power_ser_g[1] = 0.0;
             power_ser_g[2] = 0.0;
@@ -849,7 +856,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_device(
     sycl::queue queue = ctx->q;
 
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
 			auto nw = idx[0];
 			factor_een[nw] = 0.0;
 			for (n = 0; n < dim_c_vector; n++) {
@@ -923,16 +930,12 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_deriv_e_device(
 	
 	const size_t elec_num2 = elec_num << 1;
 	const size_t elec_num3 = elec_num * 3;
-
-	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
-    
-    sycl::queue queue = ctx->q;
-
     
     queue.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>((size_t)walk_num), [=](sycl::id<1> idx) {
-			auto i = idx[0];
-			double *const restrict factor_een_deriv_e_0nw =
+			auto nw = idx[0];
+
+			double *const __restrict__ factor_een_deriv_e_0nw =
 				&(factor_een_deriv_e[elec_num * 4 * nw]);
 			for (size_t n = 0; n < (size_t)dim_c_vector; ++n) {
 				const size_t l = lkpm_combined_index[n];
@@ -947,17 +950,17 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_deriv_e_device(
 				const size_t addr0 = en * (m + c1 * (k + cn));
 				const size_t addr1 = en * (m + cn);
 
-				const double *restrict tmp_c_mkn = tmp_c + addr0;
-				const double *restrict tmp_c_mlkn = tmp_c_mkn + len;
-				const double *restrict een_rescaled_n_mnw =
+				const double *__restrict__ tmp_c_mkn = tmp_c + addr0;
+				const double *__restrict__ tmp_c_mlkn = tmp_c_mkn + len;
+				const double *__restrict__ een_rescaled_n_mnw =
 					een_rescaled_n + addr1;
-				const double *restrict een_rescaled_n_mlnw =
+				const double *__restrict__ een_rescaled_n_mlnw =
 					een_rescaled_n_mnw + len;
-				const double *restrict dtmp_c_mknw = &(dtmp_c[addr0 << 2]);
-				const double *restrict dtmp_c_mlknw = dtmp_c_mknw + len4;
-				const double *restrict een_rescaled_n_deriv_e_mnw =
+				const double *__restrict__ dtmp_c_mknw = &(dtmp_c[addr0 << 2]);
+				const double *__restrict__ dtmp_c_mlknw = dtmp_c_mknw + len4;
+				const double *__restrict__ een_rescaled_n_deriv_e_mnw =
 					een_rescaled_n_deriv_e + (addr1 << 2);
-				const double *restrict een_rescaled_n_deriv_e_mlnw =
+				const double *__restrict__ een_rescaled_n_deriv_e_mlnw =
 					een_rescaled_n_deriv_e_mnw + len4;
 
 				for (size_t a = 0; a < (size_t)nucl_num; a++) {
@@ -968,50 +971,50 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_deriv_e_device(
 					const size_t ishift = elec_num * a;
 					const size_t ishift4 = ishift << 2;
 
-					const double *restrict tmp_c_amlkn = tmp_c_mlkn + ishift;
-					const double *restrict tmp_c_amkn = tmp_c_mkn + ishift;
-					const double *restrict een_rescaled_n_amnw =
+					const double *__restrict__ tmp_c_amlkn = tmp_c_mlkn + ishift;
+					const double *__restrict__ tmp_c_amkn = tmp_c_mkn + ishift;
+					const double *__restrict__ een_rescaled_n_amnw =
 						een_rescaled_n_mnw + ishift;
-					const double *restrict een_rescaled_n_amlnw =
+					const double *__restrict__ een_rescaled_n_amlnw =
 						een_rescaled_n_mlnw + ishift;
-					const double *restrict dtmp_c_0amknw =
+					const double *__restrict__ dtmp_c_0amknw =
 						dtmp_c_mknw + ishift4;
-					const double *restrict dtmp_c_0amlknw =
+					const double *__restrict__ dtmp_c_0amlknw =
 						dtmp_c_mlknw + ishift4;
-					const double *restrict een_rescaled_n_deriv_e_0amnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_0amnw =
 						een_rescaled_n_deriv_e_mnw + ishift4;
-					const double *restrict een_rescaled_n_deriv_e_0amlnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_0amlnw =
 						een_rescaled_n_deriv_e_mlnw + ishift4;
 
-					const double *restrict dtmp_c_1amknw =
+					const double *__restrict__ dtmp_c_1amknw =
 						dtmp_c_0amknw + elec_num;
-					const double *restrict dtmp_c_1amlknw =
+					const double *__restrict__ dtmp_c_1amlknw =
 						dtmp_c_0amlknw + elec_num;
-					const double *restrict dtmp_c_2amknw =
+					const double *__restrict__ dtmp_c_2amknw =
 						dtmp_c_0amknw + elec_num2;
-					const double *restrict dtmp_c_2amlknw =
+					const double *__restrict__ dtmp_c_2amlknw =
 						dtmp_c_0amlknw + elec_num2;
-					const double *restrict dtmp_c_3amknw =
+					const double *__restrict__ dtmp_c_3amknw =
 						dtmp_c_0amknw + elec_num3;
-					const double *restrict dtmp_c_3amlknw =
+					const double *__restrict__ dtmp_c_3amlknw =
 						dtmp_c_0amlknw + elec_num3;
-					const double *restrict een_rescaled_n_deriv_e_1amnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_1amnw =
 						een_rescaled_n_deriv_e_0amnw + elec_num;
-					const double *restrict een_rescaled_n_deriv_e_1amlnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_1amlnw =
 						een_rescaled_n_deriv_e_0amlnw + elec_num;
-					const double *restrict een_rescaled_n_deriv_e_2amnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_2amnw =
 						een_rescaled_n_deriv_e_0amnw + elec_num2;
-					const double *restrict een_rescaled_n_deriv_e_2amlnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_2amlnw =
 						een_rescaled_n_deriv_e_0amlnw + elec_num2;
-					const double *restrict een_rescaled_n_deriv_e_3amnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_3amnw =
 						een_rescaled_n_deriv_e_0amnw + elec_num3;
-					const double *restrict een_rescaled_n_deriv_e_3amlnw =
+					const double *__restrict__ een_rescaled_n_deriv_e_3amlnw =
 						een_rescaled_n_deriv_e_0amlnw + elec_num3;
-					double *const restrict factor_een_deriv_e_1nw =
+					double *const __restrict__ factor_een_deriv_e_1nw =
 						factor_een_deriv_e_0nw + elec_num;
-					double *const restrict factor_een_deriv_e_2nw =
+					double *const __restrict__ factor_een_deriv_e_2nw =
 						factor_een_deriv_e_0nw + elec_num2;
-					double *const restrict factor_een_deriv_e_3nw =
+					double *const __restrict__ factor_een_deriv_e_3nw =
 						factor_een_deriv_e_0nw + elec_num3;
 
 					for (size_t j = 0; j < (size_t)elec_num; ++j) {
@@ -1122,7 +1125,7 @@ qmckl_compute_jastrow_factor_een_rescaled_e_deriv_e_device(
 	});
 
     queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
 			auto nw = idx[0];
 			for (int j = 0; j < elec_num; j++) {
 				for (int i = 0; i < elec_num; i++) {
@@ -1352,7 +1355,7 @@ qmckl_compute_jastrow_factor_een_rescaled_n_deriv_e_device(
 	});
 	
 	queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
 			auto nw = idx[0];
 			// Prepare the actual een table
 			for (int a = 0; a < nucl_num; a++) {
@@ -1522,12 +1525,12 @@ qmckl_exit_code_device qmckl_compute_en_distance_rescaled_device(
 	int i, k;
 	double *coord = reinterpret_cast<double *>(qmckl_malloc_device(context, 3 * nucl_num * sizeof(double)));
 
-	int64_t *type_nucl_vector_h = malloc(nucl_num * sizeof(int64_t));
+	int64_t *type_nucl_vector_h = reinterpret_cast<int64_t *>(malloc(nucl_num * sizeof(int64_t)));
 	qmckl_memcpy_D2H(context, type_nucl_vector_h, type_nucl_vector,
 					 nucl_num * sizeof(int64_t));
 
-	double *rescale_factor_en_h = malloc(nucl_num * sizeof(int64_t));
-	qmckl_memcpy_D2H(context, rescale_factor_en_h, rescale_factor_en,
+	double *rescale_factor_en_h = reinterpret_cast<double *>(malloc(nucl_num * sizeof(int64_t)));
+	qmckl_memcpy_D2H(context, rescale_factor_en_h, const_cast<double *>(rescale_factor_en),
 					 type_nucl_num * sizeof(double));
 
 	qmckl_exit_code_device info = QMCKL_SUCCESS_DEVICE;
@@ -1607,7 +1610,7 @@ qmckl_exit_code_device qmckl_compute_een_rescaled_e_device(
 	const size_t elec_pairs = (size_t)(elec_num * (elec_num - 1)) / 2;
 	const size_t len_een_ij = (size_t)elec_pairs * (cord_num + 1);
 	double *een_rescaled_e_ij =
-		qmckl_malloc_device(context, len_een_ij * sizeof(double));
+		reinterpret_cast<double *>(qmckl_malloc_device(context, len_een_ij * sizeof(double)));
 
 	// number of elements for the een_rescaled_e_ij[N_e*(N_e-1)/2][cord+1]
 	// probably in C is better [cord+1, Ne*(Ne-1)/2]
@@ -1935,13 +1938,13 @@ qmckl_compute_tmp_c_device(const qmckl_context_device context,
 
 #else
 	queue.submit([&](sycl::handler &h) {
-        h.parallel_for(sycl::range<2>(walk_num, cord_num), [=](sycl::id<2> idx) {
+        h.parallel_for(sycl::range<2>(walk_num, cord_num), [=](sycl::id<2> idx) mutable {
 			auto nw = idx[0];
 			auto i = idx[1];
 
 			// Single DGEMM
-			double *A = een_rescaled_e + (af * (i + nw * (cord_num + 1)));
-			double *B = een_rescaled_n + (bf * nw);
+			double *A = const_cast<double *>(een_rescaled_e + (af * (i + nw * (cord_num + 1))));
+			double *B = const_cast<double *>(een_rescaled_n + (bf * nw));
 			double *C = tmp_c + (cf * (i + nw * cord_num));
 
 			// Row of A
@@ -2015,10 +2018,13 @@ qmckl_exit_code_device qmckl_compute_dtmp_c_device(
 
     queue.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<2>(walk_num, cord_num), [=](sycl::id<2> idx) {
+			auto nw = idx[0];
+			auto i = idx[1];
+			
 			// Single DGEMM
 			double *A =
-				een_rescaled_e_deriv_e + (af * (i + nw * (cord_num + 1)));
-			double *B = een_rescaled_n + (bf * nw);
+				const_cast<double *>(een_rescaled_e_deriv_e + (af * (i + nw * (cord_num + 1))));
+			double *B = const_cast<double *>(een_rescaled_n + (bf * nw));
 			double *C = dtmp_c + (cf * (i + nw * cord_num));
 
 			// Row of A
@@ -2084,10 +2090,8 @@ qmckl_set_jastrow_rescale_factor_en_device(qmckl_context_device context,
 									 "qmckl_set_jastrow_rescale_factor_en",
 									 "Already set");
 	}
-	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
     sycl::queue queue = ctx->q;
-
 
 	qmckl_memory_info_struct_device mem_info =
 		qmckl_memory_info_struct_zero_device;
