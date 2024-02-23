@@ -141,28 +141,36 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
-LTLIBRARIES = $(lib_LTLIBRARIES)
-libqmckl_gpu_la_LIBADD =
-am__libqmckl_gpu_la_SOURCES_DIST = src/qmckl_context.cpp \
+LIBRARIES = $(lib_LIBRARIES)
+ARFLAGS = cru
+AM_V_AR = $(am__v_AR_$(V))
+am__v_AR_ = $(am__v_AR_$(AM_DEFAULT_VERBOSITY))
+am__v_AR_0 = @echo "  AR      " $@;
+am__v_AR_1 = 
+libqmckl_gpu_a_AR = $(AR) $(ARFLAGS)
+libqmckl_gpu_a_LIBADD =
+am__libqmckl_gpu_a_SOURCES_DIST = src/qmckl_context.cpp \
 	src/qmckl_basic_functions.cpp src/qmckl_point.cpp \
 	src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp \
 	src/qmckl_nucleus.cpp src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp \
 	src/qmckl_mo.cpp src/qmckl_jastrow.cpp src/qmckl_trexio.cpp
 am__dirstamp = $(am__leading_dot)dirstamp
-#am__objects_1 = src/qmckl_trexio.lo
-am_libqmckl_gpu_la_OBJECTS = src/qmckl_context.lo \
-	src/qmckl_basic_functions.lo src/qmckl_point.lo \
-	src/qmckl_memory.lo src/qmckl_blas.lo src/qmckl_electron.lo \
-	src/qmckl_nucleus.lo src/qmckl_ao.lo src/qmckl_ao_sycl.lo \
-	src/qmckl_mo.lo src/qmckl_jastrow.lo $(am__objects_1)
-libqmckl_gpu_la_OBJECTS = $(am_libqmckl_gpu_la_OBJECTS)
+#am__objects_1 = src/qmckl_trexio.$(OBJEXT)
+am_libqmckl_gpu_a_OBJECTS = src/qmckl_context.$(OBJEXT) \
+	src/qmckl_basic_functions.$(OBJEXT) src/qmckl_point.$(OBJEXT) \
+	src/qmckl_memory.$(OBJEXT) src/qmckl_blas.$(OBJEXT) \
+	src/qmckl_electron.$(OBJEXT) src/qmckl_nucleus.$(OBJEXT) \
+	src/qmckl_ao.$(OBJEXT) src/qmckl_ao_sycl.$(OBJEXT) \
+	src/qmckl_mo.$(OBJEXT) src/qmckl_jastrow.$(OBJEXT) \
+	$(am__objects_1)
+libqmckl_gpu_a_OBJECTS = $(am_libqmckl_gpu_a_OBJECTS)
+am_tests_test_qmckl_ao_OBJECTS = tests/test_qmckl_ao.$(OBJEXT)
+tests_test_qmckl_ao_OBJECTS = $(am_tests_test_qmckl_ao_OBJECTS)
+tests_test_qmckl_ao_DEPENDENCIES = libqmckl_gpu.a
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am_tests_test_qmckl_ao_OBJECTS = tests/test_qmckl_ao.$(OBJEXT)
-tests_test_qmckl_ao_OBJECTS = $(am_tests_test_qmckl_ao_OBJECTS)
-tests_test_qmckl_ao_DEPENDENCIES = libqmckl_gpu.la
 tests_test_qmckl_ao_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(AM_CXXFLAGS) $(CXXFLAGS) $(tests_test_qmckl_ao_LDFLAGS) \
@@ -171,14 +179,14 @@ am_tests_test_qmckl_jastrow_OBJECTS =  \
 	tests/test_qmckl_jastrow.$(OBJEXT)
 tests_test_qmckl_jastrow_OBJECTS =  \
 	$(am_tests_test_qmckl_jastrow_OBJECTS)
-tests_test_qmckl_jastrow_DEPENDENCIES = libqmckl_gpu.la
+tests_test_qmckl_jastrow_DEPENDENCIES = libqmckl_gpu.a
 tests_test_qmckl_jastrow_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(AM_CXXFLAGS) $(CXXFLAGS) $(tests_test_qmckl_jastrow_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_tests_test_qmckl_mo_OBJECTS = tests/test_qmckl_mo.$(OBJEXT)
 tests_test_qmckl_mo_OBJECTS = $(am_tests_test_qmckl_mo_OBJECTS)
-tests_test_qmckl_mo_DEPENDENCIES = libqmckl_gpu.la
+tests_test_qmckl_mo_DEPENDENCIES = libqmckl_gpu.a
 tests_test_qmckl_mo_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(AM_CXXFLAGS) $(CXXFLAGS) $(tests_test_qmckl_mo_LDFLAGS) \
@@ -198,15 +206,14 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = src/$(DEPDIR)/qmckl_ao.Plo \
-	src/$(DEPDIR)/qmckl_ao_sycl.Plo \
-	src/$(DEPDIR)/qmckl_basic_functions.Plo \
-	src/$(DEPDIR)/qmckl_blas.Plo src/$(DEPDIR)/qmckl_context.Plo \
-	src/$(DEPDIR)/qmckl_electron.Plo \
-	src/$(DEPDIR)/qmckl_jastrow.Plo src/$(DEPDIR)/qmckl_memory.Plo \
-	src/$(DEPDIR)/qmckl_mo.Plo src/$(DEPDIR)/qmckl_nucleus.Plo \
-	src/$(DEPDIR)/qmckl_point.Plo src/$(DEPDIR)/qmckl_trexio.Plo \
-	tests/$(DEPDIR)/test_qmckl_ao.Po \
+am__depfiles_remade = src/$(DEPDIR)/qmckl_ao.Po \
+	src/$(DEPDIR)/qmckl_ao_sycl.Po \
+	src/$(DEPDIR)/qmckl_basic_functions.Po \
+	src/$(DEPDIR)/qmckl_blas.Po src/$(DEPDIR)/qmckl_context.Po \
+	src/$(DEPDIR)/qmckl_electron.Po src/$(DEPDIR)/qmckl_jastrow.Po \
+	src/$(DEPDIR)/qmckl_memory.Po src/$(DEPDIR)/qmckl_mo.Po \
+	src/$(DEPDIR)/qmckl_nucleus.Po src/$(DEPDIR)/qmckl_point.Po \
+	src/$(DEPDIR)/qmckl_trexio.Po tests/$(DEPDIR)/test_qmckl_ao.Po \
 	tests/$(DEPDIR)/test_qmckl_jastrow.Po \
 	tests/$(DEPDIR)/test_qmckl_mo.Po
 am__mv = mv -f
@@ -246,10 +253,10 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libqmckl_gpu_la_SOURCES) $(tests_test_qmckl_ao_SOURCES) \
+SOURCES = $(libqmckl_gpu_a_SOURCES) $(tests_test_qmckl_ao_SOURCES) \
 	$(tests_test_qmckl_jastrow_SOURCES) \
 	$(tests_test_qmckl_mo_SOURCES)
-DIST_SOURCES = $(am__libqmckl_gpu_la_SOURCES_DIST) \
+DIST_SOURCES = $(am__libqmckl_gpu_a_SOURCES_DIST) \
 	$(tests_test_qmckl_ao_SOURCES) \
 	$(tests_test_qmckl_jastrow_SOURCES) \
 	$(tests_test_qmckl_mo_SOURCES)
@@ -597,14 +604,15 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 ACLOCAL_AMFLAGS = -I m4 -I include 
-AM_CXXFLAGS = -fsycl -I$(top_builddir)/src -I$(top_builddir)/include -g 
+AM_CXXFLAGS = -fsycl -g   -I$(top_builddir)/src -I$(top_builddir)/include 
 include_HEADERS = include/qmckl_gpu.hpp
-lib_LTLIBRARIES = libqmckl_gpu.la
-libqmckl_gpu_la_SOURCES = src/qmckl_context.cpp \
+lib_LIBRARIES = libqmckl_gpu.a
+libqmckl_gpu_a_SOURCES = src/qmckl_context.cpp \
 	src/qmckl_basic_functions.cpp src/qmckl_point.cpp \
 	src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp \
 	src/qmckl_nucleus.cpp src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp \
 	src/qmckl_mo.cpp src/qmckl_jastrow.cpp $(am__append_1)
+libqmckl_qpu_a_CXXFLAGS = $(AM_CXXFLAGS)
 tests_test_qmckl_ao_SOURCES = tests/test_qmckl_ao.cpp chbrclf.hpp
 tests_test_qmckl_ao_LDFLAGS = -pthread
 tests_test_qmckl_mo_SOURCES = tests/test_qmckl_mo.cpp chbrclf.hpp
@@ -613,9 +621,9 @@ tests_test_qmckl_jastrow_SOURCES = tests/test_qmckl_jastrow.cpp n2.hpp
 tests_test_qmckl_jastrow_LDFLAGS = -pthread 
 
 # This shoud be added whether we use OpenMP or ACC
-tests_test_qmckl_ao_LDADD = libqmckl_gpu.la 
-tests_test_qmckl_mo_LDADD = libqmckl_gpu.la
-tests_test_qmckl_jastrow_LDADD = libqmckl_gpu.la
+tests_test_qmckl_ao_LDADD = libqmckl_gpu.a 
+tests_test_qmckl_mo_LDADD = libqmckl_gpu.a
+tests_test_qmckl_jastrow_LDADD = libqmckl_gpu.a
 
 ###
 # Run test programs
@@ -667,10 +675,9 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+install-libLIBRARIES: $(lib_LIBRARIES)
 	@$(NORMAL_INSTALL)
-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
 	list2=; for p in $$list; do \
 	  if test -f $$p; then \
 	    list2="$$list2 $$p"; \
@@ -679,56 +686,61 @@ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	test -z "$$list2" || { \
 	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
 	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
-	}
-
-uninstall-libLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	  echo " $(INSTALL_DATA) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(INSTALL_DATA) $$list2 "$(DESTDIR)$(libdir)" || exit $$?; }
+	@$(POST_INSTALL)
+	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
 	for p in $$list; do \
-	  $(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	  if test -f $$p; then \
+	    $(am__strip_dir) \
+	    echo " ( cd '$(DESTDIR)$(libdir)' && $(RANLIB) $$f )"; \
+	    ( cd "$(DESTDIR)$(libdir)" && $(RANLIB) $$f ) || exit $$?; \
+	  else :; fi; \
 	done
 
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-	@list='$(lib_LTLIBRARIES)'; \
-	locs=`for p in $$list; do echo $$p; done | \
-	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
-	      sort -u`; \
-	test -z "$$locs" || { \
-	  echo rm -f $${locs}; \
-	  rm -f $${locs}; \
-	}
+uninstall-libLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(libdir)'; $(am__uninstall_files_from_dir)
+
+clean-libLIBRARIES:
+	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
 src/$(am__dirstamp):
 	@$(MKDIR_P) src
 	@: > src/$(am__dirstamp)
 src/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) src/$(DEPDIR)
 	@: > src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_context.lo: src/$(am__dirstamp) \
+src/qmckl_context.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_basic_functions.lo: src/$(am__dirstamp) \
+src/qmckl_basic_functions.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_point.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_memory.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_blas.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_electron.lo: src/$(am__dirstamp) \
+src/qmckl_point.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_nucleus.lo: src/$(am__dirstamp) \
+src/qmckl_memory.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_ao.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_ao_sycl.lo: src/$(am__dirstamp) \
+src/qmckl_blas.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_mo.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_jastrow.lo: src/$(am__dirstamp) \
+src/qmckl_electron.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/qmckl_trexio.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_nucleus.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_ao.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_ao_sycl.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_mo.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_jastrow.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_trexio.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
-libqmckl_gpu.la: $(libqmckl_gpu_la_OBJECTS) $(libqmckl_gpu_la_DEPENDENCIES) $(EXTRA_libqmckl_gpu_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libqmckl_gpu_la_OBJECTS) $(libqmckl_gpu_la_LIBADD) $(LIBS)
+libqmckl_gpu.a: $(libqmckl_gpu_a_OBJECTS) $(libqmckl_gpu_a_DEPENDENCIES) $(EXTRA_libqmckl_gpu_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libqmckl_gpu.a
+	$(AM_V_AR)$(libqmckl_gpu_a_AR) libqmckl_gpu.a $(libqmckl_gpu_a_OBJECTS) $(libqmckl_gpu_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libqmckl_gpu.a
 tests/$(am__dirstamp):
 	@$(MKDIR_P) tests
 	@: > tests/$(am__dirstamp)
@@ -757,24 +769,23 @@ tests/test_qmckl_mo$(EXEEXT): $(tests_test_qmckl_mo_OBJECTS) $(tests_test_qmckl_
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f src/*.$(OBJEXT)
-	-rm -f src/*.lo
 	-rm -f tests/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-include src/$(DEPDIR)/qmckl_ao.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_ao_sycl.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_basic_functions.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_blas.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_context.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_electron.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_jastrow.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_memory.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_mo.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_nucleus.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_point.Plo # am--include-marker
-include src/$(DEPDIR)/qmckl_trexio.Plo # am--include-marker
+include src/$(DEPDIR)/qmckl_ao.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_ao_sycl.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_basic_functions.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_blas.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_context.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_electron.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_jastrow.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_memory.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_mo.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_nucleus.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_point.Po # am--include-marker
+include src/$(DEPDIR)/qmckl_trexio.Po # am--include-marker
 include tests/$(DEPDIR)/test_qmckl_ao.Po # am--include-marker
 include tests/$(DEPDIR)/test_qmckl_jastrow.Po # am--include-marker
 include tests/$(DEPDIR)/test_qmckl_mo.Po # am--include-marker
@@ -814,7 +825,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf src/.libs src/_libs
 	-rm -rf tests/.libs tests/_libs
 
 distclean-libtool:
@@ -1253,7 +1263,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -1297,23 +1307,23 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
+clean-am: clean-checkPROGRAMS clean-generic clean-libLIBRARIES \
 	clean-libtool clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-		-rm -f src/$(DEPDIR)/qmckl_ao.Plo
-	-rm -f src/$(DEPDIR)/qmckl_ao_sycl.Plo
-	-rm -f src/$(DEPDIR)/qmckl_basic_functions.Plo
-	-rm -f src/$(DEPDIR)/qmckl_blas.Plo
-	-rm -f src/$(DEPDIR)/qmckl_context.Plo
-	-rm -f src/$(DEPDIR)/qmckl_electron.Plo
-	-rm -f src/$(DEPDIR)/qmckl_jastrow.Plo
-	-rm -f src/$(DEPDIR)/qmckl_memory.Plo
-	-rm -f src/$(DEPDIR)/qmckl_mo.Plo
-	-rm -f src/$(DEPDIR)/qmckl_nucleus.Plo
-	-rm -f src/$(DEPDIR)/qmckl_point.Plo
-	-rm -f src/$(DEPDIR)/qmckl_trexio.Plo
+		-rm -f src/$(DEPDIR)/qmckl_ao.Po
+	-rm -f src/$(DEPDIR)/qmckl_ao_sycl.Po
+	-rm -f src/$(DEPDIR)/qmckl_basic_functions.Po
+	-rm -f src/$(DEPDIR)/qmckl_blas.Po
+	-rm -f src/$(DEPDIR)/qmckl_context.Po
+	-rm -f src/$(DEPDIR)/qmckl_electron.Po
+	-rm -f src/$(DEPDIR)/qmckl_jastrow.Po
+	-rm -f src/$(DEPDIR)/qmckl_memory.Po
+	-rm -f src/$(DEPDIR)/qmckl_mo.Po
+	-rm -f src/$(DEPDIR)/qmckl_nucleus.Po
+	-rm -f src/$(DEPDIR)/qmckl_point.Po
+	-rm -f src/$(DEPDIR)/qmckl_trexio.Po
 	-rm -f tests/$(DEPDIR)/test_qmckl_ao.Po
 	-rm -f tests/$(DEPDIR)/test_qmckl_jastrow.Po
 	-rm -f tests/$(DEPDIR)/test_qmckl_mo.Po
@@ -1339,7 +1349,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am: install-libLIBRARIES
 
 install-html: install-html-am
 
@@ -1364,18 +1374,18 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-		-rm -f src/$(DEPDIR)/qmckl_ao.Plo
-	-rm -f src/$(DEPDIR)/qmckl_ao_sycl.Plo
-	-rm -f src/$(DEPDIR)/qmckl_basic_functions.Plo
-	-rm -f src/$(DEPDIR)/qmckl_blas.Plo
-	-rm -f src/$(DEPDIR)/qmckl_context.Plo
-	-rm -f src/$(DEPDIR)/qmckl_electron.Plo
-	-rm -f src/$(DEPDIR)/qmckl_jastrow.Plo
-	-rm -f src/$(DEPDIR)/qmckl_memory.Plo
-	-rm -f src/$(DEPDIR)/qmckl_mo.Plo
-	-rm -f src/$(DEPDIR)/qmckl_nucleus.Plo
-	-rm -f src/$(DEPDIR)/qmckl_point.Plo
-	-rm -f src/$(DEPDIR)/qmckl_trexio.Plo
+		-rm -f src/$(DEPDIR)/qmckl_ao.Po
+	-rm -f src/$(DEPDIR)/qmckl_ao_sycl.Po
+	-rm -f src/$(DEPDIR)/qmckl_basic_functions.Po
+	-rm -f src/$(DEPDIR)/qmckl_blas.Po
+	-rm -f src/$(DEPDIR)/qmckl_context.Po
+	-rm -f src/$(DEPDIR)/qmckl_electron.Po
+	-rm -f src/$(DEPDIR)/qmckl_jastrow.Po
+	-rm -f src/$(DEPDIR)/qmckl_memory.Po
+	-rm -f src/$(DEPDIR)/qmckl_mo.Po
+	-rm -f src/$(DEPDIR)/qmckl_nucleus.Po
+	-rm -f src/$(DEPDIR)/qmckl_point.Po
+	-rm -f src/$(DEPDIR)/qmckl_trexio.Po
 	-rm -f tests/$(DEPDIR)/test_qmckl_ao.Po
 	-rm -f tests/$(DEPDIR)/test_qmckl_jastrow.Po
 	-rm -f tests/$(DEPDIR)/test_qmckl_mo.Po
@@ -1395,13 +1405,13 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-includeHEADERS uninstall-libLIBRARIES
 
 .MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles am--refresh check \
 	check-TESTS check-am clean clean-checkPROGRAMS clean-cscope \
-	clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
+	clean-generic clean-libLIBRARIES clean-libtool clean-local \
 	cscope cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
 	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
 	dist-zstd distcheck distclean distclean-compile \
@@ -1411,13 +1421,13 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am \
 	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-libLIBRARIES install-man install-pdf install-pdf-am \
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am \
-	uninstall-includeHEADERS uninstall-libLTLIBRARIES
+	uninstall-includeHEADERS uninstall-libLIBRARIES
 
 .PRECIOUS: Makefile
 

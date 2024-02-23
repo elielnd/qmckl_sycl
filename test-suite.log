@@ -3,17 +3,12 @@
 =======================================
 
 # TOTAL: 3
-# PASS:  2
+# PASS:  3
 # SKIP:  0
 # XFAIL: 0
-# FAIL:  1
+# FAIL:  0
 # XPASS: 0
 # ERROR: 0
 
 .. contents:: :depth: 2
-
-FAIL: tests/test_qmckl_ao
-=========================
-
-FAIL tests/test_qmckl_ao (exit status: 139)
 

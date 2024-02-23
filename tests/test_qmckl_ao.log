@@ -1,1 +1,27 @@
-FAIL tests/test_qmckl_ao (exit status: 139)
+Running on GPU: Intel(R) Data Center GPU Max 1100
+FIND3
+FIND4
+HERE2
+ ao_value ao_value[26][219]     1.020298798341620e-08
+ ao_value ao_value[26][220]     1.516643537739178e-08
+ ao_value ao_value[26][221]    -4.686370882518820e-09
+ ao_value ao_value[26][222]     7.514816980753531e-09
+
+ HERE ARE THE FIRST 10 VALUES OF AO_VALUES
+ ao_value ao_value[26][219]     1.020298798341620e-08
+ ao_value ao_value[26][220]     1.516643537739178e-08
+ ao_value ao_value[26][221]    -4.686370882518820e-09
+ ao_value ao_value[26][222]     7.514816980753531e-09
+
+ HERE ARE THE FIRST 10 VALUES OF AO_VALUE
+ ao_value ao_value[26][219]     1.020298798341620e-08
+ ao_value ao_value[26][220]     1.516643537739178e-08
+ ao_value ao_value[26][221]    -4.686370882518820e-09
+ ao_value ao_value[26][222]     7.514816980753531e-09
+
+ ao_value ao_value[26][219]     1.020298798341620e-08
+ ao_value ao_value[26][220]     1.516643537739178e-08
+ ao_value ao_value[26][221]    -4.686370882518820e-09
+ ao_value ao_value[26][222]     7.514816980753531e-09
+
+PASS tests/test_qmckl_ao (exit status: 0)

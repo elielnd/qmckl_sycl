@@ -169,283 +169,285 @@ int main()
     if (rc != QMCKL_SUCCESS_DEVICE)
         return 1;
 
-        std::cout << "\n START\n\n";
+    rc = qmckl_set_ao_basis_ao_factor_device(context, ao_factor_d, ao_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-        rc = qmckl_set_ao_basis_ao_factor_device(context, ao_factor_d, ao_num);
-        if (rc != QMCKL_SUCCESS_DEVICE)
-            return 1;
+    if (!qmckl_ao_basis_provided_device(context))
+        return 1;
 
-        std::cout << "\n END\n\n";
+    // Checking arrays after context set and get
 
-    //     if (!qmckl_ao_basis_provided_device(context))
-    //         return 1;
+    int64_t shell_num_test;
+    int64_t prim_num_test;
+    int64_t ao_num_test;
+    int64_t *nucleus_index_test;
+    int64_t *nucleus_shell_num_test;
+    int32_t *shell_ang_mom_test;
+    int64_t *shell_prim_num_test;
+    int64_t *shell_prim_index_test;
+    double *shell_factor_test;
+    double *exponent_test;
+    double *coefficient_test;
+    double *prim_factor_test;
+    double *ao_factor_test;
+    char typ_test;
 
-    //     // Checking arrays after context set and get
+    rc = qmckl_get_ao_basis_type_device(context, &typ_test);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
+    if (typ != typ_test)
+        return 1;
 
-    //     int64_t shell_num_test;
-    //     int64_t prim_num_test;
-    //     int64_t ao_num_test;
-    //     int64_t *nucleus_index_test;
-    //     int64_t *nucleus_shell_num_test;
-    //     int32_t *shell_ang_mom_test;
-    //     int64_t *shell_prim_num_test;
-    //     int64_t *shell_prim_index_test;
-    //     double *shell_factor_test;
-    //     double *exponent_test;
-    //     double *coefficient_test;
-    //     double *prim_factor_test;
-    //     double *ao_factor_test;
-    //     char typ_test;
+    rc = qmckl_get_ao_basis_shell_num_device(context, &shell_num_test);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
+    if (shell_num != shell_num_test)
+        return 1;
 
-    //     rc = qmckl_get_ao_basis_type_device(context, &typ_test);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
-    //     if (typ != typ_test)
-    //         return 1;
+    rc = qmckl_get_ao_basis_prim_num_device(context, &prim_num_test);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
+    if (prim_num != prim_num_test)
+        return 1;
 
-    //     rc = qmckl_get_ao_basis_shell_num_device(context, &shell_num_test);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
-    //     if (shell_num != shell_num_test)
-    //         return 1;
+    nucleus_index_test = (int64_t *)qmckl_malloc_device(context, nucl_num * sizeof(int64_t));
+    rc = qmckl_get_ao_basis_nucleus_index_device(context, nucleus_index_test, nucl_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     rc = qmckl_get_ao_basis_prim_num_device(context, &prim_num_test);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
-    //     if (prim_num != prim_num_test)
-    //         return 1;
+    int wrong_val = 0;
+    buffer<int, 1> buff_wrong_val(&wrong_val, range<1>(1));
 
-    //     nucleus_index_test = (int64_t *)qmckl_malloc_device(context, nucl_num * sizeof(int64_t));
-    //     rc = qmckl_get_ao_basis_nucleus_index_device(context, nucleus_index_test, nucl_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    q.submit([&](handler &h)
+             {
+            auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
 
-    //     int wrong_val = 0;
-    //     buffer<int, 1> buff_wrong_val(&wrong_val, range<1>(1));
+            h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                           {
+                                if ( nucleus_index_test[i]!= nucleus_index_d[i])
+                                {
+                                    acc_wrong_val[0] = 1;
+                                } }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     // buffer<int64_t> buff_nucleus_index_test(nucleus_index_test, nucl_num);
-    //     // buffer<int64_t> buff_nucleus_index_d(nucleus_index_d, nucl_num);
+    qmckl_free_device(context, nucleus_index_test);
+    if (wrong_val)
+        return 1;
 
-    //     auto moi = (int *)nucleus_index_test;
-    //     auto toi = (int *)nucleus_index_d;
+    nucleus_shell_num_test = (int64_t *)qmckl_malloc_device(context, nucl_num * sizeof(int64_t));
+    rc = qmckl_get_ao_basis_nucleus_shell_num_device(context, nucleus_shell_num_test, nucl_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+    q.submit([&](handler &h)
+             {
+                auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+                h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                            {
+                    if (nucleus_shell_num_test[i] != nucleus_shell_num_d[i])
+                        acc_wrong_val[0] = 1;
+                            }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //                             if ( nucleus_index_test[i]!= nucleus_index_d[i])
-    //                             {
-    //                                 acc_wrong_val[0] = 1;
-    //                             } }); });
-    //     q.wait();
+    qmckl_free_device(context, nucleus_shell_num_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, nucleus_index_test);
-    //     if (wrong_val)
-    //         return 1;
+    shell_ang_mom_test = (int32_t *)qmckl_malloc_device(context, shell_num * sizeof(int32_t));
+    rc = qmckl_get_ao_basis_shell_ang_mom_device(context, shell_ang_mom_test, shell_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     nucleus_shell_num_test = (int64_t *)qmckl_malloc_device(context, nucl_num * sizeof(int64_t));
-    //     rc = qmckl_get_ao_basis_nucleus_shell_num_device(context, nucleus_shell_num_test, nucl_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    q.submit([&](handler &h)
+             {
+                    auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+                    h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+                            if (shell_ang_mom_test[i] != shell_ang_mom_d[i])
+                                acc_wrong_val[i] = 1;
+                        }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     q.submit([&](handler &h)
-    //              {
-    //                 auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //                 h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                           {
-    //                     if (nucleus_shell_num_test[i] != nucleus_shell_num_d[i])
-    //                         acc_wrong_val[0] = 1;
-    //                             }); });
-    //     q.wait();
+    qmckl_free_device(context, shell_ang_mom_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, nucleus_shell_num_test);
-    //     if (wrong_val)
-    //         return 1;
+    shell_factor_test = (double *)qmckl_malloc_device(context, shell_num * sizeof(double));
+    rc = qmckl_get_ao_basis_shell_factor_device(context, shell_factor_test, shell_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     shell_ang_mom_test = (int32_t *)qmckl_malloc_device(context, shell_num * sizeof(int32_t));
-    //     rc = qmckl_get_ao_basis_shell_ang_mom_device(context, shell_ang_mom_test, shell_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    q.submit([&](handler &h)
+             {
+        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+                if (shell_factor_test[i] != shell_factor_d[i])
+                    acc_wrong_val[0] = 1; }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     q.submit([&](handler &h)
-    //              {
-    //                 auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //                 h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                     {
-    //                         if (shell_ang_mom_test[i] != shell_ang_mom_d[i])
-    //                             acc_wrong_val[i] = 1;
-    //                     }); });
-    //     q.wait();
+    qmckl_free_device(context, shell_factor_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, shell_ang_mom_test);
-    //     if (wrong_val)
-    //         return 1;
+    shell_prim_num_test = (int64_t *)qmckl_malloc_device(context, shell_num * sizeof(int64_t));
+    rc = qmckl_get_ao_basis_shell_prim_num_device(context, shell_prim_num_test, shell_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     shell_factor_test = (double *)qmckl_malloc_device(context, shell_num * sizeof(double));
-    //     rc = qmckl_get_ao_basis_shell_factor_device(context, shell_factor_test, shell_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    shell_prim_index_test = (int64_t *)qmckl_malloc_device(context, shell_num * sizeof(int64_t));
+    rc = qmckl_get_ao_basis_shell_prim_index_device(context, shell_prim_index_test, shell_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
+    q.submit([&](handler &h)
+             {
+        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+                if (shell_prim_index_test[i] != shell_prim_index_d[i])
+                    acc_wrong_val[0] = 1; }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //                 if (shell_factor_test[i] != shell_factor_d[i])
-    //                     acc_wrong_val[0] = true; }); });
-    //     q.wait();
+    qmckl_free_device(context, shell_prim_index_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, shell_factor_test);
-    //     if (wrong_val)
-    //         return 1;
+    exponent_test = (double *)qmckl_malloc_device(context, prim_num * sizeof(double));
+    rc = qmckl_get_ao_basis_exponent_device(context, exponent_test, prim_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     shell_prim_num_test = (int64_t *)qmckl_malloc_device(context, shell_num * sizeof(int64_t));
-    //     rc = qmckl_get_ao_basis_shell_prim_num_device(context, shell_prim_num_test, shell_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    q.submit([&](handler &h)
+             {
+        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+                if (exponent_test[i] != exponent_d[i])
+                    acc_wrong_val[0] = 1; }); });
+    q.wait();
 
-    //     shell_prim_index_test = (int64_t *)qmckl_malloc_device(context, shell_num * sizeof(int64_t));
-    //     rc = qmckl_get_ao_basis_shell_prim_index_device(context, shell_prim_index_test, shell_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //                 if (shell_prim_index_test[i] != shell_prim_index_d[i])
-    //                     acc_wrong_val[0] = 1; }); });
-    //     q.wait();
+    qmckl_free_device(context, exponent_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, shell_prim_index_test);
-    //     if (wrong_val)
-    //         return 1;
+    coefficient_test = (double *)qmckl_malloc_device(context, prim_num * sizeof(double));
+    rc = qmckl_get_ao_basis_coefficient_device(context, coefficient_test, prim_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     exponent_test = (double *)qmckl_malloc_device(context, prim_num * sizeof(double));
-    //     rc = qmckl_get_ao_basis_exponent_device(context, exponent_test, prim_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    q.submit([&](handler &h)
+             {
+        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+            if (coefficient_test[i] != coefficient_d[i])
+                acc_wrong_val[0] = 1; }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //                 if (exponent_test[i] != exponent_d[i])
-    //                     acc_wrong_val[0] = true; }); });
-    //     q.wait();
+    qmckl_free_device(context, coefficient_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, exponent_test);
-    //     if (wrong_val)
-    //         return 1;
+    prim_factor_test = (double *)qmckl_malloc_device(context, prim_num * sizeof(double));
+    rc = qmckl_get_ao_basis_prim_factor_device(context, prim_factor_test,
+                                               prim_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     coefficient_test = (double *)qmckl_malloc_device(context, prim_num * sizeof(double));
-    //     rc = qmckl_get_ao_basis_coefficient_device(context, coefficient_test, prim_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    q.submit([&](handler &h)
+             {
+        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+            if (prim_factor_test[i] != prim_factor_d[i])
+                acc_wrong_val[0] = 1; }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //             if (coefficient_test[i] != coefficient_d[i])
-    //                 acc_wrong_val[0] = true; }); });
-    //     q.wait();
+    qmckl_free_device(context, prim_factor_test);
+    if (wrong_val)
+        return 1;
 
-    //     qmckl_free_device(context, coefficient_test);
-    //     if (wrong_val)
-    //         return 1;
+    rc = qmckl_get_ao_basis_ao_num_device(context, &ao_num_test);
+    if (ao_num != ao_num_test)
+        return 1;
 
-    //     prim_factor_test = (double *)qmckl_malloc_device(context, prim_num * sizeof(double));
-    //     rc = qmckl_get_ao_basis_prim_factor_device(context, prim_factor_test,
-    //                                                prim_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    ao_factor_test = (double *)qmckl_malloc_device(context, ao_num * sizeof(double));
+    rc = qmckl_get_ao_basis_ao_factor_device(context, ao_factor_test, ao_num);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //             if (prim_factor_test[i] != prim_factor_d[i])
-    //                 acc_wrong_val[0] = true; }); });
-    //     q.wait();
+    q.submit([&](handler &h)
+             {
+            auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+            h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                           {
+                if (ao_factor_test[i] != ao_factor_d[i])
+                    acc_wrong_val[0] = 1; }); });
+    q.wait();
+    buff_wrong_val.get_host_access();
 
-    //     qmckl_free_device(context, prim_factor_test);
-    //     if (wrong_val)
-    //         return 1;
+    qmckl_free_device(context, ao_factor_test);
+    if (wrong_val)
+        return 1;
 
-    //     rc = qmckl_get_ao_basis_ao_num_device(context, &ao_num_test);
-    //     if (ao_num != ao_num_test)
-    //         return 1;
+#define shell_num chbrclf_shell_num
+#define ao_num chbrclf_ao_num
+#define elec_num chbrclf_elec_num
 
-    //     ao_factor_test = (double *)qmckl_malloc_device(context, ao_num * sizeof(double));
-    //     rc = qmckl_get_ao_basis_ao_factor_device(context, ao_factor_test, ao_num);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    double *elec_coord = &(chbrclf_elec_coord[0][0][0]);
+    int64_t point_num = elec_num;
+    double *elec_coord_d = (double *)qmckl_malloc_device(context, 3 * point_num * sizeof(double));
 
-    //     q.submit([&](handler &h)
-    //              {
-    //         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-    //         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-    //                        {
-    //             if (ao_factor_test[i] != ao_factor_d[i])
-    //                 acc_wrong_val[0] = true; }); });
-    //     q.wait();
+    qmckl_memcpy_H2D(context, elec_coord_d, elec_coord, 3 * point_num * sizeof(double));
 
-    //     qmckl_free_device(context, ao_factor_test);
-    //     if (wrong_val)
-    //         return 1;
+    // TODO Fix this
+    // if (!qmckl_electron_provided(context))
+    //	return 1;
 
-    // #define shell_num chbrclf_shell_num
-    // #define ao_num chbrclf_ao_num
-    // #define elec_num chbrclf_elec_num
+    rc = qmckl_set_point_device(context, 'N', point_num, elec_coord_d, point_num * 3);
+    if (rc != QMCKL_SUCCESS_DEVICE)
+        return 1;
 
-    //     double *elec_coord = &(chbrclf_elec_coord[0][0][0]);
-    //     int64_t point_num = elec_num;
-    //     double *elec_coord_d = (double *)qmckl_malloc_device(context, 3 * point_num * sizeof(double));
+    // Get & test ao_value values
+    double *ao_value_d = (double *)qmckl_malloc_device(context, point_num * ao_num * sizeof(double));
+    double *ao_value = (double *)malloc(point_num * ao_num * sizeof(double));
+    qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
 
-    //     qmckl_memcpy_H2D(context, elec_coord_d, elec_coord, 3 * point_num * sizeof(double));
+    rc = qmckl_get_ao_basis_ao_value_device(context, ctx->ao_basis.ao_value, (int64_t)(point_num * ao_num));
 
-    //     // TODO Fix this
-    //     // if (!qmckl_electron_provided(context))
-    //     //	return 1;
+    q.memcpy(ao_value, ctx->ao_basis.ao_value, point_num * ao_num * sizeof(double)).wait();
 
-    //     rc = qmckl_set_point_device(context, 'N', point_num, elec_coord_d, point_num * 3);
-    //     if (rc != QMCKL_SUCCESS_DEVICE)
-    //         return 1;
+    // qmckl_memcpy_D2H(context, ao_value, ao_value_d, point_num * ao_num * sizeof(double));
 
-    //     // Get & test ao_value values
-    //     double *ao_value_d = (double *)qmckl_malloc_device(context, point_num * ao_num * sizeof(double));
-    //     double *ao_value = (double *)malloc(point_num * ao_num * sizeof(double));
+    // Print the values [26][219] [26][220] [26][221] [26][222
 
-    //     printf("About to get values\n");
-    //     rc = qmckl_get_ao_basis_ao_value_device(context, ao_value_d, (int64_t)(point_num * ao_num));
+    printf(" ao_value ao_value[26][219] %25.15e\n",
+           ao_value[AO_VALUE_ID(26, 219)]);
+    printf(" ao_value ao_value[26][220] %25.15e\n",
+           ao_value[AO_VALUE_ID(26, 220)]);
+    printf(" ao_value ao_value[26][221] %25.15e\n",
+           ao_value[AO_VALUE_ID(26, 221)]);
+    printf(" ao_value ao_value[26][222] %25.15e\n",
+           ao_value[AO_VALUE_ID(26, 222)]);
+    printf("\n");
 
-    //     qmckl_memcpy_D2H(context, ao_value, ao_value_d, point_num * ao_num * sizeof(double));
-
-    //     printf(" ao_value ao_value[26][219] %25.15e\n",
-    //            ao_value[AO_VALUE_ID(26, 219)]);
-    //     printf(" ao_value ao_value[26][220] %25.15e\n",
-    //            ao_value[AO_VALUE_ID(26, 220)]);
-    //     printf(" ao_value ao_value[26][221] %25.15e\n",
-    //            ao_value[AO_VALUE_ID(26, 221)]);
-    //     printf(" ao_value ao_value[26][222] %25.15e\n",
-    //            ao_value[AO_VALUE_ID(26, 222)]);
-    //     printf("\n");
-
-    //     if (fabs(ao_value[AO_VALUE_ID(26, 219)] - (1.020298798341620e-08)) > 1.e-14)
-    //         return 1;
-    //     if (fabs(ao_value[AO_VALUE_ID(26, 220)] - (1.516643537739178e-08)) > 1.e-14)
-    //         return 1;
-    //     if (fabs(ao_value[AO_VALUE_ID(26, 221)] - (-4.686370882518819e-09)) >
-    //         1.e-14)
-    //         return 1;
-    //     if (fabs(ao_value[AO_VALUE_ID(26, 222)] - (7.514816980753531e-09)) > 1.e-14)
-    //         return 1;
+    // if (fabs(ao_value[AO_VALUE_ID(26, 219)] - (1.020298798341620e-08)) > 1.e-14)
+    //     return 1;
+    // if (fabs(ao_value[AO_VALUE_ID(26, 220)] - (1.516643537739178e-08)) > 1.e-14)
+    //     return 1;
+    // if (fabs(ao_value[AO_VALUE_ID(26, 221)] - (-4.686370882518819e-09)) >
+    //     1.e-14)
+    //     return 1;
+    // if (fabs(ao_value[AO_VALUE_ID(26, 222)] - (7.514816980753531e-09)) > 1.e-14)
+    //     return 1;
 
     //     // Get & test ao_vgl values
     //     double *ao_vgl_d = (double *)qmckl_malloc_device(context, point_num * 5 * ao_num * sizeof(double));
