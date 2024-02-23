@@ -1,4 +1,5 @@
 #include "../include/qmckl_ao.hpp"
+#define MAX_MEMORY_SIZE 16.0 * 1024 * 1024 * 1024
 
 using namespace sycl;
 
@@ -45,6 +46,10 @@ bool qmckl_ao_basis_provided_device(qmckl_context_device context)
 /* shell_vgl */
 qmckl_exit_code_device qmckl_provide_ao_basis_shell_vgl_device(qmckl_context_device context)
 {
+	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
+	assert(ctx != NULL);
+
+	sycl::queue q = ctx->q;
 
 	if (qmckl_context_check_device((qmckl_context_device)context) == QMCKL_NULL_CONTEXT_DEVICE)
 	{
@@ -53,8 +58,6 @@ qmckl_exit_code_device qmckl_provide_ao_basis_shell_vgl_device(qmckl_context_dev
 									 NULL);
 	}
 
-	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device *)context;
-	assert(ctx != NULL);
 
 	if (!ctx->ao_basis.provided)
 	{
@@ -70,7 +73,6 @@ qmckl_exit_code_device qmckl_provide_ao_basis_shell_vgl_device(qmckl_context_dev
 		/* Allocate array */
 		if (ctx->ao_basis.shell_vgl == NULL)
 		{
-
 			double *shell_vgl = (double *)qmckl_malloc_device(context,
 															  ctx->ao_basis.shell_num * 5 * ctx->point.num * sizeof(double));
 
@@ -81,8 +83,10 @@ qmckl_exit_code_device qmckl_provide_ao_basis_shell_vgl_device(qmckl_context_dev
 					"qmckl_ao_basis_shell_vgl_device", NULL);
 			}
 			ctx->ao_basis.shell_vgl = shell_vgl;
+
 		}
 
+		
 		qmckl_exit_code_device rc;
 		if (ctx->ao_basis.type == 'G')
 		{
@@ -94,6 +98,7 @@ qmckl_exit_code_device qmckl_provide_ao_basis_shell_vgl_device(qmckl_context_dev
 				ctx->ao_basis.shell_prim_num, ctx->point.coord.data,
 				ctx->nucleus.coord.data, ctx->ao_basis.exponent,
 				ctx->ao_basis.coefficient_normalized, ctx->ao_basis.shell_vgl);
+			
 		}
 		else
 		{
@@ -1757,3 +1762,4 @@ qmckl_exit_code_device qmckl_get_ao_basis_ao_factor_device(qmckl_context_device 
 					 ctx->ao_basis.ao_num * sizeof(double));
 	return QMCKL_SUCCESS_DEVICE;
 }
+
