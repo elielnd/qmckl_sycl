@@ -1,8 +1,5 @@
-#include <CL/sycl.hpp>
-
 #include "../include/qmckl_ao.hpp"
 #define MAX_MEMORY_SIZE 16.0 * 1024 * 1024 * 1024
-#define AO_VALUE_ID(x, y) 263 *x + y
 
 using namespace sycl;
 
@@ -142,21 +139,24 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
     buffer<int, 1> buff_lmax(&lmax, range<1>(1));
 
     q.submit([&](handler &h)
-             {
-        accessor acc_lmax(buff_lmax, h, write_only);
-        for (int i = 0; i < nucl_num; i++)
-        {
-            if (acc_lmax[0] < nucleus_max_ang_mom[i])
-            {
-                acc_lmax[0] = nucleus_max_ang_mom[i];
-            }
-        } });
+             { 
+                auto acc_lmax = buff_lmax.get_access<access::mode::write>(h);
+                h.single_task([=]()
+                              {
+                    for (int i = 0; i < nucl_num; i++)
+                    {
+                        if (acc_lmax[0] < nucleus_max_ang_mom[i])
+                        {
+                            acc_lmax[0] = nucleus_max_ang_mom[i];
+                        }
+                    } }); });
     q.wait();
+    buff_lmax.get_host_access();
 
     size_t pows_dim = (lmax + 3) * 3 * chunk_size;
     double *pows_shared = (double *)qmckl_malloc_device(context, sizeof(double) * pows_dim);
 
-    q.submit([&](handler &h)
+    q.single_task([=]()
              {
 		for (int l = 0; l < 21; l++) {
 			lstart[l] = l * (l + 1) * (l + 2) / 6 + 1;
@@ -164,36 +164,31 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
     q.wait();
 
     int k = 1;
+    buffer<int, 1> buff_k(&k, range<1>(1));
     int *shell_to_nucl = (int *)qmckl_malloc_device(context, sizeof(int) * shell_num);
 
     q.submit([&](handler &h)
              {
-		for (int inucl = 0; inucl < nucl_num; inucl++) {
-			int ishell_start = nucleus_index[inucl];
-			int ishell_end = nucleus_index[inucl] + nucleus_shell_num[inucl] - 1;
-			for (int ishell = ishell_start; ishell <= ishell_end; ishell++) {
-				int l = shell_ang_mom[ishell];
-				ao_index[ishell] = k;
-				k = k + lstart[l + 1] - lstart[l];
-				shell_to_nucl[ishell] = inucl;
-			}
-        } });
+                auto acc_k = buff_k.get_access<access::mode::read_write>(h);
+                h.single_task([=]()
+                {
+                    for (int inucl = 0; inucl < nucl_num; inucl++) 
+                    {
+                        int ishell_start = nucleus_index[inucl];
+                        int ishell_end = nucleus_index[inucl] + nucleus_shell_num[inucl] - 1;
+                        for (int ishell = ishell_start; ishell <= ishell_end; ishell++) 
+                        {
+                            int l = shell_ang_mom[ishell];
+                            ao_index[ishell] = acc_k[0];
+                            acc_k[0] = acc_k[0] + lstart[l + 1] - lstart[l];
+                            shell_to_nucl[ishell] = inucl;
+                        }
+                    } }); });
     q.wait();
+    buff_k.get_host_access();
 
-    // double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
-    // double(*poly_vgl)[chunk_size] = reinterpret_cast<double(*)[chunk_size]>(poly_vgl_shared);
-
-    // double *poly_vgl[chunk_size] = static_cast<double(*)[chunk_size]>(poly_vgl_shared);
-    // double *pows[chunk_size] = (double(*)[chunk_size])pows_shared;
-
-    double **poly_vgl = (double **)qmckl_malloc_device(context, sizeof(poly_vgl_shared));
-    double **pows = (double **)qmckl_malloc_device(context, sizeof(pows_shared));
-
-    std::cout << "Num sub iters: " << num_sub_iters << std::endl;
-    std::cout << "Chunk size: " << chunk_size << std::endl;
-    std::cout << "Num iters: " << num_iters << std::endl;
-    std::cout << "Nucleus num: " << nucl_num << std::endl;
-    std::cout << "Shell num: " << shell_num << std::endl;
+    double(*poly_vgl)[340] = (double(*)[340])poly_vgl_shared;
+    double(*pows)[340] = (double(*)[340])pows_shared;
 
     for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++)
     {
@@ -440,7 +435,6 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
     return QMCKL_SUCCESS_DEVICE;
 }
 
-// START HERT
 /* ao_value */
 
 qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
@@ -486,41 +480,21 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
                         {
                             acc_lmax[0] = nucleus_max_ang_mom[i];
                         }
-                    } });
-             });
+                    } }); });
     q.wait();
     buff_lmax.get_host_access();
 
-    // LMAX = 3
-
-
     size_t pows_dim = (lmax + 3) * 3 * chunk_size;
     double *pows_shared = (double *)qmckl_malloc_device(context, sizeof(double) * pows_dim);
-    
-    // pows_dim: 6120
-    // chunk_size: 340
-    // target_chunk: 2041334
-    // num_iters: 340
-    // num_sub_iters: 1
-    // poly_dim: 89420
-    // max_chunk_size: 2041330
-    // lmax: 3
-    // shell_num: 72
-    // point_num: 68
-    // nucl_num: 5
-    // ao_num: 263
-    // cl::sycl::stream os(102, 3000, h);
 
-    q.submit([&](sycl::handler& h )
-        {
-        h.single_task([=]()
-                  {
+    q.submit([&](sycl::handler &h)
+             { h.single_task([=]()
+                             {
             for (int l = 0; l < 21; l++) 
             {
                 lstart[l] = l * (l + 1) * (l + 2) / 6 + 1;
             } }); });
     q.wait();
-
 
     int k = 1;
     buffer<int, 1> buff_k(&k, range<1>(1));
@@ -528,8 +502,6 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 
     q.submit([&](sycl::handler &h)
              {
-            
-        cl::sycl::stream os(5000, 5000, h);
         auto acc_k = buff_k.get_access<access::mode::read_write>(h);
         h.single_task([=]()
                 {
@@ -545,31 +517,10 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
                     shell_to_nucl[ishell] = inucl;
                 }
             }
-
-            // // Print the 10 first elements of ao_index
-            // for (int i = 0; i < 50; i++)
-            // {
-            //     os << "ao_index[" << i << "]" << "=" << ao_index[i] << sycl::endl;
-            // }
-
-            // // Print the 10 first elements of shell_to_nucl
-            // for (int i = 0; i < 50; i++)
-            // {
-            //     os << "shell_to_nucl[" << i << "]" << "=" << shell_to_nucl[i] << sycl::endl;
-            // }
-
-
-            // k_p = 264
-             
             }); });
     q.wait();
     buff_k.get_host_access();
 
-    // printf("k: %d\n", k);
-
-    // double(*poly_vgl)[chunk_size] = (double(*)[chunk_size])poly_vgl_shared;
-    // double(*pows)[chunk_size] = (double(*)[chunk_size])pows_shared;
-    
     double(*poly_vgl)[340] = (double(*)[340])poly_vgl_shared;
     double(*pows)[340] = (double(*)[340])pows_shared;
 
@@ -577,17 +528,12 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
     {
         q.submit([&](sycl::handler &h)
                  {
-                    
-                    h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter)
+                     h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter)
                                     {
                     
-                    // double **poly_vgl = (double **)qmckl_malloc_device(context, sizeof(poly_vgl_shared));
-                    // double **pows = (double **)qmckl_malloc_device(context, sizeof(pows_shared));
-
-   
-				    int step = iter + sub_iter * chunk_size;
-                    // if (step >= num_iters) 
-                    //     return;
+    			    int step = iter + sub_iter * chunk_size;
+                    if (step >= num_iters) 
+                        return;
 
                     int ipoint = step / nucl_num;
                     int inucl = step % nucl_num;
@@ -607,8 +553,8 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
                     double r2 = x * x + y * y + z * z;
 
                     
-                    // if (r2 > cutoff * nucleus_range[inucl]) 
-                    //     return;
+                    if (r2 > cutoff * nucleus_range[inucl]) 
+                        return;
                     
 
                     // Beginning of ao_polynomial computation (now inlined)
@@ -731,26 +677,12 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
                     } });
                      // End of ao_polynomial computation (now inlined)
                      // poly_vgl is now set from here
-
-                    // Print the first 10 values of poly_vgl
-                    // for (int i = 0; i < 3; i++)
-                    // {
-                    //     for (int j = 0; j < 10; j++)
-                    //     {
-                    //     os << "poly_vgl[" << i << "]" << "["<<j<<"]" << "=" << poly_vgl[i] << sycl::endl;
-                    // }
                  });
         q.wait();
 
-
-
-
         /* Create a stream object with a buffer of 1024 and a maximum statement length of 128. */
-
-
         q.submit([&](sycl::handler &h)
-                    {
-            h.parallel_for(sycl::range<2>((chunk_size / nucl_num), shell_num), [=](sycl::id<2> idx)
+                 { h.parallel_for(sycl::range<2>((chunk_size / nucl_num), shell_num), [=](sycl::id<2> idx)
                                   {
 
                     auto iter_new = idx[0];
@@ -759,8 +691,8 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 					int inucl = shell_to_nucl[ishell];
 					int iter = iter_new * nucl_num + inucl;
 
-					// if (ipoint >= point_num)
-					// 	return;
+					if (ipoint >= point_num)
+						return;
 
 					double e_coord_0 = coord[0 * point_num + ipoint];
 					double e_coord_1 = coord[1 * point_num + ipoint];
@@ -776,9 +708,9 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 
 					double r2 = x * x + y * y + z * z;
 
-					// if (r2 > cutoff * nucleus_range[inucl]) {
-					// 	return;
-					// }
+					if (r2 > cutoff * nucleus_range[inucl]) {
+						return;
+					}
 
 					int k = ao_index[ishell] - 1;
 					int l = shell_ang_mom[ishell];
@@ -792,34 +724,11 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
                             ao_factor[k];
                         
                         k = k + 1;
-					}
-				}); });
+					} }); });
         q.wait();
-
-        // std::cout << "Iter: " << sub_iter << std::endl;
-
-        // Copy ao_value to the host
-        double *ao_value_h = (double *)malloc(ctx->ao_basis.ao_num * ctx->point.num * sizeof(double));
-        // q.memcpy(ao_value_h, ao_value, ctx->ao_basis.ao_num * ctx->point.num * sizeof(double)).wait();
-        qmckl_memcpy_D2H(context, ao_value_h, ao_value, ctx->ao_basis.ao_num * ctx->point.num * sizeof(double));
-        // Print the first 10 values
-        printf("HERE2\n");
-        printf(" ao_value ao_value[26][219] %25.15e\n",
-               ao_value_h[AO_VALUE_ID(26, 219)]);
-        printf(" ao_value ao_value[26][220] %25.15e\n",
-               ao_value_h[AO_VALUE_ID(26, 220)]);
-        printf(" ao_value ao_value[26][221] %25.15e\n",
-               ao_value_h[AO_VALUE_ID(26, 221)]);
-        printf(" ao_value ao_value[26][222] %25.15e\n",
-               ao_value_h[AO_VALUE_ID(26, 222)]);
-        printf("\n");
-
         // End of outer compute loop
     }
-   
 
-
-    // printf("\n");
     // End of target data region
     qmckl_free_device(context, ao_index);
     qmckl_free_device(context, poly_vgl_shared);
@@ -829,8 +738,6 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
 
     return QMCKL_SUCCESS_DEVICE;
 }
-
-// RESTART HERE
 
 //  //**********
 //  // PROVIDE
@@ -892,7 +799,7 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context)
             int ao_num = ctx->ao_basis.ao_num;
 
             q.single_task([=]()
-                     {
+                          {
     				for (int i = 0; i < point_num; ++i) {
     					for (int k = 0; k < ao_num; ++k) {
     						v[i * ao_num + k] = vgl[i * ao_num * 5 + k];
@@ -902,7 +809,6 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context)
         }
         else
         {
-            printf("FIND3\n");
             // We don't have ao_vgl, so we will compute the values only
 
             /* Checking for shell_vgl */
@@ -914,7 +820,6 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context)
 
             if (ctx->ao_basis.type == 'G')
             {
-                std::cout << "FIND4" << std::endl;
                 rc = qmckl_compute_ao_value_gaussian_device(
                     context, ctx->ao_basis.ao_num, ctx->ao_basis.shell_num,
                     ctx->point.num, ctx->nucleus.num, ctx->point.coord.data,
@@ -924,21 +829,6 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context)
                     ctx->ao_basis.nucleus_max_ang_mom,
                     ctx->ao_basis.shell_ang_mom, ctx->ao_basis.ao_factor,
                     ctx->ao_basis.shell_vgl, ctx->ao_basis.ao_value);
-
-                // Copy ao_value to the host
-                double *ao_value_h = (double *)malloc(ctx->ao_basis.ao_num * ctx->point.num * sizeof(double));
-                qmckl_memcpy_D2H(context, ao_value_h, ctx->ao_basis.ao_value, ctx->ao_basis.ao_num * ctx->point.num * sizeof(double));
-                // Print the first 10 values
-                printf(" HERE ARE THE FIRST 10 VALUES OF AO_VALUES\n");
-                printf(" ao_value ao_value[26][219] %25.15e\n",
-                       ao_value_h[AO_VALUE_ID(26, 219)]);
-                printf(" ao_value ao_value[26][220] %25.15e\n",
-                       ao_value_h[AO_VALUE_ID(26, 220)]);
-                printf(" ao_value ao_value[26][221] %25.15e\n",
-                       ao_value_h[AO_VALUE_ID(26, 221)]);
-                printf(" ao_value ao_value[26][222] %25.15e\n",
-                       ao_value_h[AO_VALUE_ID(26, 222)]);
-                printf("\n");
             }
             else
             {
@@ -947,20 +837,6 @@ qmckl_provide_ao_basis_ao_value_device(qmckl_context_device context)
             }
         }
     }
-    // Copy ao_value to the host
-    double *ao_value_h = (double *)malloc(ctx->ao_basis.ao_num * ctx->point.num * sizeof(double));
-    qmckl_memcpy_D2H(context, ao_value_h, ctx->ao_basis.ao_value, ctx->ao_basis.ao_num * ctx->point.num * sizeof(double));
-    // Print the first 10 values
-    printf(" HERE ARE THE FIRST 10 VALUES OF AO_VALUE\n");
-    printf(" ao_value ao_value[26][219] %25.15e\n",
-           ao_value_h[AO_VALUE_ID(26, 219)]);
-    printf(" ao_value ao_value[26][220] %25.15e\n",
-           ao_value_h[AO_VALUE_ID(26, 220)]);
-    printf(" ao_value ao_value[26][221] %25.15e\n",
-           ao_value_h[AO_VALUE_ID(26, 221)]);
-    printf(" ao_value ao_value[26][222] %25.15e\n",
-           ao_value_h[AO_VALUE_ID(26, 222)]);
-    printf("\n");
 
     if (rc != QMCKL_SUCCESS_DEVICE)
     {
