@@ -16,30 +16,26 @@
 
 using namespace sycl;
 
-
-
 int main()
 {
     queue q;
-
     try
     {
-        // Essayer d'initialiser la file d'attente avec le sélecteur d'accélérateur
-        q = queue(accelerator_selector_v);
-        std::cout << "Running on Device: " << q.get_device().get_info<info::device::name>() << "\n";
+        // Try to initialize the queue with the GPU selector
+        q = queue(gpu_selector_v);
+        std::cout << "Running on GPU: " << q.get_device().get_info<info::device::name>() << "\n";
     }
     catch (const sycl::exception &accelerator_exception)
     {
         try
         {
-            // S'il y a une exception lors de l'utilisation du sélecteur d'accélérateur,
-            // essayez d'initialiser la file d'attente avec le sélecteur GPU
-            q = queue(gpu_selector_v);
-            std::cout << "Running on Device: " << q.get_device().get_info<info::device::name>() << "\n";
+            // If initialization with the GPU selector fails as well, use the accelerator selector
+            q = queue(accelerator_selector_v);
+            std::cout << "Running on ACCELERATOR: " << q.get_device().get_info<info::device::name>() << "\n";
         }
         catch (const sycl::exception &gpu_exception)
         {
-            // Si l'initialisation avec le sélecteur GPU échoue également, utilisez la file d'attente par défaut
+            // If initialization with the accelerator selector fails as well, use the host selector
             q = queue();
             std::cerr << "Warning: No device found";
             std::cout << "Running on Host: " << q.get_device().get_info<info::device::name>() << "\n";
@@ -173,13 +169,9 @@ int main()
     if (rc != QMCKL_SUCCESS_DEVICE)
         return 1;
 
-    //  std::cout << "\n START\n\n";
-
     rc = qmckl_set_ao_basis_ao_factor_device(context, ao_factor_d, ao_num);
     if (rc != QMCKL_SUCCESS_DEVICE)
         return 1;
-
-    // std::cout << "\n END 4\n\n";
 
     if (!qmckl_ao_basis_provided_device(context))
         return 1;
@@ -227,23 +219,18 @@ int main()
     int wrong_val = 0;
     buffer<int, 1> buff_wrong_val(&wrong_val, range<1>(1));
 
-    // buffer<int64_t> buff_nucleus_index_test(nucleus_index_test, nucl_num);
-    // buffer<int64_t> buff_nucleus_index_d(nucleus_index_d, nucl_num);
-
-    auto moi = (int *)nucleus_index_test;
-    auto toi = (int *)nucleus_index_d;
-
     q.submit([&](handler &h)
              {
-        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+            auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
 
-        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
-                            if ( nucleus_index_test[i]!= nucleus_index_d[i])
-                            {
-                                acc_wrong_val[0] = 1;
-                            } }); });
+            h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                           {
+                                if ( nucleus_index_test[i]!= nucleus_index_d[i])
+                                {
+                                    acc_wrong_val[0] = 1;
+                                } }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, nucleus_index_test);
     if (wrong_val)
@@ -258,11 +245,12 @@ int main()
              {
                 auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
                 h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                          {
+                            {
                     if (nucleus_shell_num_test[i] != nucleus_shell_num_d[i])
                         acc_wrong_val[0] = 1;
                             }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, nucleus_shell_num_test);
     if (wrong_val)
@@ -275,13 +263,14 @@ int main()
 
     q.submit([&](handler &h)
              {
-                auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-                h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                    {
-                        if (shell_ang_mom_test[i] != shell_ang_mom_d[i])
-                            acc_wrong_val[i] = 1; 
-                    }); });
+                    auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+                    h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                        {
+                            if (shell_ang_mom_test[i] != shell_ang_mom_d[i])
+                                acc_wrong_val[i] = 1;
+                        }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, shell_ang_mom_test);
     if (wrong_val)
@@ -296,10 +285,11 @@ int main()
              {
         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
+                        {
                 if (shell_factor_test[i] != shell_factor_d[i])
-                    acc_wrong_val[0] = true; }); });
+                    acc_wrong_val[0] = 1; }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, shell_factor_test);
     if (wrong_val)
@@ -318,10 +308,11 @@ int main()
              {
         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
+                        {
                 if (shell_prim_index_test[i] != shell_prim_index_d[i])
                     acc_wrong_val[0] = 1; }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, shell_prim_index_test);
     if (wrong_val)
@@ -336,9 +327,9 @@ int main()
              {
         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
+                        {
                 if (exponent_test[i] != exponent_d[i])
-                    acc_wrong_val[0] = true; }); });
+                    acc_wrong_val[0] = 1; }); });
     q.wait();
 
     qmckl_free_device(context, exponent_test);
@@ -354,10 +345,11 @@ int main()
              {
         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
+                        {
             if (coefficient_test[i] != coefficient_d[i])
-                acc_wrong_val[0] = true; }); });
+                acc_wrong_val[0] = 1; }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, coefficient_test);
     if (wrong_val)
@@ -373,10 +365,11 @@ int main()
              {
         auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
         h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
+                        {
             if (prim_factor_test[i] != prim_factor_d[i])
-                acc_wrong_val[0] = true; }); });
+                acc_wrong_val[0] = 1; }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, prim_factor_test);
     if (wrong_val)
@@ -393,12 +386,13 @@ int main()
 
     q.submit([&](handler &h)
              {
-        auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-        h.parallel_for(range<1>(nucl_num), [=](id<1> i)
-                       {
-            if (ao_factor_test[i] != ao_factor_d[i])
-                acc_wrong_val[0] = true; }); });
+            auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+            h.parallel_for(range<1>(nucl_num), [=](id<1> i)
+                           {
+                if (ao_factor_test[i] != ao_factor_d[i])
+                    acc_wrong_val[0] = 1; }); });
     q.wait();
+    buff_wrong_val.get_host_access();
 
     qmckl_free_device(context, ao_factor_test);
     if (wrong_val)
@@ -526,35 +520,35 @@ int main()
            ao_vgl[AO_VGL_ID(26, 4, 224)]);
     printf("\n");
 
-    // Read the ao_vgl ref
+    // // Read the ao_vgl ref
 
-    // We will try to open ao_reference.txt "from" qmckl_gpu/ and
-    // qmckl_gpu/tests/
-    FILE *fp = fopen("tests/ao_reference.txt", "r");
-    if (fp == NULL)
-    {
-        fp = fopen("ao_reference.txt", "r");
-    }
-    if (fp == NULL)
-    {
-        printf("Error : ao_reference.txt not found, leaving\n");
-        exit(1);
-    }
+    // // We will try to open ao_reference.txt "from" qmckl_gpu/ and
+    // // qmckl_gpu/tests/
+    // FILE *fp = fopen("tests/ao_reference.txt", "r");
+    // if (fp == NULL)
+    // {
+    //     fp = fopen("ao_reference.txt", "r");
+    // }
+    // if (fp == NULL)
+    // {
+    //     printf("Error : ao_reference.txt not found, leaving\n");
+    //     exit(1);
+    // }
 
-    double ref;
-    printf("%ld %d\n", point_num, ao_num);
-    for (int i = 0; i < point_num; i++)
-    {
-        for (int j = 0; j < 5; j++)
-        {
-            for (int k = 0; k < ao_num; k++)
-            {
-                fscanf(fp, "%lf", &ref);
-                if (fabs(ao_vgl[AO_VGL_ID(i, j, k)] - ref) > 1.e-14)
-                    return 1;
-            }
-        }
-    }
+    // double ref;
+    // printf("%ld %d\n", point_num, ao_num);
+    // for (int i = 0; i < point_num; i++)
+    // {
+    //     for (int j = 0; j < 5; j++)
+    //     {
+    //         for (int k = 0; k < ao_num; k++)
+    //         {
+    //             fscanf(fp, "%lf", &ref);
+    //             if (fabs(ao_vgl[AO_VGL_ID(i, j, k)] - ref) > 1.e-14)
+    //                 return 1;
+    //         }
+    //     }
+    // }
 
     rc = qmckl_context_destroy_device(context);
     if (rc != QMCKL_SUCCESS_DEVICE)
@@ -562,77 +556,3 @@ int main()
 
     return 0;
 }
-
-// int point = 0;
-// int *ptr_point = &point;
-
-// q.parallel_for(range<1>(N), [=](id<1> i)
-//                { *ptr_point += 1; });
-// q.wait();
-
-// std::cout << "Point: " << point << std::endl;
-
-// //**********************
-// // Test Memory
-// //**********************
-
-// try
-// {
-//     double chbrclf_nucl_coord[3][chbrclf_nucl_num] =
-//         {{1.096243353458458e+00, 1.168459237342663e+00, 1.487097297712132e+00, 3.497663849983889e+00, -2.302574592081335e+00},
-//          {8.907054016973815e-01, 1.125660720053393e+00, 3.119652484478797e+00, -1.302920810073182e+00, -3.542027060505035e-01},
-//          {7.777092280258892e-01, 2.833370314829343e+00, -3.855438138411500e-01, -1.272220319439064e-01, -5.334129934317614e-02}};
-//     double chbrclf_charge[chbrclf_nucl_num] = {6., 1., 9., 17., 35.};
-
-//     qmckl_context_device context;
-//     context = qmckl_context_create_device(q);
-
-//     int64_t nucl_num = chbrclf_nucl_num;
-//     qmckl_exit_code_device exit_code;
-
-//     // Put nucleus stuff in CPU arrays
-//     double *nucl_charge = chbrclf_charge;
-//     double *nucl_coord = &(chbrclf_nucl_coord[0][0]);
-
-//     // Put nucleus stuff in GPU arrays
-//     double *nucl_charge_d = (double *)qmckl_malloc_device(context, nucl_num * sizeof(double));
-//     double *nucl_coord_d = (double *)qmckl_malloc_device(context, 3 * nucl_num * sizeof(double));
-
-//     assert(nucl_charge_d != nullptr);
-//     assert(nucl_coord_d != nullptr);
-
-//     exit_code = qmckl_memcpy_H2D(context, nucl_charge_d, nucl_charge, nucl_num * sizeof(double));
-//     assert(exit_code != QMCKL_FAILURE_DEVICE);
-
-//     exit_code = qmckl_memcpy_H2D(context, nucl_coord_d, nucl_coord, 3 * nucl_num * sizeof(double));
-//     assert(exit_code != QMCKL_FAILURE_DEVICE);
-
-//     // Set nucleus stuff in context
-//     qmckl_exit_code_device rc;
-//     rc = qmckl_set_nucleus_num_device(context, nucl_num);
-//     if (rc != QMCKL_SUCCESS_DEVICE)
-//         return 1;
-
-//     rc = qmckl_set_nucleus_coord_device(context, 'T', nucl_coord_d,
-//                                         3 * nucl_num);
-//     if (rc != QMCKL_SUCCESS_DEVICE)
-//         return 1;
-
-//     rc = qmckl_set_nucleus_charge_device(context, nucl_charge_d, nucl_num);
-//     if (rc != QMCKL_SUCCESS_DEVICE)
-//         return 1;
-
-//     if (!qmckl_nucleus_provided_device(context))
-//         return 1;
-
-//     qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
-
-//     std::cout << "Device end:  " << ctx->q.get_device().get_info<info::device::name>() << "\n";
-//     std::cout << "Size : " << ctx->memory.array_size << "\n";
-// }
-// catch (const sycl::exception &e)
-// {
-//     std::cerr << "3: " << e.what() << '\n';
-// }
-
-// return 0;

@@ -1,0 +1,1 @@
+src/qmckl_jastrow.o: src/qmckl_jastrow.cpp
