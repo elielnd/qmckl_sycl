@@ -16,7 +16,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_asymp_jasa_device(
 
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
 	int i, j, p;
 	float kappa_inv, x, asym_one;
@@ -31,21 +31,25 @@ qmckl_exit_code_device qmckl_compute_jastrow_asymp_jasa_device(
 		info = QMCKL_INVALID_ARG_2_DEVICE;
 		return info;
 	}
+    sycl::buffer<float, 1> buffer_kappa_inv(&kappa_inv, range<1>(1));
+    sycl::buffer<float, 1> buffer_x(&x, range<1>(1));
     
-	queue.submit([&](handler &h) {
-		h.parallel_for(sycl::range<1>(type_nucl_num), [=](sycl::id<1> idx) mutable {
+	q.submit([&](handler &h) {
+		sycl::accessor acc_kappa_inv(buffer_kappa_inv, h, read_write);
+		sycl::accessor acc_x(buffer_x, h, read_write);
+		h.parallel_for(sycl::range<1>(type_nucl_num), [=](sycl::id<1> idx) {
 			auto i = idx[0];
 			
-			kappa_inv = 1.0 / rescale_factor_en[i];
+			acc_kappa_inv[0] = 1.0 / rescale_factor_en[i];
 
-			asymp_jasa[i] = a_vector[0 + i * (aord_num + 1)] * kappa_inv /
-						(1.0 + a_vector[1 + i * (aord_num + 1)] * kappa_inv);
+			asymp_jasa[i] = a_vector[0 + i * (aord_num + 1)] * acc_kappa_inv[0] /
+						(1.0 + a_vector[1 + i * (aord_num + 1)] * acc_kappa_inv[0]);
 
-			x = kappa_inv;
+			acc_x[0] = acc_kappa_inv[0];
 			for (int p = 1; p < aord_num; p++) {
-				x = x * kappa_inv;
+				acc_x[0] = acc_x[0] * acc_kappa_inv[0];
 				asymp_jasa[i] =
-					asymp_jasa[i] + a_vector[p + 1 + i * (aord_num + 1)] * x;
+					asymp_jasa[i] + a_vector[p + 1 + i * (aord_num + 1)] * acc_x[0];
 			}
 		});
 	});
@@ -61,7 +65,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_asymp_jasb_device(
     
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
 	double asym_one, x;
 	double kappa_inv = 1.0 / rescale_factor_ee;
@@ -78,26 +82,39 @@ qmckl_exit_code_device qmckl_compute_jastrow_asymp_jasb_device(
 		return info;
 	}
 
-	queue.single_task([=]() mutable {
-		asym_one = b_vector[0] * kappa_inv / (1.0 + b_vector[1] * kappa_inv);
-		asymp_jasb[0] = asym_one;
-		asymp_jasb[1] = 0.5 * asym_one;
-	});
+    sycl::buffer<double, 1> buffer_asym_one(&asym_one, range<1>(1));
+    sycl::buffer<double, 1> buffer_x(&x, range<1>(1));
+    sycl::buffer<double, 1> buffer_kappa_inv(&kappa_inv, range<1>(1));
+	
+    q.submit([&](handler &h) {
+        sycl::accessor acc_asym_one(buffer_asym_one, h, read_write);
+        sycl::accessor acc_kappa_inv(buffer_kappa_inv, h, read_write);
+        h.single_task([=]() {
+            acc_asym_one[0] = b_vector[0] * acc_kappa_inv[0] / (1.0 + b_vector[1] * acc_kappa_inv[0]);
+            asymp_jasb[0] = acc_asym_one[0];
+            asymp_jasb[1] = 0.5 * acc_asym_one[0];
+        });
+    });
 
-	queue.parallel_for(sycl::range<1>(2), [=](sycl::id<1> idx) mutable {
-		auto i = idx[0];
-		
-		x = kappa_inv;
-		for (int p = 1; p < bord_num; p++) {
-			x = x * kappa_inv;
-			asymp_jasb[i] = asymp_jasb[i] + b_vector[p + 1] * x;
-		}
-	});
+    q.submit([&](handler &h) {
+        sycl::accessor acc_x(buffer_x, h, read_write);
+        sycl::accessor acc_kappa_inv(buffer_kappa_inv, h, read_write);
+        h.parallel_for(sycl::range<1>(2), [=](sycl::id<1> idx) {
+            auto i = idx[0];
+            
+            acc_x[0] = acc_kappa_inv[0];
+            for (int p = 1; p < bord_num; p++) {
+                acc_x[0] = acc_x[0] * acc_kappa_inv[0];
+                asymp_jasb[i] = asymp_jasb[i] + b_vector[p + 1] * acc_x[0];
+            }
+        });
+    });
 
 	return QMCKL_SUCCESS_DEVICE;
 }
 
 // Total Jastrow
+
 qmckl_exit_code_device
 qmckl_compute_jastrow_value_device(const qmckl_context_device context,
 								   const int64_t walk_num, const double *f_ee,
@@ -119,9 +136,9 @@ qmckl_compute_jastrow_value_device(const qmckl_context_device context,
 
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+	q.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
 		auto i = idx[0];
 
 		double arg = f_ee[i] + f_en[i] + f_een[i];
@@ -134,6 +151,7 @@ qmckl_compute_jastrow_value_device(const qmckl_context_device context,
 
 	return QMCKL_SUCCESS_DEVICE;
 }
+
 
 qmckl_exit_code_device qmckl_compute_jastrow_gl_device(
 	const qmckl_context_device context, const int64_t walk_num,
@@ -159,9 +177,9 @@ qmckl_exit_code_device qmckl_compute_jastrow_gl_device(
     
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
     
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+	q.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
 		auto k = idx[0];
 
 		for (int j = 0; j < 4; j++) {
@@ -195,6 +213,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_gl_device(
 	return QMCKL_SUCCESS_DEVICE;
 }
 
+
 // Electron/electron component
 qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_device(
 	const qmckl_context_device context, const int64_t walk_num,
@@ -220,9 +239,9 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_device(
 
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
     
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+	q.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
 		auto nw = idx[0];
 		
 		factor_ee[nw] = 0.0; // put init array here.
@@ -255,6 +274,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_device(
 	return QMCKL_SUCCESS_DEVICE;
 }
 
+
 qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_deriv_e_device(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t up_num, const int64_t bord_num,
@@ -280,10 +300,10 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_deriv_e_device(
 
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
     
-	queue.parallel_for(sycl::range<3>(walk_num, 4, elec_num), [=](sycl::id<3> idx) {
+	q.parallel_for(sycl::range<3>(walk_num, 4, elec_num), [=](sycl::id<3> idx) {
 		auto nw = idx[0];
 		auto ii = idx[1];
 		auto j = idx[2];
@@ -292,7 +312,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_deriv_e_device(
 
 	const double third = 1.0 / 3.0;
     
-	queue.parallel_for(sycl::range<3>(walk_num, elec_num, elec_num), [=](sycl::id<3> idx) {
+	q.parallel_for(sycl::range<3>(walk_num, elec_num, elec_num), [=](sycl::id<3> idx) {
 		auto nw = idx[0];
 		auto i = idx[1];
 		auto j = idx[2];
@@ -371,6 +391,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_ee_deriv_e_device(
 	return QMCKL_SUCCESS_DEVICE;
 }
 
+
 // Electron/nucleus component
 qmckl_exit_code_device qmckl_compute_jastrow_factor_en_device(
 	const qmckl_context_device context, const int64_t walk_num,
@@ -415,43 +436,58 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_device(
     
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
-		auto nw = idx[0];
-		
-		factor_en[nw] = 0.0;
-		for (a = 0; a < nucl_num; a++) {
-			for (i = 0; i < elec_num; i++) {
-				x = en_distance_rescaled[i + a * elec_num +
-											nw * elec_num * nucl_num];
+    sycl::buffer<int, 1> buff_i(&i, range<1>(1));
+    sycl::buffer<int, 1> buff_a(&a, range<1>(1));
+    sycl::buffer<int, 1> buff_p(&p, range<1>(1));
+    sycl::buffer<int, 1> buff_nw(&nw, range<1>(1));
+    sycl::buffer<double, 1> buff_x(&x, range<1>(1));
+	
+    q.submit([&](handler &h) {
+        sycl::accessor acc_i(buff_i, h, read_write);
+        sycl::accessor acc_a(buff_a, h, read_write);
+        sycl::accessor acc_p(buff_p, h, read_write);
+        sycl::accessor acc_nw(buff_nw, h, read_write);
+        sycl::accessor acc_x(buff_x, h, read_write);
+        
+        h.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
+            acc_nw[0] = idx[0];
+            
+            factor_en[acc_nw[0]] = 0.0;
+            for (acc_a[0] = 0; acc_a[0] < nucl_num; acc_a[0]++) {
+                for (acc_i[0] = 0; acc_i[0] < elec_num; acc_i[0]++) {
+                    acc_x[0] = en_distance_rescaled[acc_i[0] + acc_a[0] * elec_num +
+                                                acc_nw[0] * elec_num * nucl_num];
 
-				factor_en[nw] =
-					factor_en[nw] +
-					a_vector[0 +
-								type_nucl_vector[a] * (aord_num + 1)] *
-						x /
-						(1.0 + a_vector[1 + type_nucl_vector[a] *
-												(aord_num + 1)] *
-									x) -
-					asymp_jasa[type_nucl_vector[a]];
+                    factor_en[acc_nw[0]] =
+                        factor_en[acc_nw[0]] +
+                        a_vector[0 +
+                                    type_nucl_vector[acc_a[0]] * (aord_num + 1)] *
+                            acc_x[0] /
+                            (1.0 + a_vector[1 + type_nucl_vector[acc_a[0]] *
+                                                    (aord_num + 1)] *
+                                        acc_x[0]) -
+                        asymp_jasa[type_nucl_vector[acc_a[0]]];
 
-				for (p = 1; p < aord_num; p++) {
-					x = x * en_distance_rescaled[i + a * elec_num +
-													nw * elec_num * nucl_num];
-					factor_en[nw] =
-						factor_en[nw] + a_vector[p + 1 +
-													type_nucl_vector[a] *
-														(aord_num + 1)] *
-											x;
-				}
-			}
-		}
-	});
+                    for (acc_p[0] = 1; acc_p[0] < aord_num; acc_p[0]++) {
+                        acc_x[0] = acc_x[0] * en_distance_rescaled[acc_i[0] + acc_a[0] * elec_num +
+                                                        acc_nw[0] * elec_num * nucl_num];
+                        factor_en[acc_nw[0]] =
+                            factor_en[acc_nw[0]] + a_vector[acc_p[0] + 1 +
+                                                        type_nucl_vector[acc_a[0]] *
+                                                            (aord_num + 1)] *
+                                                acc_x[0];
+                    }
+                }
+            }
+        });
+    });
 
 	return info;
 }
 
+/*
 qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t nucl_num, const int64_t type_nucl_num,
@@ -503,7 +539,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 
 	third = 1.0 / 3.0;
 
-	queue.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) mutable {
+	queue.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) {
 		auto nw = idx[0];
 		auto a = idx[1];
 		auto i = idx[2]; 
@@ -588,7 +624,8 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 
 	return info;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_en_distance_rescaled_deriv_e_device(
 	const qmckl_context_device context, const int64_t elec_num,
 	const int64_t nucl_num, const int64_t type_nucl_num,
@@ -658,7 +695,8 @@ qmckl_exit_code_device qmckl_compute_en_distance_rescaled_deriv_e_device(
 
 	return info;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_jastrow_champ_factor_en_deriv_e(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t nucl_num, const int64_t type_nucl_num,
@@ -710,7 +748,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_champ_factor_en_deriv_e(
 
 	third = 1.0 / 3.0;
 
-	queue.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) mutable {
+	queue.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) {
 		auto nw = idx[0];
 		auto a = idx[1];
 		auto i = idx[2];
@@ -790,7 +828,8 @@ qmckl_exit_code_device qmckl_compute_jastrow_champ_factor_en_deriv_e(
 
 	return info;
 }
-
+*/
+/*
 // Electron/electron/nucleus component
 qmckl_exit_code_device qmckl_compute_jastrow_factor_een_device(
 	const qmckl_context_device context, const int64_t walk_num,
@@ -833,7 +872,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_device(
     
     sycl::queue queue = ctx->q;
 
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
+	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
 		auto nw = idx[0];
 		factor_een[nw] = 0.0;
 		for (n = 0; n < dim_c_vector; n++) {
@@ -868,7 +907,8 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_device(
 
 	return info;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_jastrow_factor_een_deriv_e_device(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t nucl_num, const int64_t cord_num,
@@ -1046,7 +1086,8 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_een_deriv_e_device(
 
 	return info;
 }
-
+*/
+/*
 // Electron/electron/nucleus deriv
 qmckl_exit_code_device
 qmckl_compute_jastrow_factor_een_rescaled_e_deriv_e_device(
@@ -1094,7 +1135,7 @@ qmckl_compute_jastrow_factor_een_rescaled_e_deriv_e_device(
 		een_rescaled_e_deriv_e[i] = 0.0;
 	});
 
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
+	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
 		auto nw = idx[0];
 		for (int j = 0; j < elec_num; j++) {
 			for (int i = 0; i < elec_num; i++) {
@@ -1267,7 +1308,8 @@ qmckl_compute_jastrow_factor_een_rescaled_e_deriv_e_device(
 	qmckl_free_device(context, elec_dist_deriv_e);
 	return info;
 }
-
+*/
+/*
 qmckl_exit_code_device
 qmckl_compute_jastrow_factor_een_rescaled_n_deriv_e_device(
 	const qmckl_context_device context, const int64_t walk_num,
@@ -1320,7 +1362,7 @@ qmckl_compute_jastrow_factor_een_rescaled_n_deriv_e_device(
 		een_rescaled_n_deriv_e[i] = 0.0;
 	});
 
-	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) mutable {
+	queue.parallel_for(sycl::range<1>(walk_num), [=](sycl::id<1> idx) {
 		auto nw = idx[0];
 		// Prepare the actual een table
 		for (int a = 0; a < nucl_num; a++) {
@@ -1476,9 +1518,10 @@ qmckl_compute_jastrow_factor_een_rescaled_n_deriv_e_device(
 	qmckl_free_device(context, elnuc_dist_deriv_e);
 	return QMCKL_SUCCESS_DEVICE;
 }
+*/
 
 // Distances
-
+/*
 qmckl_exit_code_device qmckl_compute_en_distance_rescaled_device(
 	const qmckl_context_device context, const int64_t elec_num,
 	const int64_t nucl_num, const int64_t type_nucl_num,
@@ -1547,7 +1590,8 @@ qmckl_exit_code_device qmckl_compute_en_distance_rescaled_device(
 	free(rescale_factor_en_h);
 	return info;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_een_rescaled_e_device(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t cord_num,
@@ -1658,7 +1702,8 @@ qmckl_exit_code_device qmckl_compute_een_rescaled_e_device(
 	qmckl_free_device(context, een_rescaled_e_ij);
 	return QMCKL_SUCCESS_DEVICE;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_een_rescaled_n_device(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t nucl_num, const int64_t type_nucl_num,
@@ -1734,7 +1779,8 @@ qmckl_exit_code_device qmckl_compute_een_rescaled_n_device(
 
 	return QMCKL_SUCCESS_DEVICE;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_c_vector_full_device(
 	const qmckl_context_device context, const int64_t nucl_num,
 	const int64_t dim_c_vector, const int64_t type_nucl_num,
@@ -1770,7 +1816,8 @@ qmckl_exit_code_device qmckl_compute_c_vector_full_device(
 
 	return QMCKL_SUCCESS_DEVICE;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_lkpm_combined_index_device(
 	const qmckl_context_device context, const int64_t cord_num,
 	const int64_t dim_c_vector, int64_t *const lkpm_combined_index) {
@@ -1801,7 +1848,7 @@ qmckl_exit_code_device qmckl_compute_lkpm_combined_index_device(
     
     sycl::queue queue = ctx->q;
 
-	queue.single_task([=]() mutable {
+	queue.single_task([=]() {
 		for (int p = 2; p <= cord_num; ++p) {
 			for (int k = (p - 1); k >= 0; --k) {
 				if (k != 0) {
@@ -1825,7 +1872,8 @@ qmckl_exit_code_device qmckl_compute_lkpm_combined_index_device(
 
 	return QMCKL_SUCCESS_DEVICE;
 }
-
+*/
+/*
 qmckl_exit_code_device
 qmckl_compute_tmp_c_device(const qmckl_context_device context,
 						   const int64_t cord_num, const int64_t elec_num,
@@ -1914,7 +1962,8 @@ qmckl_compute_tmp_c_device(const qmckl_context_device context,
 #endif
 	return info;
 }
-
+*/
+/*
 qmckl_exit_code_device qmckl_compute_dtmp_c_device(
 	const qmckl_context_device context, const int64_t cord_num,
 	const int64_t elec_num, const int64_t nucl_num, const int64_t walk_num,
@@ -1992,11 +2041,12 @@ qmckl_exit_code_device qmckl_compute_dtmp_c_device(
 
 	return info;
 }
+*/
 
 //**********
 // SETTERS (requiring offload)
 //**********
-
+/*
 qmckl_exit_code_device
 qmckl_set_jastrow_rescale_factor_en_device(qmckl_context_device context,
 										   const double *rescale_factor_en,
@@ -2054,7 +2104,7 @@ qmckl_set_jastrow_rescale_factor_en_device(qmckl_context_device context,
 
 	queue.submit([&](handler &h) {
 		sycl::accessor acc_wrongval(buffer_wrongval, h, write_only);
-		h.single_task([=]() mutable {
+		h.single_task([=]() {
 			for (int64_t i = 0; i < ctx_type_nucl_num; ++i) {
 				if (rescale_factor_en[i] <= 0.0) {
 					acc_wrongval[0] = true;
@@ -2079,7 +2129,4 @@ qmckl_set_jastrow_rescale_factor_en_device(qmckl_context_device context,
 
 	return QMCKL_SUCCESS_DEVICE;
 }
-
-
-
-
+*/

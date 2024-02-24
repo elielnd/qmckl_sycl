@@ -1,1 +1,1 @@
-# dummy
+src/qmckl_trexio.o: src/qmckl_trexio.cpp

@@ -1,0 +1,3 @@
+depbase=`echo src/qmckl_jastrow.o | sed 's|[^/]*$|.deps/&|;s|\.o$||'`;\
+icpx -DPACKAGE_NAME=\"qmckl_gpu\" -DPACKAGE_TARNAME=\"qmckl_gpu\" -DPACKAGE_VERSION=\"0.0.1\" -DPACKAGE_STRING=\"qmckl_gpu\ 0.0.1\" -DPACKAGE_BUGREPORT=\"BUG-REPORT-ADDRESS\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qmckl_gpu\" -DVERSION=\"0.0.1\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_LIBTREXIO=1 -DHAVE_TREXIO_H=1 -DHAVE_TREXIO=1 -I.    -fsycl -I./src -I./include -Iinclude -O2  -MT src/qmckl_jastrow.o -MD -MP -MF $depbase.Tpo -c -o src/qmckl_jastrow.o src/qmckl_jastrow.cpp &&\
+mv -f $depbase.Tpo $depbase.Po

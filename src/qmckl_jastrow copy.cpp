@@ -7,3 +7,7 @@
 
 		});
 	});
+    
+
+    sycl::buffer<float, 1> buffer_x(&x, range<1>(1));
+    sycl::accessor acc_x(buffer_x, h, read_write);
