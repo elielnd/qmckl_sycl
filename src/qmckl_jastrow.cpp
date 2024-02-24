@@ -487,7 +487,7 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_device(
 	return info;
 }
 
-/*
+
 qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 	const qmckl_context_device context, const int64_t walk_num,
 	const int64_t elec_num, const int64_t nucl_num, const int64_t type_nucl_num,
@@ -529,9 +529,9 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
-	queue.parallel_for(sycl::range<1>(elec_num * 4 * walk_num), [=](sycl::id<1> idx) {
+	q.parallel_for(sycl::range<1>(elec_num * 4 * walk_num), [=](sycl::id<1> idx) {
 		auto i = idx[0];
 
 		factor_en_deriv_e[i] = 0.0;         
@@ -539,92 +539,126 @@ qmckl_exit_code_device qmckl_compute_jastrow_factor_en_deriv_e_device(
 
 	third = 1.0 / 3.0;
 
-	queue.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) {
-		auto nw = idx[0];
-		auto a = idx[1];
-		auto i = idx[2]; 
+    sycl::buffer<int, 1> buff_i(&i, range<1>(1));
+    sycl::buffer<int, 1> buff_a(&a, range<1>(1));
+    sycl::buffer<int, 1> buff_p(&p, range<1>(1));
+    sycl::buffer<int, 1> buff_nw(&nw, range<1>(1));
+    sycl::buffer<int, 1> buff_ii(&ii, range<1>(1));
+    sycl::buffer<double, 1> buff_x(&x, range<1>(1));
+    sycl::buffer<double, 1> buff_den(&den, range<1>(1));
+    sycl::buffer<double, 1> buff_invden(&invden, range<1>(1));
+    sycl::buffer<double, 1> buff_invden2(&invden2, range<1>(1));
+    sycl::buffer<double, 1> buff_invden3(&invden3, range<1>(1));
+    sycl::buffer<double, 1> buff_xinv(&xinv, range<1>(1));
+    sycl::buffer<double, 1> buff_y(&y, range<1>(1));
+    sycl::buffer<double, 1> buff_lap1(&lap1, range<1>(1));
+    sycl::buffer<double, 1> buff_lap2(&lap2, range<1>(1));
+    sycl::buffer<double, 1> buff_lap3(&lap3, range<1>(1));
+    sycl::buffer<double, 1> buff_third(&third, range<1>(1));
+    q.submit([&](handler &h) {
+        sycl::accessor acc_a(buff_a, h, read_write);
+        sycl::accessor acc_nw(buff_nw, h, read_write);
+        sycl::accessor acc_x(buff_x, h, read_write);
+        sycl::accessor acc_i(buff_i, h, read_write);
+        sycl::accessor acc_p(buff_p, h, read_write);
+        sycl::accessor acc_ii(buff_ii, h, read_write);
+        sycl::accessor acc_den(buff_den, h, read_write);
+        sycl::accessor acc_invden(buff_invden, h, read_write);
+        sycl::accessor acc_invden2(buff_invden2, h, read_write);
+        sycl::accessor acc_invden3(buff_invden3, h, read_write);
+        sycl::accessor acc_xinv(buff_xinv, h, read_write);
+        sycl::accessor acc_y(buff_y, h, read_write);
+        sycl::accessor acc_lap1(buff_lap1, h, read_write);
+        sycl::accessor acc_lap2(buff_lap2, h, read_write);
+        sycl::accessor acc_lap3(buff_lap3, h, read_write);
+        sycl::accessor acc_third(buff_third, h, read_write);
+        q.parallel_for(sycl::range<3>(walk_num, nucl_num, elec_num), [=](sycl::id<3> idx) {
+            acc_nw[0] = idx[0];
+            acc_a[0] = idx[1];
+            acc_i[0] = idx[2]; 
 
-		double power_ser_g[3];
-		double dx[4];
+            double power_ser_g[3];
+            double dx[4];
 
-		x = en_distance_rescaled[i + a * elec_num +
-									nw * elec_num * nucl_num];
-		for (int i = 0; i < 0; i++) {
-			if (fabs(x) < 1.0e-18) {
-				continue;
-			}
-		}
-		power_ser_g[0] = 0.0;
-		power_ser_g[1] = 0.0;
-		power_ser_g[2] = 0.0;
-		den =
-			1.0 +
-			a_vector[1 + (type_nucl_vector[a]+1) * (aord_num + 1)] * x;
-		invden = 1.0 / den;
-		invden2 = invden * invden;
-		invden3 = invden2 * invden;
-		xinv = 1.0 / x;
+            acc_x[0] = en_distance_rescaled[acc_i[0] + acc_a[0] * elec_num +
+                                        acc_nw[0] * elec_num * nucl_num];
+            for (int z = 0; z < 0; z++) {
+                if (fabs(acc_x[0]) < 1.0e-18) {
+                    continue;
+                }
+            }
+            power_ser_g[0] = 0.0;
+            power_ser_g[1] = 0.0;
+            power_ser_g[2] = 0.0;
+            acc_den[0] =
+                1.0 +
+                a_vector[1 + (type_nucl_vector[acc_a[0]]+1) * (aord_num + 1)] * x;
+            acc_invden[0] = 1.0 / den;
+            acc_invden2[0] = acc_invden[0] * acc_invden[0];
+            acc_invden3[0] = acc_invden2[0] * invden;
+            acc_xinv[0] = 1.0 / acc_x[0];
 
-		for (ii = 0; ii < 4; ii++) {
-			dx[ii] =
-				en_distance_rescaled_deriv_e[ii + i * 4 +
-												a * 4 * elec_num +
-												nw * 4 * elec_num *
-													nucl_num];
-		}
+            for (acc_ii[0] = 0; acc_ii[0] < 4; acc_ii[0]++) {
+                dx[acc_ii[0]] =
+                    en_distance_rescaled_deriv_e[acc_ii[0] + acc_i[0] * 4 +
+                                                    acc_a[0] * 4 * elec_num +
+                                                    acc_nw[0] * 4 * elec_num *
+                                                        nucl_num];
+            }
 
-		lap1 = 0.0;
-		lap2 = 0.0;
-		lap3 = 0.0;
-		for (ii = 0; ii < 3; ii++) {
-			x = en_distance_rescaled[i + a * elec_num +
-										nw * elec_num * nucl_num];
+            acc_lap1[0] = 0.0;
+            acc_lap2[0] = 0.0;
+            acc_lap3[0] = 0.0;
+            for (acc_ii[0] = 0; acc_ii[0] < 3; acc_ii[0]++) {
+                acc_x[0] = en_distance_rescaled[acc_i[0] + acc_a[0] * elec_num +
+                                            acc_nw[0] * elec_num * nucl_num];
 
-			for (p = 1; p < aord_num; p++) {
-				y = (p + 1) *
-					a_vector[(p + 1) + type_nucl_vector[a] *
-											(aord_num + 1)] *
-					x;
-				power_ser_g[ii] = power_ser_g[ii] + y * dx[ii];
-				lap1 = lap1 + p * y * xinv * dx[ii] * dx[ii];
-				lap2 = lap2 + y;
-				x = x *
-					en_distance_rescaled[i + a * elec_num +
-											nw * elec_num * nucl_num];
-			}
+                for (acc_p[0] = 1; acc_p[0] < aord_num; acc_p[0]++) {
+                    acc_y[0] = (acc_p[0] + 1) *
+                        a_vector[(acc_p[0] + 1) + type_nucl_vector[acc_a[0]] *
+                                                (aord_num + 1)] *
+                        acc_x[0];
+                    power_ser_g[acc_ii[0]] = power_ser_g[acc_ii[0]] + acc_y[0] * dx[acc_ii[0]];
+                    acc_lap1[0] = acc_lap1[0] + acc_p[0] * acc_y[0] * acc_xinv[0] * dx[acc_ii[0]] * dx[acc_ii[0]];
+                    acc_lap2[0] = acc_lap2[0] + acc_y[0];
+                    acc_x[0] = acc_x[0] *
+                        en_distance_rescaled[acc_i[0] + acc_a[0] * elec_num +
+                                                acc_nw[0] * elec_num * nucl_num];
+                }
 
-			lap3 =
-				lap3 - 2.0 *
-							a_vector[1 + type_nucl_vector[a] *
-											(aord_num + 1)] *
-							dx[ii] * dx[ii];
+                acc_lap3[0] =
+                    acc_lap3[0] - 2.0 *
+                                a_vector[1 + type_nucl_vector[acc_a[0]] *
+                                                (aord_num + 1)] *
+                                dx[acc_ii[0]] * dx[acc_ii[0]];
 
-			factor_en_deriv_e[i + ii * elec_num +
-								nw * elec_num * 4] =
-				factor_en_deriv_e[i + ii * elec_num +
-									nw * elec_num * 4] +
-				a_vector[0 + type_nucl_vector[a] *
-									(aord_num + 1)] *
-					dx[ii] * invden2 +
-				power_ser_g[ii];
-		}
+                factor_en_deriv_e[acc_i[0] + acc_ii[0] * elec_num +
+                                    acc_nw[0] * elec_num * 4] =
+                    factor_en_deriv_e[acc_i[0] + acc_ii[0] * elec_num +
+                                        acc_nw[0] * elec_num * 4] +
+                    a_vector[0 + type_nucl_vector[acc_a[0]] *
+                                        (aord_num + 1)] *
+                        dx[acc_ii[0]] * acc_invden2[0] +
+                    power_ser_g[acc_ii[0]];
+            }
 
-		ii = 3;
-		lap2 = lap2 * dx[ii] * third;
-		lap3 = lap3 + den * dx[ii];
-		lap3 = lap3 *
-				a_vector[0 + type_nucl_vector[a] *
-								(aord_num + 1)] *
-				invden3;
-		factor_en_deriv_e[i + ii * elec_num + nw * elec_num * 4] =
-			factor_en_deriv_e[i + ii * elec_num +
-								nw * elec_num * 4] +
-			lap1 + lap2 + lap3;
-	});
+            acc_ii[0] = 3;
+            acc_lap2[0] = acc_lap2[0] * dx[acc_ii[0]] * acc_third[0];
+            acc_lap3[0] = acc_lap3[0] + acc_den[0] * dx[acc_ii[0]];
+            acc_lap3[0] = acc_lap3[0] *
+                    a_vector[0 + type_nucl_vector[acc_a[0]] *
+                                    (aord_num + 1)] *
+                    acc_invden3[0];
+            factor_en_deriv_e[acc_i[0] + acc_ii[0] * elec_num + acc_nw[0] * elec_num * 4] =
+                factor_en_deriv_e[acc_i[0] + acc_ii[0] * elec_num +
+                                    acc_nw[0] * elec_num * 4] +
+                acc_lap1[0] + acc_lap2[0] + acc_lap3[0];
+        });
+    });
 
 	return info;
 }
-*/
+
 /*
 qmckl_exit_code_device qmckl_compute_en_distance_rescaled_deriv_e_device(
 	const qmckl_context_device context, const int64_t elec_num,
