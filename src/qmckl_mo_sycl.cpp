@@ -19,9 +19,9 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_vgl_device(
 
     qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
-    queue.submit([&](sycl::handler &h) {
+    q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(point_num), [=](sycl::id<1> j) {
             for (int k = 0; k < 5; ++k) {
 				for (int l = 0; l < mo_num; l++) {
@@ -60,14 +60,14 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_value_device(
 
  	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
 	double *av1_shared =
 		reinterpret_cast<double *>(qmckl_malloc_device(context, point_num * ao_num * sizeof(double)));
 	int64_t *idx_shared =
 		reinterpret_cast<int64_t *>(qmckl_malloc_device(context, point_num * ao_num * sizeof(int64_t)));
 
-    queue.submit([&](sycl::handler &h) {
+    q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(point_num), [=](sycl::id<1> ipoint) {
 			
             double *av1 = av1_shared + ipoint * ao_num;
@@ -137,7 +137,7 @@ qmckl_finalize_mo_basis_device(qmckl_context_device context) {
 	qmckl_context_struct_device *ctx = (qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
 	double *new_array = (double *)qmckl_malloc_device(
 		context, ctx->ao_basis.ao_num * ctx->mo_basis.mo_num * sizeof(double));
@@ -162,7 +162,7 @@ qmckl_finalize_mo_basis_device(qmckl_context_device context) {
 	int64_t ao_num = ctx->ao_basis.ao_num;
 	int64_t mo_num = ctx->mo_basis.mo_num;
 
-    queue.submit([&](sycl::handler &h) {
+    q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<2>(ao_num, mo_num), [=](sycl::id<2> idx) {
             auto i = idx[0];
             auto j = idx[1];
