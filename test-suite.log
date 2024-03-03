@@ -1,0 +1,28 @@
+=======================================
+   qmckl_gpu 0.0.1: ./test-suite.log
+=======================================
+
+# TOTAL: 3
+# PASS:  1
+# SKIP:  0
+# XFAIL: 0
+# FAIL:  2
+# XPASS: 0
+# ERROR: 0
+
+.. contents:: :depth: 2
+
+FAIL: tests/test_qmckl_mo
+=========================
+
+failed to open /dev/dri/renderD128: Permission denied
+failed to open /dev/dri/renderD128: Permission denied
+FAIL tests/test_qmckl_mo (exit status: 139)
+
+FAIL: tests/test_qmckl_jastrow
+==============================
+
+failed to open /dev/dri/renderD128: Permission denied
+failed to open /dev/dri/renderD128: Permission denied
+FAIL tests/test_qmckl_jastrow (exit status: 139)
+
