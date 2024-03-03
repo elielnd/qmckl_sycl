@@ -154,7 +154,7 @@ am__libqmckl_gpu_a_SOURCES_DIST = src/qmckl_context.cpp \
 	src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp \
 	src/qmckl_nucleus.cpp src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp \
 	src/qmckl_mo_sycl.cpp src/qmckl_mo.cpp src/qmckl_jastrow.cpp \
-	src/qmckl_trexio.cpp
+	src/qmckl_jastrow_sycl.cpp src/qmckl_trexio.cpp
 am__dirstamp = $(am__leading_dot)dirstamp
 @HAVE_TREXIO_TRUE@am__objects_1 = src/qmckl_trexio.$(OBJEXT)
 am_libqmckl_gpu_a_OBJECTS = src/qmckl_context.$(OBJEXT) \
@@ -163,7 +163,8 @@ am_libqmckl_gpu_a_OBJECTS = src/qmckl_context.$(OBJEXT) \
 	src/qmckl_electron.$(OBJEXT) src/qmckl_nucleus.$(OBJEXT) \
 	src/qmckl_ao.$(OBJEXT) src/qmckl_ao_sycl.$(OBJEXT) \
 	src/qmckl_mo_sycl.$(OBJEXT) src/qmckl_mo.$(OBJEXT) \
-	src/qmckl_jastrow.$(OBJEXT) $(am__objects_1)
+	src/qmckl_jastrow.$(OBJEXT) src/qmckl_jastrow_sycl.$(OBJEXT) \
+	$(am__objects_1)
 libqmckl_gpu_a_OBJECTS = $(am_libqmckl_gpu_a_OBJECTS)
 am_tests_test_qmckl_ao_OBJECTS = tests/test_qmckl_ao.$(OBJEXT)
 tests_test_qmckl_ao_OBJECTS = $(am_tests_test_qmckl_ao_OBJECTS)
@@ -212,6 +213,7 @@ am__depfiles_remade = src/$(DEPDIR)/qmckl_ao.Po \
 	src/$(DEPDIR)/qmckl_basic_functions.Po \
 	src/$(DEPDIR)/qmckl_blas.Po src/$(DEPDIR)/qmckl_context.Po \
 	src/$(DEPDIR)/qmckl_electron.Po src/$(DEPDIR)/qmckl_jastrow.Po \
+	src/$(DEPDIR)/qmckl_jastrow_sycl.Po \
 	src/$(DEPDIR)/qmckl_memory.Po src/$(DEPDIR)/qmckl_mo.Po \
 	src/$(DEPDIR)/qmckl_mo_sycl.Po src/$(DEPDIR)/qmckl_nucleus.Po \
 	src/$(DEPDIR)/qmckl_point.Po src/$(DEPDIR)/qmckl_trexio.Po \
@@ -622,7 +624,7 @@ libqmckl_gpu_a_SOURCES = src/qmckl_context.cpp \
 	src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp \
 	src/qmckl_nucleus.cpp src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp \
 	src/qmckl_mo_sycl.cpp src/qmckl_mo.cpp src/qmckl_jastrow.cpp \
-	$(am__append_1)
+	src/qmckl_jastrow_sycl.cpp $(am__append_1)
 tests_test_qmckl_ao_SOURCES = tests/test_qmckl_ao.cpp chbrclf.hpp
 tests_test_qmckl_ao_LDFLAGS = -pthread
 tests_test_qmckl_mo_SOURCES = tests/test_qmckl_mo.cpp chbrclf.hpp
@@ -746,6 +748,8 @@ src/qmckl_mo.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/qmckl_jastrow.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/qmckl_jastrow_sycl.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 src/qmckl_trexio.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 
@@ -793,6 +797,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_context.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_electron.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_jastrow.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_jastrow_sycl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_memory.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_mo.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/qmckl_mo_sycl.Po@am__quote@ # am--include-marker
@@ -1331,6 +1336,7 @@ distclean: distclean-am
 	-rm -f src/$(DEPDIR)/qmckl_context.Po
 	-rm -f src/$(DEPDIR)/qmckl_electron.Po
 	-rm -f src/$(DEPDIR)/qmckl_jastrow.Po
+	-rm -f src/$(DEPDIR)/qmckl_jastrow_sycl.Po
 	-rm -f src/$(DEPDIR)/qmckl_memory.Po
 	-rm -f src/$(DEPDIR)/qmckl_mo.Po
 	-rm -f src/$(DEPDIR)/qmckl_mo_sycl.Po
@@ -1394,6 +1400,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f src/$(DEPDIR)/qmckl_context.Po
 	-rm -f src/$(DEPDIR)/qmckl_electron.Po
 	-rm -f src/$(DEPDIR)/qmckl_jastrow.Po
+	-rm -f src/$(DEPDIR)/qmckl_jastrow_sycl.Po
 	-rm -f src/$(DEPDIR)/qmckl_memory.Po
 	-rm -f src/$(DEPDIR)/qmckl_mo.Po
 	-rm -f src/$(DEPDIR)/qmckl_mo_sycl.Po
