@@ -41,7 +41,7 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_vgl_sgemm_device(
 
 	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
     
-    sycl::queue queue = ctx->q;
+    sycl::queue q = ctx->q;
 
 	cublasHandle_t handle;
 
@@ -67,13 +67,13 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_vgl_sgemm_device(
 		reinterpret_cast<float *>qmckl_malloc_device(context, sizeof(float) * 5 * mo_num * point_num);
 
 
-    queue.submit([&](sycl::handler &h) {
+    q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(ao_num * mo_num), [=](sycl::id<1> ii) {
 			A[ii] = (float)coefficient_t[ii];
 		});
 	});
 
-	queue.submit([&](sycl::handler &h) {
+	q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(5 * au_num * point_num), [=](sycl::id<1> ii) {
 			B[ii] = (float)ao_vgl[ii];
 		});
@@ -84,7 +84,7 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_vgl_sgemm_device(
 				   &beta, C, ldc);
 	cublasDestroy(handle);
 
-	queue.submit([&](sycl::handler &h) {
+	q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(5 * mo_num * point_num), [=](sycl::id<1> ii) {
 			mo_vgl[ii] = (double)C[ii];
 		});
@@ -188,13 +188,17 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_value_sgemm_device(
 	float *B = reinterpret_cast<float *>qmckl_malloc_device(context, sizeof(float) * ao_num * point_num);
 	float *C = reinterpret_cast<float *>qmckl_malloc_device(context, sizeof(float) * mo_num * point_num);
 
-	queue.submit([&](sycl::handler &h) {
+	qmckl_context_struct_device *const ctx = (qmckl_context_struct_device*)(context);
+    
+    sycl::queue q = ctx->q;
+
+	q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(ao_num * mo_num), [=](sycl::id<1> ii) {
 			A[ii] = (float)coefficient_t[ii];
 		});
 	});
 
-	queue.submit([&](sycl::handler &h) {
+	q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(ao_num * point_num), [=](sycl::id<1> ii) {
 			B[ii] = (float)ao_vgl[ii];
 		});
@@ -205,7 +209,7 @@ qmckl_exit_code_device qmckl_compute_mo_basis_mo_value_sgemm_device(
 				   &beta, C, ldc);
 	cublasDestroy(handle);
 
-	queue.submit([&](sycl::handler &h) {
+	q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(mo_num * point_num), [=](sycl::id<1> ii) {
 			mo_vgl[ii] = (double)C[ii];
 		});
@@ -616,7 +620,7 @@ qmckl_provide_mo_basis_mo_value_device(qmckl_context_device context) {
 		(qmckl_context_struct_device *)context;
 	assert(ctx != NULL);
 
-	sycl::queue queue = ctx->q;
+	sycl::queue q = ctx->q;
 
 	if (!ctx->mo_basis.provided) {
 		return qmckl_failwith_device(context, QMCKL_NOT_PROVIDED_DEVICE,
@@ -651,7 +655,7 @@ qmckl_provide_mo_basis_mo_value_device(qmckl_context_device context) {
 			double *v = &(ctx->mo_basis.mo_value[0]);
 			double *vgl = &(ctx->mo_basis.mo_vgl[0]);
 
-			queue.submit([&](sycl::handler &h) {
+			q.submit([&](sycl::handler &h) {
 				for (int i = 0; i < ctx->point.num; ++i) {
 					for (int k = 0; k < ctx->mo_basis.mo_num; ++k) {
 						v[k] = vgl[k];
