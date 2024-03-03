@@ -1,3 +1,0 @@
-failed to open /dev/dri/renderD128: Permission denied
-failed to open /dev/dri/renderD128: Permission denied
-FAIL tests/test_qmckl_mo (exit status: 139)
