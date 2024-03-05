@@ -11,7 +11,6 @@
 #include "n2.h"
 #include "../include/qmckl_gpu.hpp"
 
-
 using namespace sycl;
 
 int main() {
@@ -23,7 +22,7 @@ int main() {
 		exit(1);
 	}*/
 
-	sycl::queue q;
+	queue q;
 
 	context = qmckl_context_create_device(q);
 
@@ -73,19 +72,27 @@ int main() {
 	rc = qmckl_get_electron_coord_device(context, 'N', elec_coord2,
 										 walk_num * 3 * elec_num);
 
-	bool wrongval = 0;
+	int wrongval = 0;
 
 	buffer<int, 1> buff_wrongval(&wrongval, range<1>(1));
 
+	/*q.parallel_for<class VectorAdd>(num_items, [=](id<1> wiID) {
+    sum_accessor[wiID] = addend_1_accessor[wiID] + addend_2_accessor[wiID];
+    out << "Sum : " << sum_accessor[wiID]  << cl::sycl::endl;  // I want to print this sum
+    });*/
+	
 	q.submit([&](handler &h) {
+		sycl::stream out(1024, 256, h);
 		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
-		q.single_task([=]() {
-			for (int64_t i = 0; i < 3 * elec_num; ++i) {
-				if (elec_coord[i] != elec_coord2[i]) {
-					acc_wrongval[0] = 1;
-					break;
-				}
-			}
+		h.single_task([=]() {
+			out << "Nddddddddddddddddddddddddddddddddddddddddddddddddd"  << cl::sycl::endl;
+			// for (int64_t i = 0; i < 3 * elec_num; ++i) {
+			// 	if (elec_coord[i] != elec_coord2[i]) {
+			// 		out << "This is the if state"  << cl::sycl::endl;
+			// 		// acc_wrongval[0] = 1;
+			// 		break;
+			// 	}
+			// }
 		});
 	}).wait();
 
@@ -111,24 +118,24 @@ int main() {
 		qmckl_get_nucleus_coord_device(context, 'N', nucl_coord2, nucl_num * 3);
 
 
-	q.submit([&](handler &h) {
-		// auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
-		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
-		q.single_task([=]() {
-			for (int64_t k = 0; k < 3; ++k) {
-				for (int64_t i = 0; i < nucl_num; ++i) {
-					if (nucl_coord[nucl_num * k + i] != nucl_coord2[3 * i + k]) {
-						acc_wrongval[0] = 1;
-						break;
-					}
-					if (acc_wrongval[0]) {
-						break;
-					}
-                    return;
-				}
-			}
-		});
-	}).wait();
+	// q.submit([&](handler &h) {
+	// 	auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+	// 	q.single_task([=]() {
+	// 		for (int64_t k = 0; k < 3; ++k) {
+	// 			for (int64_t i = 0; i < nucl_num; ++i) {
+	// 				if (nucl_coord[nucl_num * k + i] != nucl_coord2[3 * i + k]) {
+	// 					acc_wrongval[0] = 1;
+	// 					break;
+	// 				}
+	// 				if (acc_wrongval[0]) {
+	// 					break;
+	// 				}
+    //                 return;
+	// 			}
+	// 		}
+	// 	});
+	// });
+	// q.wait();
 
 	// buff_wrongval.get_host_access();
 
@@ -136,11 +143,11 @@ int main() {
 	// 	return 1;
 	// }
 
-	// rc =
-	// 	qmckl_get_nucleus_coord_device(context, 'T', nucl_coord2, nucl_num * 3);
+	rc =
+		qmckl_get_nucleus_coord_device(context, 'T', nucl_coord2, nucl_num * 3);
 
 	// q.submit([&](handler &h) {
-	// 	sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
+	// 	auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
 	// 	q.single_task([=]() {
 	// 		for (int64_t i = 0; i < 3 * nucl_num; ++i) {
 	// 		if (nucl_coord[i] != nucl_coord2[i]) {
@@ -157,26 +164,26 @@ int main() {
 	// 	return 1;
 	// }
 
-	// double *nucl_charge2 = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_charge)));
+	double *nucl_charge2 = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_charge)));
 
-	// rc = qmckl_get_nucleus_charge_device(context, nucl_charge2, nucl_num);
+	rc = qmckl_get_nucleus_charge_device(context, nucl_charge2, nucl_num);
 
-	// rc = qmckl_set_nucleus_charge_device(context, nucl_charge, nucl_num);
+	rc = qmckl_set_nucleus_charge_device(context, nucl_charge, nucl_num);
 
-	// rc = qmckl_get_nucleus_charge_device(context, nucl_charge2, nucl_num);
+	rc = qmckl_get_nucleus_charge_device(context, nucl_charge2, nucl_num);
 	
-	// q.submit([&](handler &h) {
-	// 	sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-	// 	h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> idx) {
-	// 		auto i = idx[0];
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		h.parallel_for(sycl::range<1>(nucl_num), [=](sycl::id<1> idx) {
+			auto i = idx[0];
 			
-	// 		if (nucl_charge[i] != nucl_charge2[i]) {
-	// 			acc_wrongval[0] = true;
-	// 		}
-	// 	});
-	// }).wait();
+			if (nucl_charge[i] != nucl_charge2[i]) {
+				acc_wrongval[0] = 1;
+			}
+		});
+	}).wait();
 	
-	// buff_wrongval.get_host_access();
+	buff_wrongval.get_host_access();
 
 	// if (wrongval) {
 	// 	return 1;

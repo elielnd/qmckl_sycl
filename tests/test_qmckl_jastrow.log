@@ -1,3 +1,4 @@
 failed to open /dev/dri/renderD128: Permission denied
 failed to open /dev/dri/renderD128: Permission denied
+Nddddddddddddddddddddddddddddddddddddddddddddddddd
 PASS tests/test_qmckl_jastrow (exit status: 0)
