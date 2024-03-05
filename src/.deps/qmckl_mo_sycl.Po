@@ -1,4 +1,4 @@
-src/qmckl_mo.o: src/qmckl_mo.cpp include/qmckl_mo.hpp \
+src/qmckl_mo_sycl.o: src/qmckl_mo_sycl.cpp src/../include/qmckl_mo.hpp \
   /usr/include/c++/11/cassert \
   /usr/include/c++/11/x86_64-redhat-linux/bits/c++config.h \
   /usr/include/bits/wordsize.h \
@@ -152,8 +152,8 @@ src/qmckl_mo.o: src/qmckl_mo.cpp include/qmckl_mo.hpp \
   /usr/include/c++/11/bits/ostream.tcc /usr/include/c++/11/istream \
   /usr/include/c++/11/bits/istream.tcc /usr/include/c++/11/cstring \
   /usr/include/string.h /usr/include/strings.h \
-  include/../include/qmckl_basic_functions.hpp \
-  include/../include/qmckl_types.hpp \
+  src/../include/../include/qmckl_basic_functions.hpp \
+  src/../include/../include/qmckl_types.hpp \
   /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/CL/sycl.hpp \
   /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/sycl.hpp \
   /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/accessor.hpp \
@@ -459,18 +459,13 @@ src/qmckl_mo.o: src/qmckl_mo.cpp include/qmckl_mo.hpp \
   /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/ext/oneapi/sub_group.hpp \
   /usr/include/c++/11/cstdbool \
   /cluster/intel/oneapi/2024.0.0/compiler/2024.0/lib/clang/17/include/stdbool.h \
-  include/../include/qmckl_context.hpp /usr/include/c++/11/thread \
+  src/../include/../include/qmckl_context.hpp /usr/include/c++/11/thread \
   /usr/include/c++/11/bits/std_thread.h \
   /usr/include/c++/11/bits/this_thread_sleep.h \
-  include/../include/qmckl_memory.hpp include/../include/qmckl_blas.hpp \
-  include/../include/qmckl_nucleus.hpp include/qmckl_ao.hpp \
-  /cluster/intel/oneapi/2024.0.0/compiler/2024.0/opt/compiler/include/math.h \
-  /usr/include/c++/11/math.h \
-  /cluster/intel/oneapi/2024.0.0/compiler/2024.0/opt/compiler/include/math_common_define.h \
-  /cluster/intel/oneapi/2024.0.0/compiler/2024.0/opt/compiler/include/math_common_undefine.h \
-  include/qmckl_basic_functions.hpp include/qmckl_context.hpp \
-  include/qmckl_memory.hpp
-include/qmckl_mo.hpp:
+  src/../include/../include/qmckl_memory.hpp \
+  src/../include/../include/qmckl_blas.hpp \
+  src/../include/../include/qmckl_nucleus.hpp
+src/../include/qmckl_mo.hpp:
 /usr/include/c++/11/cassert:
 /usr/include/c++/11/x86_64-redhat-linux/bits/c++config.h:
 /usr/include/bits/wordsize.h:
@@ -683,8 +678,8 @@ include/qmckl_mo.hpp:
 /usr/include/c++/11/cstring:
 /usr/include/string.h:
 /usr/include/strings.h:
-include/../include/qmckl_basic_functions.hpp:
-include/../include/qmckl_types.hpp:
+src/../include/../include/qmckl_basic_functions.hpp:
+src/../include/../include/qmckl_types.hpp:
 /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/CL/sycl.hpp:
 /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/sycl.hpp:
 /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/accessor.hpp:
@@ -1011,18 +1006,10 @@ include/../include/qmckl_types.hpp:
 /cluster/intel/oneapi/2024.0.0/compiler/2024.0/include/sycl/ext/oneapi/sub_group.hpp:
 /usr/include/c++/11/cstdbool:
 /cluster/intel/oneapi/2024.0.0/compiler/2024.0/lib/clang/17/include/stdbool.h:
-include/../include/qmckl_context.hpp:
+src/../include/../include/qmckl_context.hpp:
 /usr/include/c++/11/thread:
 /usr/include/c++/11/bits/std_thread.h:
 /usr/include/c++/11/bits/this_thread_sleep.h:
-include/../include/qmckl_memory.hpp:
-include/../include/qmckl_blas.hpp:
-include/../include/qmckl_nucleus.hpp:
-include/qmckl_ao.hpp:
-/cluster/intel/oneapi/2024.0.0/compiler/2024.0/opt/compiler/include/math.h:
-/usr/include/c++/11/math.h:
-/cluster/intel/oneapi/2024.0.0/compiler/2024.0/opt/compiler/include/math_common_define.h:
-/cluster/intel/oneapi/2024.0.0/compiler/2024.0/opt/compiler/include/math_common_undefine.h:
-include/qmckl_basic_functions.hpp:
-include/qmckl_context.hpp:
-include/qmckl_memory.hpp:
+src/../include/../include/qmckl_memory.hpp:
+src/../include/../include/qmckl_blas.hpp:
+src/../include/../include/qmckl_nucleus.hpp:

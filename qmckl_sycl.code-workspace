@@ -1,13 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "."
-		},
-		{
-			"path": "../scripts"
-		},
-		{
 			"path": "../qmckl_gpu"
+		},
+		{
+			"path": "../marc/qmckl_sycl"
 		}
 	],
 	"settings": {

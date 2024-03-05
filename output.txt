@@ -1,0 +1,12 @@
+Running on GPU: Intel(R) Data Center GPU Max 1100
+AO 1
+
+ ao_vgl ao_vgl[26][0][219]     1.020298798341620e-08
+ ao_vgl ao_vgl[26][1][219]    -4.928035238010602e-08
+ ao_vgl ao_vgl[26][2][219]    -4.691009312035986e-08
+ ao_vgl ao_vgl[26][3][219]     1.449504046436699e-08
+ ao_vgl ao_vgl[26][4][219]     4.296442111843973e-07
+
+2 ici
+AO 4
+AO 5

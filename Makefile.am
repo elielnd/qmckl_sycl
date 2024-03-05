@@ -13,7 +13,7 @@ lib_LIBRARIES = libqmckl_gpu.a
 
 libqmckl_gpu_a_SOURCES = src/qmckl_context.cpp src/qmckl_basic_functions.cpp src/qmckl_point.cpp \
 src/qmckl_memory.cpp src/qmckl_blas.cpp src/qmckl_electron.cpp src/qmckl_nucleus.cpp \
-src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp  src/qmckl_mo.cpp src/qmckl_jastrow.cpp
+src/qmckl_ao.cpp src/qmckl_ao_sycl.cpp  src/qmckl_mo.cpp src/qmckl_mo_sycl.cpp  src/qmckl_jastrow.cpp
 libqmckl_qpu_a_CXXFLAGS = $(AM_CXXFLAGS)
 
 

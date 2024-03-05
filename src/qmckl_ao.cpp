@@ -1224,6 +1224,7 @@ qmckl_exit_code_device qmckl_set_ao_basis_ao_factor_device(qmckl_context_device 
 
 	ctx->ao_basis.uninitialized &= ~mask;
 	ctx->ao_basis.provided = (ctx->ao_basis.uninitialized == 0);
+
 	if (ctx->ao_basis.provided)
 	{
 		qmckl_exit_code_device rc_ = qmckl_finalize_ao_basis_device(context);
