@@ -1,0 +1,4 @@
+failed to open /dev/dri/renderD128: Permission denied
+failed to open /dev/dri/renderD128: Permission denied
+Device: Intel(R) FPGA Emulation Device
+PASS tests/test_qmckl_ao (exit status: 0)

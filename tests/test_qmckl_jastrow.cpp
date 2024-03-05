@@ -11,7 +11,6 @@
 #include "n2.h"
 #include "../include/qmckl_gpu.hpp"
 
-#include <CL/sycl.hpp>
 
 using namespace sycl;
 
@@ -74,16 +73,16 @@ int main() {
 	rc = qmckl_get_electron_coord_device(context, 'N', elec_coord2,
 										 walk_num * 3 * elec_num);
 
-	bool wrongval = false;
+	bool wrongval = 0;
 
-	sycl::buffer<bool, 1> buff_wrongval(&wrongval, range<1>(1));
+	buffer<int, 1> buff_wrongval(&wrongval, range<1>(1));
 
 	q.submit([&](handler &h) {
-		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
 		q.single_task([=]() {
 			for (int64_t i = 0; i < 3 * elec_num; ++i) {
 				if (elec_coord[i] != elec_coord2[i]) {
-					acc_wrongval[0] = true;
+					acc_wrongval[0] = 1;
 					break;
 				}
 			}
@@ -113,17 +112,19 @@ int main() {
 
 
 	q.submit([&](handler &h) {
-		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
+		// auto acc_wrong_val = buff_wrong_val.get_access<access::mode::write>(h);
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
 		q.single_task([=]() {
 			for (int64_t k = 0; k < 3; ++k) {
 				for (int64_t i = 0; i < nucl_num; ++i) {
 					if (nucl_coord[nucl_num * k + i] != nucl_coord2[3 * i + k]) {
-						// acc_wrongval[0] = true;
-						// break;
+						acc_wrongval[0] = 1;
+						break;
 					}
 					if (acc_wrongval[0]) {
 						break;
 					}
+                    return;
 				}
 			}
 		});
