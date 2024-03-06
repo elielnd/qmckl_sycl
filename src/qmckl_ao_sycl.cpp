@@ -157,7 +157,7 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
     double *pows_shared = (double *)qmckl_malloc_device(context, sizeof(double) * pows_dim);
 
     q.single_task([=]()
-             {
+                  {
 		for (int l = 0; l < 21; l++) {
 			lstart[l] = l * (l + 1) * (l + 2) / 6 + 1;
         } });
@@ -187,8 +187,9 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
     q.wait();
     buff_k.get_host_access();
 
-    double(*poly_vgl)[680] = (double(*)[680])poly_vgl_shared;
-    double(*pows)[680] = (double(*)[680])pows_shared;
+    double *poly_vgl = poly_vgl_shared;
+    double *pows = pows_shared;
+
     for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++)
     {
         q.parallel_for(range<1>(chunk_size), [=](id<1> iter)
@@ -217,7 +218,7 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
                            if (r2 > cutoff * nucleus_range[inucl])
                                return;
 
-                           // beginning of ao_polynomial computation (now inlined)
+                           // beginning of ao_polynomial computation (now inlined)/p
                            int n;
 
                            // already computed outsite of the ao_polynomial part
@@ -228,11 +229,11 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
                            int llmax = nucleus_max_ang_mom[inucl];
                            if (llmax == 0)
                            {
-                               poly_vgl[0][iter] = 1.;
-                               poly_vgl[1][iter] = 0.;
-                               poly_vgl[2][iter] = 0.;
-                               poly_vgl[3][iter] = 0.;
-                               poly_vgl[4][iter] = 0.;
+                               poly_vgl[0 * chunk_size + iter] = 1.;
+                               poly_vgl[1 * chunk_size + iter] = 0.;
+                               poly_vgl[2 * chunk_size + iter] = 0.;
+                               poly_vgl[3 * chunk_size + iter] = 0.;
+                               poly_vgl[4 * chunk_size + iter] = 0.;
 
                                n = 0;
                            }
@@ -244,42 +245,42 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
                                // use the (llmax+3)*3 first elements of the array
                                for (int i = 0; i < 3 * (lmax + 3); i++)
                                {
-                                   pows[i][iter] = 0.;
+                                   pows[i * chunk_size + iter] = 0.;
                                }
 
                                for (int i = 0; i < 3; i++)
                                {
                                    for (int j = 0; j < 3; j++)
                                    {
-                                       pows[i + (llmax + 3) * j][iter] = 1.;
+                                       pows[(i + (llmax + 3) * j) * chunk_size + iter] = 1.;
                                    }
                                }
 
                                for (int i = 3; i < llmax + 3; i++)
                                {
-                                   pows[i][iter] = pows[(i - 1)][iter] * Y1;
-                                   pows[i + (llmax + 3)][iter] = pows[(i - 1) + (llmax + 3)][iter] * Y2;
-                                   pows[i + 2 * (llmax + 3)][iter] = pows[(i - 1) + 2 * (llmax + 3)][iter] * Y3;
+                                   pows[i * chunk_size + iter] = pows[(i - 1) * chunk_size + iter] * Y1;
+                                   pows[(i + (llmax + 3)) * chunk_size + iter] = pows[(i - 1 + (llmax + 3)) * chunk_size + iter] * Y2;
+                                   pows[(i + 2 * (llmax + 3)) * chunk_size + iter] = pows[(i - 1 + 2 * (llmax + 3)) * chunk_size + iter] * Y3;
                                }
 
                                for (int i = 0; i < 5; i++)
                                {
                                    for (int j = 0; j < 4; j++)
                                    {
-                                       poly_vgl[i + 5 * j][iter] = 0.;
+                                       poly_vgl[(i + 5 * j) * chunk_size + iter] = 0.;
                                    }
                                }
 
-                               poly_vgl[0][iter] = 1.;
+                               poly_vgl[0 * chunk_size + iter] = 1.;
 
-                               poly_vgl[5][iter] = pows[3][iter];
-                               poly_vgl[6][iter] = 1.;
+                               poly_vgl[5 * chunk_size + iter] =  pows[3 * chunk_size + iter]; 
+                               poly_vgl[6 * chunk_size + iter] = 1.;
 
-                               poly_vgl[10][iter] = pows[3 + (llmax + 3)][iter];
-                               poly_vgl[12][iter] = 1.;
+                               poly_vgl[10 * chunk_size + iter] = pows[(3 + (llmax + 3)) * chunk_size + iter];
+                               poly_vgl[12 * chunk_size + iter] = 1.;
 
-                               poly_vgl[15][iter] = pows[3 + 2 * (llmax + 3)][iter];
-                               poly_vgl[18][iter] = 1.;
+                               poly_vgl[15 * chunk_size + iter] = pows[(3 + 2 * (llmax + 3)) * chunk_size + iter]; 
+                               poly_vgl[18 * chunk_size + iter] = 1.;
 
                                n = 3;
                            }
@@ -305,25 +306,23 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
                                        dc = dd - da - db;
                                        n = n + 1;
 
-                                       xy = pows[(a + 2)][iter] * pows[(b + 2) + (llmax + 3)][iter];
-                                       yz = pows[(b + 2) + (llmax + 3)][iter] * pows[(c + 2) + 2 * (llmax + 3)][iter];
-                                       xz = pows[(a + 2)][iter] * pows[(c + 2) + 2 * (llmax + 3)][iter];
+                                       xy = pows[(a + 2) * chunk_size + iter] * pows[((b + 2) + (llmax + 3)) * chunk_size + iter];
+                                       yz = pows[((b + 2) + (llmax + 3)) * chunk_size + iter] * pows[((c + 2) + 2 * (llmax + 3)) * chunk_size + iter];
+                                       xz = pows[(a + 2) * chunk_size + iter] * pows[((c + 2) + 2 * (llmax + 3)) * chunk_size + iter];
 
-                                       poly_vgl[5 * (n)][iter] = xy * pows[c + 2 + 2 * (llmax + 3)][iter];
+                                        poly_vgl[(5 * n) * chunk_size + iter] = xy * pows[(c + 2 + 2 * (llmax + 3)) * chunk_size + iter]; 
 
                                        xy = dc * xy;
                                        xz = db * xz;
                                        yz = da * yz;
 
-                                       poly_vgl[1 + 5 * n][iter] = pows[a + 1][iter] * yz;
-                                       poly_vgl[2 + 5 * n][iter] = pows[b + 1 + (llmax + 3)][iter] * xz;
-                                       poly_vgl[3 + 5 * n][iter] = pows[c + 1 + 2 * (llmax + 3)][iter] * xy;
+                                       poly_vgl[(1 + 5 * n) * chunk_size + iter] = pows[(a + 1) * chunk_size + iter] * yz;
+                                       poly_vgl[(2 + 5 * n) * chunk_size + iter] = pows[(b + 1 + (llmax + 3)) * chunk_size + iter] * xz;
+                                       poly_vgl[(3 + 5 * n) * chunk_size + iter] = pows[(c + 1 + 2 * (llmax + 3)) * chunk_size + iter] * xy; 
 
-                                       poly_vgl[4 + 5 * n][iter] = (da - 1.) * pows[a][iter] * yz +
-                                                                   (db - 1.) * pows[b + (llmax + 3)][iter] * xz +
-                                                                   (dc - 1.) * pows[c + 2 * (llmax + 3)][iter] *
-                                                                       xy;
-
+                                       poly_vgl[(4 + 5 * n) * chunk_size + iter] = (da - 1.) * pows[a * chunk_size + iter] * yz + 
+                                                                                   (db - 1.) * pows[(b + (llmax + 3)) * chunk_size + iter] * xz + 
+                                                                                   (dc - 1.) * pows[(c + 2 * (llmax + 3)) * chunk_size + iter] * xy;
                                        db -= 1.;
                                    }
                                    da -= 1.;
@@ -369,53 +368,53 @@ qmckl_exit_code_device qmckl_compute_ao_vgl_gaussian_device(
                 {
 
                     // value
-                    ao_vgl[k + 0 * ao_num + ipoint * 5 * ao_num] = poly_vgl[il * 5 + 0][iter] *
+                    ao_vgl[k + 0 * ao_num + ipoint * 5 * ao_num] = poly_vgl[(il * 5 + 0) * chunk_size + iter] * 
                                                                 shell_vgl[ishell + 0 * shell_num + ipoint * shell_num * 5] *
                                                                 ao_factor[k];
 
                     // Grad x
-                    ao_vgl[k + 1 * ao_num + ipoint * 5 * ao_num] = (poly_vgl[il * 5 + 1][iter] *
+                    ao_vgl[k + 1 * ao_num + ipoint * 5 * ao_num] = (poly_vgl[(il * 5 + 1) * chunk_size + iter] *  
                                                                         shell_vgl[ishell + 0 * shell_num + ipoint * shell_num * 5] +
-                                                                    poly_vgl[il * 5 + 0][iter] *
+                                                                    poly_vgl[(il * 5 + 0) * chunk_size + iter] * 
                                                                         shell_vgl[ishell + 1 * shell_num +
                                                                                 ipoint * shell_num * 5]) *
                                                                 ao_factor[k];
 
                     // grad y
                     ao_vgl[k + 2 * ao_num + ipoint * 5 * ao_num] =
-                        (poly_vgl[il * 5 + 2][iter] *
+                        (poly_vgl[(il * 5 + 2) * chunk_size + iter] * 
                             shell_vgl[ishell + 0 * shell_num +
                                     ipoint * shell_num * 5] +
-                        poly_vgl[il * 5 + 0][iter] *
+                        poly_vgl[(il * 5 + 0) * chunk_size + iter]  *
                             shell_vgl[ishell + 2 * shell_num +
                                     ipoint * shell_num * 5]) *
                         ao_factor[k];
 
                     // grad z
                     ao_vgl[k + 3 * ao_num + ipoint * 5 * ao_num] =
-                        (poly_vgl[il * 5 + 3][iter] *
+                        (poly_vgl[(il * 5 + 3) * chunk_size + iter] * 
                             shell_vgl[ishell + 0 * shell_num +
                                     ipoint * shell_num * 5] +
-                        poly_vgl[il * 5 + 0][iter] *
+                        poly_vgl[(il * 5 + 0) * chunk_size + iter]  *
                             shell_vgl[ishell + 3 * shell_num +
                                     ipoint * shell_num * 5]) *
                         ao_factor[k];
 
                     // Lapl_z
                     ao_vgl[k + 4 * ao_num + ipoint * 5 * ao_num] =
-                        (poly_vgl[il * 5 + 4][iter] *
+                        (poly_vgl[(il * 5 + 4) * chunk_size + iter] *  
                             shell_vgl[ishell + 0 * shell_num +
                                     ipoint * shell_num * 5] +
-                        poly_vgl[il * 5 + 0][iter] *
+                        poly_vgl[(il * 5 + 0) * chunk_size + iter]  *
                             shell_vgl[ishell + 4 * shell_num +
                                     ipoint * shell_num * 5] +
-                        2.0 * (poly_vgl[il * 5 + 1][iter] *
+                        2.0 * (poly_vgl[(il * 5 + 1) * chunk_size + iter]  * 
                                     shell_vgl[ishell + 1 * shell_num +
                                             ipoint * shell_num * 5] +
-                                poly_vgl[il * 5 + 2][iter] *
+                                poly_vgl[(il * 5 + 2) * chunk_size + iter] * 
                                     shell_vgl[ishell + 2 * shell_num +
                                             ipoint * shell_num * 5] +
-                                poly_vgl[il * 5 + 3][iter] *
+                                poly_vgl[(il * 5 + 3) * chunk_size + iter] * 
                                     shell_vgl[ishell + 3 * shell_num +
                                             ipoint * shell_num * 5])) *
                         ao_factor[k];
@@ -520,13 +519,14 @@ qmckl_exit_code_device qmckl_compute_ao_value_gaussian_device(
     q.wait();
     buff_k.get_host_access();
 
-    double(*poly_vgl)[680] = (double(*)[680])poly_vgl_shared;
-    double(*pows)[680] = (double(*)[680])pows_shared;
+    double(*poly_vgl)[340] = (double(*)[340])poly_vgl_shared;
+    double(*pows)[340] = (double(*)[340])pows_shared;
 
     for (int sub_iter = 0; sub_iter < num_sub_iters; sub_iter++)
     {
         q.submit([&](sycl::handler &h)
                  {
+                    auto test = malloc_device(sizeof(double) * 5, q);
                      h.parallel_for(sycl::range<1>(chunk_size), [=](sycl::id<1> iter)
                                     {
                     
