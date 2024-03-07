@@ -4006,82 +4006,6 @@ qmckl_provide_jastrow_value_device(qmckl_context_device context) {
 	return QMCKL_SUCCESS_DEVICE;
 }
 
-qmckl_exit_code_device
-qmckl_provide_jastrow_gl_device(qmckl_context_device context) {
-
-	qmckl_exit_code_device rc;
-
-	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE) {
-		return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
-									 "qmckl_provide_jastrow_gl_device", NULL);
-	}
-
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
-	assert(ctx != NULL);
-
-	if (!ctx->jastrow.provided) {
-		return qmckl_failwith_device(context, QMCKL_NOT_PROVIDED_DEVICE,
-									 "qmckl_provide_jastrow_gl", NULL);
-	}
-
-	rc = qmckl_provide_jastrow_value_device(context);
-	if (rc != QMCKL_SUCCESS_DEVICE)
-		return rc;
-
-	rc = qmckl_provide_jastrow_factor_ee_deriv_e_device(context);
-	if (rc != QMCKL_SUCCESS_DEVICE)
-		return rc;
-
-	rc = qmckl_provide_jastrow_factor_en_deriv_e_device(context);
-	if (rc != QMCKL_SUCCESS_DEVICE)
-		return rc;
-
-	rc = qmckl_provide_jastrow_factor_een_deriv_e_device(context);
-	if (rc != QMCKL_SUCCESS_DEVICE)
-		return rc;
-
-	/* Compute if necessary */
-	if (ctx->date > ctx->jastrow.gl_date) {
-
-		if (ctx->electron.walker.num > ctx->electron.walker_old.num) {
-			if (ctx->jastrow.gl != NULL) {
-				rc = qmckl_free_device(context, ctx->jastrow.gl);
-				if (rc != QMCKL_SUCCESS_DEVICE) {
-					return qmckl_failwith_device(
-						context, rc, "qmckl_provide_jastrow_gl",
-						"Unable to free ctx->jastrow.gl");
-				}
-				ctx->jastrow.gl = NULL;
-			}
-		}
-
-		/* Allocate array */
-		if (ctx->jastrow.gl == NULL) {
-			double *gl = (double *)qmckl_malloc_device(
-				context, ctx->electron.walker.num * ctx->electron.num * 4 *
-							 sizeof(double));
-
-			if (gl == NULL) {
-				return qmckl_failwith_device(
-					context, QMCKL_ALLOCATION_FAILED_DEVICE,
-					"qmckl_provide_jastrow_gl_device", NULL);
-			}
-			ctx->jastrow.gl = gl;
-		}
-
-		rc = qmckl_compute_jastrow_gl_device(
-			context, ctx->electron.walker.num, ctx->electron.num,
-			ctx->jastrow.value, ctx->jastrow.factor_ee_deriv_e,
-			ctx->jastrow.factor_en_deriv_e, ctx->jastrow.factor_een_deriv_e,
-			ctx->jastrow.gl);
-
-		ctx->jastrow.gl_date = ctx->date;
-	}
-
-	return QMCKL_SUCCESS_DEVICE;
-}
-
 // Electron/electron component
 qmckl_exit_code_device
 qmckl_provide_jastrow_factor_ee_device(qmckl_context_device context) {
@@ -5213,6 +5137,7 @@ qmckl_provide_jastrow_factor_ee_deriv_e_device(qmckl_context_device context) {
 
 	qmckl_context_struct_device *const ctx =
 		(qmckl_context_struct_device *)context;
+
 	assert(ctx != NULL);
 
 	if (!ctx->jastrow.provided) {
@@ -5272,6 +5197,83 @@ qmckl_provide_jastrow_factor_ee_deriv_e_device(qmckl_context_device context) {
 		}
 
 		ctx->jastrow.factor_ee_date = ctx->date;
+	}
+
+
+	return QMCKL_SUCCESS_DEVICE;
+}
+
+qmckl_exit_code_device
+qmckl_provide_jastrow_gl_device(qmckl_context_device context) {
+
+	qmckl_exit_code_device rc;
+
+	if (qmckl_context_check_device(context) == QMCKL_NULL_CONTEXT_DEVICE) {
+		return qmckl_failwith_device(context, QMCKL_INVALID_CONTEXT_DEVICE,
+									 "qmckl_provide_jastrow_gl_device", NULL);
+	}
+
+	qmckl_context_struct_device *const ctx =
+		(qmckl_context_struct_device *)context;
+	assert(ctx != NULL);
+
+	if (!ctx->jastrow.provided) {
+		return qmckl_failwith_device(context, QMCKL_NOT_PROVIDED_DEVICE,
+									 "qmckl_provide_jastrow_gl", NULL);
+	}
+
+	rc = qmckl_provide_jastrow_value_device(context);
+	if (rc != QMCKL_SUCCESS_DEVICE)
+		return rc;
+
+	rc = qmckl_provide_jastrow_factor_ee_deriv_e_device(context);
+	if (rc != QMCKL_SUCCESS_DEVICE)
+		return rc;
+
+	rc = qmckl_provide_jastrow_factor_en_deriv_e_device(context);
+	if (rc != QMCKL_SUCCESS_DEVICE)
+		return rc;
+
+	rc = qmckl_provide_jastrow_factor_een_deriv_e_device(context);
+	if (rc != QMCKL_SUCCESS_DEVICE)
+		return rc;
+
+	/* Compute if necessary */
+	if (ctx->date > ctx->jastrow.gl_date) {
+
+		if (ctx->electron.walker.num > ctx->electron.walker_old.num) {
+			if (ctx->jastrow.gl != NULL) {
+				rc = qmckl_free_device(context, ctx->jastrow.gl);
+				if (rc != QMCKL_SUCCESS_DEVICE) {
+					return qmckl_failwith_device(
+						context, rc, "qmckl_provide_jastrow_gl",
+						"Unable to free ctx->jastrow.gl");
+				}
+				ctx->jastrow.gl = NULL;
+			}
+		}
+
+		/* Allocate array */
+		if (ctx->jastrow.gl == NULL) {
+			double *gl = (double *)qmckl_malloc_device(
+				context, ctx->electron.walker.num * ctx->electron.num * 4 *
+							 sizeof(double));
+
+			if (gl == NULL) {
+				return qmckl_failwith_device(
+					context, QMCKL_ALLOCATION_FAILED_DEVICE,
+					"qmckl_provide_jastrow_gl_device", NULL);
+			}
+			ctx->jastrow.gl = gl;
+		}
+
+		rc = qmckl_compute_jastrow_gl_device(
+			context, ctx->electron.walker.num, ctx->electron.num,
+			ctx->jastrow.value, ctx->jastrow.factor_ee_deriv_e,
+			ctx->jastrow.factor_en_deriv_e, ctx->jastrow.factor_een_deriv_e,
+			ctx->jastrow.gl);
+
+		ctx->jastrow.gl_date = ctx->date;
 	}
 
 	return QMCKL_SUCCESS_DEVICE;
@@ -5511,23 +5513,23 @@ qmckl_get_jastrow_factor_en_deriv_e_device(qmckl_context_device context,
 
 	qmckl_exit_code_device rc;
 
-	rc = qmckl_provide_jastrow_factor_en_deriv_e_device(context);
-	if (rc != QMCKL_SUCCESS_DEVICE)
-		return rc;
+	// rc = qmckl_provide_jastrow_factor_en_deriv_e_device(context);
+	// if (rc != QMCKL_SUCCESS_DEVICE)
+	// 	return rc;
 
-	qmckl_context_struct_device *const ctx =
-		(qmckl_context_struct_device *)context;
-	assert(ctx != NULL);
+	// qmckl_context_struct_device *const ctx =
+	// 	(qmckl_context_struct_device *)context;
+	// assert(ctx != NULL);
 
-	int64_t sze = ctx->electron.walker.num * 4 * ctx->electron.num;
-	if (size_max < sze) {
-		return qmckl_failwith_device(
-			context, QMCKL_INVALID_ARG_3_DEVICE,
-			"qmckl_get_jastrow_factor_en_deriv_e",
-			"Array too small. Expected 4*walker.num*elec_num");
-	}
-	qmckl_memcpy_D2D(context, factor_en_deriv_e, ctx->jastrow.factor_en_deriv_e,
-					 sze * sizeof(double));
+	// int64_t sze = ctx->electron.walker.num * 4 * ctx->electron.num;
+	// if (size_max < sze) {
+	// 	return qmckl_failwith_device(
+	// 		context, QMCKL_INVALID_ARG_3_DEVICE,
+	// 		"qmckl_get_jastrow_factor_en_deriv_e",
+	// 		"Array too small. Expected 4*walker.num*elec_num");
+	// }
+	// qmckl_memcpy_D2D(context, factor_en_deriv_e, ctx->jastrow.factor_en_deriv_e,
+	// 				 sze * sizeof(double));
 
 	return QMCKL_SUCCESS_DEVICE;
 }
@@ -5938,6 +5940,7 @@ qmckl_get_jastrow_factor_ee_deriv_e_device(qmckl_context_device context,
 	qmckl_exit_code_device rc;
 
 	rc = qmckl_provide_jastrow_factor_ee_deriv_e_device(context);
+
 	if (rc != QMCKL_SUCCESS_DEVICE)
 		return rc;
 

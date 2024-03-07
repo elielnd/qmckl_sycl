@@ -3,12 +3,27 @@
 =======================================
 
 # TOTAL: 3
-# PASS:  3
+# PASS:  2
 # SKIP:  0
 # XFAIL: 0
-# FAIL:  0
+# FAIL:  1
 # XPASS: 0
 # ERROR: 0
 
 .. contents:: :depth: 2
+
+FAIL: tests/test_qmckl_jastrow
+==============================
+
+failed to open /dev/dri/renderD128: Permission denied
+failed to open /dev/dri/renderD128: Permission denied
+
+Before check
+Walk_num: 1
+Elec_num: 10
+
+After check
+Walk_num: 1
+Elec_num: 10
+FAIL tests/test_qmckl_jastrow (exit status: 1)
 

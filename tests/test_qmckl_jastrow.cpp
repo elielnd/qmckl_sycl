@@ -75,24 +75,18 @@ int main() {
 	int wrongval = 0;
 
 	buffer<int, 1> buff_wrongval(&wrongval, range<1>(1));
-
-	/*q.parallel_for<class VectorAdd>(num_items, [=](id<1> wiID) {
-    sum_accessor[wiID] = addend_1_accessor[wiID] + addend_2_accessor[wiID];
-    out << "Sum : " << sum_accessor[wiID]  << cl::sycl::endl;  // I want to print this sum
-    });*/
 	
 	q.submit([&](handler &h) {
-		sycl::stream out(1024, 256, h);
+		
 		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
 		h.single_task([=]() {
-			out << "Nddddddddddddddddddddddddddddddddddddddddddddddddd"  << cl::sycl::endl;
-			// for (int64_t i = 0; i < 3 * elec_num; ++i) {
-			// 	if (elec_coord[i] != elec_coord2[i]) {
-			// 		out << "This is the if state"  << cl::sycl::endl;
-			// 		// acc_wrongval[0] = 1;
-			// 		break;
-			// 	}
-			// }
+			
+			for (int64_t i = 0; i < 3 * elec_num; ++i) {
+				if (elec_coord[i] != elec_coord2[i]) {
+					acc_wrongval[0] = 1;
+					break;
+				}
+			}
 		});
 	}).wait();
 
@@ -118,51 +112,51 @@ int main() {
 		qmckl_get_nucleus_coord_device(context, 'N', nucl_coord2, nucl_num * 3);
 
 
-	// q.submit([&](handler &h) {
-	// 	auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
-	// 	q.single_task([=]() {
-	// 		for (int64_t k = 0; k < 3; ++k) {
-	// 			for (int64_t i = 0; i < nucl_num; ++i) {
-	// 				if (nucl_coord[nucl_num * k + i] != nucl_coord2[3 * i + k]) {
-	// 					acc_wrongval[0] = 1;
-	// 					break;
-	// 				}
-	// 				if (acc_wrongval[0]) {
-	// 					break;
-	// 				}
-    //                 return;
-	// 			}
-	// 		}
-	// 	});
-	// });
-	// q.wait();
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		h.single_task([=]() {
+			for (int64_t k = 0; k < 3; ++k) {
+				for (int64_t i = 0; i < nucl_num; ++i) {
+					if (nucl_coord[nucl_num * k + i] != nucl_coord2[3 * i + k]) {
+						acc_wrongval[0] = 1;
+						break;
+					}
+					if (acc_wrongval[0]) {
+						break;
+					}
+                    return;
+				}
+			}
+		});
+	});
+	q.wait();
 
-	// buff_wrongval.get_host_access();
+	buff_wrongval.get_host_access();
 
-	// if (wrongval) {
-	// 	return 1;
-	// }
+	if (wrongval) {
+		return 1;
+	}
 
 	rc =
 		qmckl_get_nucleus_coord_device(context, 'T', nucl_coord2, nucl_num * 3);
 
-	// q.submit([&](handler &h) {
-	// 	auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
-	// 	q.single_task([=]() {
-	// 		for (int64_t i = 0; i < 3 * nucl_num; ++i) {
-	// 		if (nucl_coord[i] != nucl_coord2[i]) {
-	// 			acc_wrongval[0] = true;
-	// 			break;
-	// 		}
-	// 	}
-	// 	});
-	// }).wait();
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		h.single_task([=]() {
+			for (int64_t i = 0; i < 3 * nucl_num; ++i) {
+			if (nucl_coord[i] != nucl_coord2[i]) {
+				acc_wrongval[0] = 1;
+				break;
+			}
+		}
+		});
+	}).wait();
 
-	// buff_wrongval.get_host_access();
+	buff_wrongval.get_host_access();
 
-	// if (wrongval) {
-	// 	return 1;
-	// }
+	if (wrongval) {
+		return 1;
+	}
 
 	double *nucl_charge2 = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_charge)));
 
@@ -185,169 +179,181 @@ int main() {
 	
 	buff_wrongval.get_host_access();
 
-	// if (wrongval) {
-	// 	return 1;
-	// }
+	if (wrongval) {
+		return 1;
+	}
 
-	// int64_t type_nucl_num = n2_type_nucl_num;
+	int64_t type_nucl_num = n2_type_nucl_num;
 
-	// // int64_t *type_nucl_vector = &(n2_type_nucl_vector[0]);
-	// int64_t *type_nucl_vector =
-	// 	reinterpret_cast<int64_t *>(qmckl_malloc_device(context, sizeof(n2_type_nucl_vector)));
-	// qmckl_memcpy_H2D(context, type_nucl_vector, n2_type_nucl_vector,
-	// 				 sizeof(n2_type_nucl_vector));
+	// int64_t *type_nucl_vector = &(n2_type_nucl_vector[0]);
+	int64_t *type_nucl_vector =
+		reinterpret_cast<int64_t *>(qmckl_malloc_device(context, sizeof(n2_type_nucl_vector)));
+	qmckl_memcpy_H2D(context, type_nucl_vector, n2_type_nucl_vector,
+					 sizeof(n2_type_nucl_vector));
 
-	// int64_t aord_num = n2_aord_num;
-	// int64_t bord_num = n2_bord_num;
-	// int64_t cord_num = n2_cord_num;
+	int64_t aord_num = n2_aord_num;
+	int64_t bord_num = n2_bord_num;
+	int64_t cord_num = n2_cord_num;
 
-// 	// double *a_vector = &(n2_aord_vector[0][0]);
-// 	double *a_vector = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_aord_vector)));
-// 	qmckl_memcpy_H2D(context, a_vector, n2_aord_vector, sizeof(n2_aord_vector));
+	// double *a_vector = &(n2_aord_vector[0][0]);
+	double *a_vector = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_aord_vector)));
+	qmckl_memcpy_H2D(context, a_vector, n2_aord_vector, sizeof(n2_aord_vector));
 
-// 	// double *b_vector = &(n2_bord_vector[0]);
-// 	double *b_vector = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_bord_vector)));
-// 	qmckl_memcpy_H2D(context, b_vector, n2_bord_vector, sizeof(n2_bord_vector));
+	// double *b_vector = &(n2_bord_vector[0]);
+	double *b_vector = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_bord_vector)));
+	qmckl_memcpy_H2D(context, b_vector, n2_bord_vector, sizeof(n2_bord_vector));
 
-// 	// double *c_vector = &(n2_cord_vector[0][0]);
-// 	double *c_vector = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_cord_vector)));
-// 	qmckl_memcpy_H2D(context, c_vector, n2_cord_vector, sizeof(n2_cord_vector));
+	// double *c_vector = &(n2_cord_vector[0][0]);
+	double *c_vector = reinterpret_cast<double *>(qmckl_malloc_device(context, sizeof(n2_cord_vector)));
+	qmckl_memcpy_H2D(context, c_vector, n2_cord_vector, sizeof(n2_cord_vector));
 
-// 	int64_t dim_c_vector = 0;
+	int64_t dim_c_vector = 0;
 
-// 	/* Set the data */
-// 	rc = qmckl_set_jastrow_aord_num_device(context, aord_num);
-// 	rc = qmckl_set_jastrow_bord_num_device(context, bord_num);
-// 	rc = qmckl_set_jastrow_cord_num_device(context, cord_num);
-// 	rc = qmckl_set_jastrow_type_nucl_num_device(context, type_nucl_num);
-// 	rc = qmckl_set_jastrow_type_nucl_vector_device(context, type_nucl_vector,
-// 												   nucl_num);
-// 	rc = qmckl_set_jastrow_a_vector_device(context, a_vector,
-// 										   (aord_num + 1) * type_nucl_num);
-// 	rc = qmckl_set_jastrow_b_vector_device(context, b_vector, (bord_num + 1));
-// 	rc = qmckl_get_jastrow_dim_c_vector_device(context, &dim_c_vector);
-// 	rc = qmckl_set_jastrow_c_vector_device(context, c_vector,
-// 										   dim_c_vector * type_nucl_num);
+	/* Set the data */
+	rc = qmckl_set_jastrow_aord_num_device(context, aord_num);
+	rc = qmckl_set_jastrow_bord_num_device(context, bord_num);
+	rc = qmckl_set_jastrow_cord_num_device(context, cord_num);
+	rc = qmckl_set_jastrow_type_nucl_num_device(context, type_nucl_num);
+	rc = qmckl_set_jastrow_type_nucl_vector_device(context, type_nucl_vector,
+												   nucl_num);
+	rc = qmckl_set_jastrow_a_vector_device(context, a_vector,
+										   (aord_num + 1) * type_nucl_num);
+	rc = qmckl_set_jastrow_b_vector_device(context, b_vector, (bord_num + 1));
+	rc = qmckl_get_jastrow_dim_c_vector_device(context, &dim_c_vector);
+	rc = qmckl_set_jastrow_c_vector_device(context, c_vector,
+										   dim_c_vector * type_nucl_num);
 
-// 	double k_ee = 0.;
+	double k_ee = 0.;
 
-// 	double *k_en = reinterpret_cast<double *>(qmckl_malloc_device(context, 2 * sizeof(double)));
+	double *k_en = reinterpret_cast<double *>(qmckl_malloc_device(context, 2 * sizeof(double)));
 	
-// 	q.single_task([=]() {
-// 		k_en[0] = 0.;
-// 		k_en[1] = 0.;
-// 	}).wait();
+	q.single_task([=]() {
+		k_en[0] = 0.;
+		k_en[1] = 0.;
+	}).wait();
 
-// 	rc = qmckl_set_jastrow_rescale_factor_en_device(context, rescale_factor_en,
-// 													type_nucl_num);
+	rc = qmckl_set_jastrow_rescale_factor_en_device(context, rescale_factor_en,
+													type_nucl_num);
 
-// 	rc = qmckl_set_jastrow_rescale_factor_ee_device(context, rescale_factor_ee);
+	rc = qmckl_set_jastrow_rescale_factor_ee_device(context, rescale_factor_ee);
 
-// 	rc = qmckl_get_jastrow_rescale_factor_ee_device(context, &k_ee);
-// 	if (k_ee != rescale_factor_ee) {
-// 		return 1;
-// 	}
+	rc = qmckl_get_jastrow_rescale_factor_ee_device(context, &k_ee);
+	if (k_ee != rescale_factor_ee) {
+		return 1;
+	}
 
-// 	rc = qmckl_get_jastrow_rescale_factor_en_device(context, k_en,
-// 													type_nucl_num);
+	rc = qmckl_get_jastrow_rescale_factor_en_device(context, k_en,
+													type_nucl_num);
 
-// 	q.submit([&](handler &h) {
-// 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-// 		q.single_task([=]() {
-// 			for (int i = 0; i < type_nucl_num; ++i) {
-// 				if (fabs(k_en[i] - rescale_factor_en[i]) > 1e-12) {
-// 					acc_wrongval[0] = true;
-// 					break;
-// 				}
-// 			}
-// 		});
-// 	}).wait();
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		h.single_task([=]() {
+			for (int i = 0; i < type_nucl_num; ++i) {
+				if (fabs(k_en[i] - rescale_factor_en[i]) > 1e-12) {
+					acc_wrongval[0] = 1;
+					break;
+				}
+			}
+		});
+	}).wait();
 
-// 	buff_wrongval.get_host_access();
+	buff_wrongval.get_host_access();
 
-// 	if (wrongval) {
-// 		return 1;
-// 	}
+	if (wrongval) {
+		return 1;
+	}
 
-// 	double *asymp_jasb = reinterpret_cast<double *>(qmckl_malloc_device(context, 2 * sizeof(double)));
+	double *asymp_jasb = reinterpret_cast<double *>(qmckl_malloc_device(context, 2 * sizeof(double)));
 
-// 	// calculate asymp_jasb
-// 	rc = qmckl_get_jastrow_asymp_jasb_device(context, asymp_jasb, 2);
+	// calculate asymp_jasb
+	rc = qmckl_get_jastrow_asymp_jasb_device(context, asymp_jasb, 2);
 
-// 	q.submit([&](handler &h) {
-// 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-// 		q.single_task([=](){
-// 			if (fabs(asymp_jasb[0] - 0.5323750557252571) > 1.e-12) {
-// 				acc_wrongval[0] = true;
-// 			}
-// 			if (fabs(asymp_jasb[1] - 0.31567342786262853) > 1.e-12) {
-// 				acc_wrongval[0] = true;
-// 			}
-// 		});
-// 	}).wait();
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		h.single_task([=](){
+			if (fabs(asymp_jasb[0] - 0.5323750557252571) > 1.e-12) {
+				acc_wrongval[0] = 1;
+			}
+			if (fabs(asymp_jasb[1] - 0.31567342786262853) > 1.e-12) {
+				acc_wrongval[0] = 1;
+			}
+		});
+	}).wait();
 	
-// 	buff_wrongval.get_host_access();
+	buff_wrongval.get_host_access();
 
-// 	if (wrongval) {
-// 		return 1;
-// 	}
+	if (wrongval) {
+		return 1;
+	}
 
-// 	double *factor_ee = reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * sizeof(double)));
-// 	rc = qmckl_get_jastrow_factor_ee_device(context, factor_ee, walk_num);
+	double *factor_ee = reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * sizeof(double)));
+	rc = qmckl_get_jastrow_factor_ee_device(context, factor_ee, walk_num);
 
-// 	// calculate factor_ee
-// 	rc = qmckl_get_jastrow_factor_ee_device(context, factor_ee, walk_num);
+	// calculate factor_ee
+	rc = qmckl_get_jastrow_factor_ee_device(context, factor_ee, walk_num);
 
-// 	q.submit([&](handler &h) {
-// 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-// 		q.single_task([=](){
-// 			if (fabs(factor_ee[0] + 4.282760865958113) > 1.e-12) {
-// 				acc_wrongval[0];
-// 			}
-// 		});
-// 	}).wait();
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		h.single_task([=](){
+			if (fabs(factor_ee[0] + 4.282760865958113) > 1.e-12) {
+				acc_wrongval[0] = 1;
+			}
+		});
+	}).wait();
 	
-// 	buff_wrongval.get_host_access();
+	buff_wrongval.get_host_access();
 
-// 	if (wrongval) {
-// 		return 1;
-// 	}
+	if (wrongval) {
+		return 1;
+	}
 
-// 	// calculate factor_ee_deriv_e
-// 	double *factor_ee_deriv_e =
-// 		reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * 4 * elec_num * sizeof(double)));
+	// calculate factor_ee_deriv_e
+	double *factor_ee_deriv_e =
+		reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * 4 * elec_num * sizeof(double)));
 
-// 	// check factor_ee_deriv_e
-// 	rc = qmckl_get_jastrow_factor_ee_deriv_e_device(context, factor_ee_deriv_e,
-// 													walk_num * 4 * elec_num);
+	printf("\nBefore check\n");
+	std::cout << "Walk_num: " << walk_num << std::endl;
+	std::cout << "Elec_num: " << elec_num << std::endl;
 
-// 	q.submit([&](handler &h) {
-// 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-// 		q.single_task([=](){
-// 			if (fabs(factor_ee_deriv_e[0 + 0 * elec_num + 0] -
-// 				 0.16364894652107934) > 1.e-12) {
-// 				acc_wrongval[0] = true;
-// 			}
-// 			if (fabs(factor_ee_deriv_e[0 + 1 * elec_num + 0] + 0.6927548119830084) >
-// 				1.e-12) {
-// 				acc_wrongval[0] = true;
-// 			}
-// 			if (fabs(factor_ee_deriv_e[0 + 2 * elec_num + 0] - 0.073267755223968) >
-// 				1.e-12) {
-// 				acc_wrongval[0] = true;
-// 			}
-// 			if (fabs(factor_ee_deriv_e[0 + 3 * elec_num + 0] - 1.5111672803213185) >
-// 				1.e-12) {
-// 				acc_wrongval[0] = true;
-// 			}
-// 		});
-// 	}).wait();
+	// check factor_ee_deriv_e
+	rc = qmckl_get_jastrow_factor_ee_deriv_e_device(context, factor_ee_deriv_e,
+													walk_num * 4 * elec_num);
+	printf("\nAfter check\n");
+	std::cout << "Walk_num: " << walk_num << std::endl;
+	std::cout << "Elec_num: " << elec_num << std::endl;
 
-// 	buff_wrongval.get_host_access();
+	// q.submit([&](handler &h) {
+	// 	auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+	// 	sycl::stream out(1024, 256, h);
+	// 	h.single_task([=](){
+	// 		if (fabs(factor_ee_deriv_e[0 + 0 * elec_num + 0] -
+	// 			 0.16364894652107934) > 1.e-12) {
+	// 			// out << "This is the error 1 !!!" << "\n" << cl::sycl::endl;
+	// 			acc_wrongval[0] = 1;
+	// 		}
+	// 		if (fabs(factor_ee_deriv_e[0 + 1 * elec_num + 0] + 0.6927548119830084) >
+	// 			1.e-12) {
+	// 			// out << "This is the error 2 !!!" << "\n" << cl::sycl::endl;
+	// 			acc_wrongval[0] = 1;
+	// 		}
+	// 		if (fabs(factor_ee_deriv_e[0 + 2 * elec_num + 0] - 0.073267755223968) >
+	// 			1.e-12) {
+	// 			// out << "This is the error 3 !!!" << "\n" << cl::sycl::endl;
+	// 			acc_wrongval[0] = 1;
+	// 		}
+	// 		if (fabs(factor_ee_deriv_e[0 + 3 * elec_num + 0] - 1.5111672803213185) >
+	// 			1.e-12) {
+	// 			// out << "This is the error 4 !!!" << "\n" << cl::sycl::endl;
+	// 			acc_wrongval[0] = 1;
+	// 		}
+	// 	});
+	// }).wait();
 
-// 	if (wrongval) {
-// 		return 1;
-// 	}
+	buff_wrongval.get_host_access();
+
+	if (wrongval) {
+		return 1;
+	}
 
 // 	double *ee_distance_rescaled = reinterpret_cast<double *>(qmckl_malloc_device(
 // 		context, walk_num * elec_num * elec_num * sizeof(double)));
@@ -355,22 +361,22 @@ int main() {
 // 													   ee_distance_rescaled);
 
 // 	q.submit([&](handler &h) {
-// 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-// 		q.single_task([=](){
+// 		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+// 		h.single_task([=](){
 // 			// (e1,e2,w)
 // 			// (0,0,0) == 0.
 // 			if (ee_distance_rescaled[0] != 0.) {
-// 				acc_wrongval[0] = true;
+// 				acc_wrongval[0] = 1;
 // 			}
 
 // 			// (1,0,0) == (0,1,0)
 // 			if (ee_distance_rescaled[1] != ee_distance_rescaled[elec_num]) {
-// 				acc_wrongval[0] = true;
+// 				acc_wrongval[0] = 1;
 // 			}
 
 // 			// value of (1,0,0)
 // 			if (fabs(ee_distance_rescaled[1] - 0.5502278003524018) > 1.e-12) {
-// 				acc_wrongval[0] = true;
+// 				acc_wrongval[0] = 1;
 // 			}
 
 // 			// (0,0,1) == 0.
@@ -381,13 +387,13 @@ int main() {
 // 			// (1,0,1) == (0,1,1)
 // 			if (ee_distance_rescaled[5 * elec_num + 6] !=
 // 				ee_distance_rescaled[6 * elec_num + 5]) {
-// 				acc_wrongval[0] = true;
+// 				acc_wrongval[0] = 1;
 // 			}
 
 // 			// value of (1,0,1)
 // 			if (fabs(ee_distance_rescaled[5 * elec_num + 6] - 0.3622098222364193) >
 // 				1.e-12) {
-// 				acc_wrongval[0] = true;
+// 				acc_wrongval[0] = 1;
 // 			}
 // 		});
 // 	}).wait();
@@ -429,69 +435,50 @@ int main() {
 // 	rc =
 // 		qmckl_get_jastrow_asymp_jasa_device(context, asymp_jasa, type_nucl_num);
 	
-// 	//sycl::stream out;
-// 	sycl::property_list props;
-// 	/*q.parallel_for<class VectorAdd>(num_items, [=](id<1> wiID) {
-//     sum_accessor[wiID] = addend_1_accessor[wiID] + addend_2_accessor[wiID];
-//     out << "Sum : " << sum_accessor[wiID]  << cl::sycl::endl;  // I want to print this sum
-//     });*/
 // // calculate asymp_jasb
 // 	q.submit([&](handler &h) {
 // 		sycl::stream out(1024, 256, h);
-// 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
+// 		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
 // 		q.single_task([=](){
-// 			out << asymp_jasa[0] << " " << -0.548554 << "\n" << cl::sycl::endl;
+// 			// out << asymp_jasa[0] << " " << -0.548554 << "\n" << cl::sycl::endl;
 // 			// printf("%e %e\n", asymp_jasa[0], -0.548554);
 // 			if (fabs(-0.548554 - asymp_jasa[0]) > 1.e-12) {
-// 				acc_wrongval[0] = true;
+// 				acc_wrongval[0] = 1;
 // 			}
 // 		});
 // 	}).wait();
 
+// 	buff_wrongval.get_host_access();
 
+// 	if (wrongval) {
+// 		return 1;
+// 	}
 
+// 	double *factor_en = reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * sizeof(double)));
+// 	rc = qmckl_get_jastrow_factor_en_device(context, factor_en, walk_num);
 
-
-
-
-
-
-
-
-
-
-/*	
-	buff_wrongval.get_host_access();
-
-	if (wrongval) {
-		return 1;
-	}
-
-	double *factor_en = reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * sizeof(double)));
-	rc = qmckl_get_jastrow_factor_en_device(context, factor_en, walk_num);
-
-	// calculate factor_en
-	q.submit([&](handler &h) {
-		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
-		q.single_task([=](){
-			if (fabs(5.1052574308112755 - factor_en[0]) > 1.e-12) {
-				acc_wrongval[0] = true;
-			}
-		});
-	}).wait();
+// 	// calculate factor_en
+// 	q.submit([&](handler &h) {
+// 		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+// 		q.single_task([=](){
+// 			if (fabs(5.1052574308112755 - factor_en[0]) > 1.e-12) {
+// 				acc_wrongval[0] = 1;
+// 			}
+// 		});
+// 	}).wait();
 	
-	buff_wrongval.get_host_access();
+// 	buff_wrongval.get_host_access();
 
-	if (wrongval) {
-		return 1;
-	}
+// 	if (wrongval) {
+// 		return 1;
+// 	}
 
-	// calculate factor_en_deriv_e
-	double *factor_en_deriv_e =
-		reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * 4 * elec_num * sizeof(double)));
-	rc = qmckl_get_jastrow_factor_en_deriv_e_device(context, factor_en_deriv_e,
-													walk_num * 4 * elec_num);
- 
+// 	// calculate factor_en_deriv_e
+// 	double *factor_en_deriv_e =
+// 		reinterpret_cast<double *>(qmckl_malloc_device(context, walk_num * 4 * elec_num * sizeof(double)));
+// 	rc = qmckl_get_jastrow_factor_en_deriv_e_device(context, factor_en_deriv_e,
+// 													walk_num * 4 * elec_num);
+/*
 // check factor_en_deriv_e
 	q.submit([&](handler &h) {
 		sycl::accessor acc_wrongval(buff_wrongval, h, read_write);
