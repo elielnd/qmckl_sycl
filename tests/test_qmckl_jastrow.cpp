@@ -322,32 +322,32 @@ int main() {
 	std::cout << "Walk_num: " << walk_num << std::endl;
 	std::cout << "Elec_num: " << elec_num << std::endl;
 
-	// q.submit([&](handler &h) {
-	// 	auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
-	// 	sycl::stream out(1024, 256, h);
-	// 	h.single_task([=](){
-	// 		if (fabs(factor_ee_deriv_e[0 + 0 * elec_num + 0] -
-	// 			 0.16364894652107934) > 1.e-12) {
-	// 			// out << "This is the error 1 !!!" << "\n" << cl::sycl::endl;
-	// 			acc_wrongval[0] = 1;
-	// 		}
-	// 		if (fabs(factor_ee_deriv_e[0 + 1 * elec_num + 0] + 0.6927548119830084) >
-	// 			1.e-12) {
-	// 			// out << "This is the error 2 !!!" << "\n" << cl::sycl::endl;
-	// 			acc_wrongval[0] = 1;
-	// 		}
-	// 		if (fabs(factor_ee_deriv_e[0 + 2 * elec_num + 0] - 0.073267755223968) >
-	// 			1.e-12) {
-	// 			// out << "This is the error 3 !!!" << "\n" << cl::sycl::endl;
-	// 			acc_wrongval[0] = 1;
-	// 		}
-	// 		if (fabs(factor_ee_deriv_e[0 + 3 * elec_num + 0] - 1.5111672803213185) >
-	// 			1.e-12) {
-	// 			// out << "This is the error 4 !!!" << "\n" << cl::sycl::endl;
-	// 			acc_wrongval[0] = 1;
-	// 		}
-	// 	});
-	// }).wait();
+	q.submit([&](handler &h) {
+		auto acc_wrongval = buff_wrongval.get_access<access::mode::write>(h);
+		sycl::stream out(1024, 256, h);
+		h.single_task([=](){
+			if (fabs(factor_ee_deriv_e[0 + 0 * elec_num + 0] -
+				 0.16364894652107934) > 1.e-12) {
+				// out << "This is the error 1 !!!" << "\n" << cl::sycl::endl;
+				acc_wrongval[0] = 1;
+			}
+			if (fabs(factor_ee_deriv_e[0 + 1 * elec_num + 0] + 0.6927548119830084) >
+				1.e-12) {
+				// out << "This is the error 2 !!!" << "\n" << cl::sycl::endl;
+				acc_wrongval[0] = 1;
+			}
+			if (fabs(factor_ee_deriv_e[0 + 2 * elec_num + 0] - 0.073267755223968) >
+				1.e-12) {
+				// out << "This is the error 3 !!!" << "\n" << cl::sycl::endl;
+				acc_wrongval[0] = 1;
+			}
+			if (fabs(factor_ee_deriv_e[0 + 3 * elec_num + 0] - 1.5111672803213185) >
+				1.e-12) {
+				// out << "This is the error 4 !!!" << "\n" << cl::sycl::endl;
+				acc_wrongval[0] = 1;
+			}
+		});
+	}).wait();
 
 	buff_wrongval.get_host_access();
 
