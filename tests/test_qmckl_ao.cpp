@@ -7,6 +7,7 @@
 #include "chbrclf.hpp"
 #include "../include/qmckl_gpu.hpp"
 
+
 #if FPGA_HARDWARE || FPGA_EMULATOR || FPGA_SIMULATOR
 #include <sycl/ext/intel/fpga_extensions.hpp>
 #endif
@@ -16,8 +17,9 @@
 
 using namespace sycl;
 
-int main()
+int main(int argc, char **argv)
 {
+
     queue q;
     try
     {
